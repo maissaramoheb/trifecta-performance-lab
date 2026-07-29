@@ -6,7 +6,9 @@ Arabic-first bilingual trainer-development application for Learning Domains, the
 
 - Explains Cognitive, Psychomotor, and Affective Learning Domains with five/six-level interactive progressions.
 - Explains Physical, Technical, and Cognitive / Neurophysiological Performance, including all ten cognitive families in the internal course reference.
+- Organizes the ten cognitive families through the source-derived four-phase operational map.
 - Makes the build-versus-diagnose distinction explicit.
+- Uses an interactive Trifecta performance instrument and a cause–evidence–intervention comparison deck.
 - Includes 15 guided cases at basic, intermediate, and advanced levels.
 - Provides objective, station, calibration, performance-profile, AAR, and intervention tools.
 - Enforces Critical Safety Failure as a non-compensable No-Go gate.
@@ -44,6 +46,7 @@ npm test
 - `lib/content.ts` — typed bilingual source content, cases, checks, and references.
 - `public/sw.js` — offline-first cache for the core learning routes.
 - `docs/` — source analysis, content architecture, assessment logic, and test report.
+- `docs/UPGRADE_GAP_MAP.md` — comparison of previous coverage, source gaps, and implemented upgrades.
 
 No backend or authentication is used. User-entered content is stored only in `localStorage`.
 
@@ -57,4 +60,3 @@ The application builds with vinext for the OpenAI Sites / Cloudflare Worker runt
 - Printable outputs use the browser’s print/PDF capability rather than generating signed or centrally managed records.
 - The calibration consistency view is descriptive, not a validated inter-rater reliability statistic.
 - Sleep/circadian and other longitudinal interpretations require data gathered outside a single session.
-

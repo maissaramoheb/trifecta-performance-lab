@@ -11,6 +11,10 @@ const baseMetadata: Metadata = {
     "Arabic-first bilingual trainer platform for Learning Domains, the Trifecta, evidence-based assessment, and AAR.",
   applicationName: "Trifecta Performance Lab",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/favicon.png", type: "image/png", sizes: "64x64" }],
+    shortcut: "/favicon.png",
+  },
   other: {
     "content-language": "ar, en",
   },

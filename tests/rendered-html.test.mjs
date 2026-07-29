@@ -52,6 +52,20 @@ test("critical safety and diagnostic-restraint rules are encoded", async () => {
   assert.equal((content.match(/\bC\(\d+,/g) ?? []).length, 15);
 });
 
+test("source-driven cognitive phases and diagnostic intervention patterns are present", async () => {
+  const [component, styles] = await Promise.all([
+    readFile(new URL("../components/TrainingApp.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(component, /أربع مراحل · عشر عائلات/);
+  assert.match(component, /Same decision · different causes/);
+  assert.match(component, /Four No-Go cases do not need the same remedy/);
+  assert.match(component, /mobile-mode/);
+  assert.match(styles, /\.card-role-metric/);
+  assert.match(styles, /\.card-role-diagnostic/);
+  assert.match(styles, /prefers-reduced-motion/);
+});
+
 test("PWA core and privacy controls are present", async () => {
   const [manifest, sw, component] = await Promise.all([
     readFile(new URL("../app/manifest.ts", import.meta.url), "utf8"),
@@ -59,7 +73,10 @@ test("PWA core and privacy controls are present", async () => {
     readFile(new URL("../components/TrainingApp.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(manifest, /display:\s*"standalone"/);
+  assert.match(manifest, /icon-192\.png/);
+  assert.match(manifest, /icon-512\.png/);
   assert.match(sw, /caches\.open/);
+  assert.match(sw, /trifecta-core-v2/);
   assert.match(component, /localStorage/);
   assert.match(component, /navigator\.serviceWorker/);
 });

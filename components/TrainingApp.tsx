@@ -124,6 +124,49 @@ function LevelCards({ levels, lang, affective = false }: { levels: Level[]; lang
   </div>;
 }
 
+function TrifectaInstrument({ lang }: { lang: Lang }) {
+  const [active, setActive] = useState<"physical" | "technical" | "cognitive">("technical");
+  const pillars = {
+    physical: {
+      code: "P",
+      name: b("بدني", "Physical"),
+      prompt: b("هل الجسم يدعم المهمة ويحافظ على الأداء؟", "Can the body support the task and retain performance?"),
+    },
+    technical: {
+      code: "T",
+      name: b("فني", "Technical"),
+      prompt: b("هل الناتج صحيح وآمن وثابت وقابل للتكرار؟", "Is the output correct, safe, stable, and repeatable?"),
+    },
+    cognitive: {
+      code: "C",
+      name: b("ذهني", "Cognitive"),
+      prompt: b("هل لاحظ وتذكّر وقرّر وحوّل القرار إلى فعل؟", "Did the performer notice, remember, decide, and turn the decision into action?"),
+    },
+  };
+  const current = pillars[active];
+  return <aside className="trifecta-instrument card-role-feature" aria-label={local(b("مؤشر أعمدة الأداء", "Performance pillar instrument"), lang)}>
+    <div className="instrument-head">
+      <span>PERFORMANCE / 03</span>
+      <SourceMark lang={lang}/>
+    </div>
+    <div className="tri-stage">
+      <div className="tri-core" aria-hidden="true"><span>TRI</span></div>
+      {(Object.keys(pillars) as Array<keyof typeof pillars>).map(key => <button
+        key={key}
+        className={`tri-node tri-node-${key}`}
+        aria-pressed={active === key}
+        onClick={() => setActive(key)}
+      ><bdi>{pillars[key].code}</bdi><span>{local(pillars[key].name, lang)}</span></button>)}
+      <div className="scan-line" aria-hidden="true"/>
+    </div>
+    <div className="instrument-readout" aria-live="polite">
+      <span>ACTIVE LENS · <bdi>{current.code}</bdi></span>
+      <strong>{local(current.name, lang)}</strong>
+      <p>{local(current.prompt, lang)}</p>
+    </div>
+  </aside>;
+}
+
 function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
   const comparisons = [
     [b("إحنا عايزين نبني إيه؟", "What are we trying to build?"), b("ليه الأداء الفعلي نجح أو فشل؟", "Why did actual performance succeed or fail?")],
@@ -148,11 +191,26 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
           <button className="secondary" onClick={() => go("cases")}>{local(b("افتح معمل الحالات", "Open the case lab"), lang)}</button>
         </div>
       </div>
-      <div className="evidence-chain" aria-label={local(b("سلسلة الأداء", "Performance evidence chain"), lang)}>
+      <TrifectaInstrument lang={lang}/>
+    </section>
+
+    <section className="metric-deck" aria-label={local(b("نطاق المنصة", "Platform scope"), lang)}>
+      {[
+        ["03", b("مجالات تعلم", "Learning domains"), b("معرفة · مهارة · سلوك", "Knowledge · skill · behaviour")],
+        ["03", b("أعمدة أداء", "Performance pillars"), b("بدني · فني · ذهني", "Physical · technical · cognitive")],
+        ["10", b("عائلات ذهنية", "Cognitive families"), b("من الإدراك إلى الاستعادة", "From perception to recovery")],
+      ].map(([value, title, note]) => <article className="metric-card card-role-metric" key={local(title as Bi, "en")}>
+        <strong>{value as string}</strong><div><span>{local(title as Bi, lang)}</span><small>{local(note as Bi, lang)}</small></div>
+      </article>)}
+    </section>
+
+    <section className="workflow-rail" aria-label={local(b("سلسلة الأداء", "Performance evidence chain"), lang)}>
+      <div className="workflow-line" aria-hidden="true"/>
+      <div className="workflow-steps">
         {[
           b("متطلب", "Requirement"), b("تعلم", "Learning"), b("محطة", "Station"),
           b("دليل", "Evidence"), b("تشخيص", "Diagnosis"), b("تحسين", "Improve"),
-        ].map((x, i) => <div key={i}><span>{String(i + 1).padStart(2, "0")}</span>{local(x, lang)}</div>)}
+        ].map((x, i) => <div key={i}><span>{String(i + 1).padStart(2, "0")}</span><strong>{local(x, lang)}</strong></div>)}
       </div>
     </section>
 
@@ -242,6 +300,13 @@ function Trifecta({ lang }: { lang: Lang }) {
 function CognitiveExplorer({ lang }: { lang: Lang }) {
   const [active, setActive] = useState(0);
   const item = cognitiveFamilies[active];
+  const phases = [
+    { number: "I", name: b("الإدراك والتحكم الذهني", "Perception and mental control"), codes: ["SA", "CLM"] },
+    { number: "II", name: b("اتخاذ القرار والتنفيذ", "Decision and execution"), codes: ["DMUS", "WMTR", "CFA"] },
+    { number: "III", name: b("التزامن الانفعالي والبدني", "Emotional and physical synchronization"), codes: ["ERSI", "MCC", "RSVMI"] },
+    { number: "IV", name: b("الاستمرار تحت الظروف الصعبة", "Sustained performance under extremes"), codes: ["FRFRC", "SCR"] },
+  ];
+  const activePhase = phases.findIndex(phase => phase.codes.includes(item.code));
   const fields = [
     [b("التعريف البسيط", "Simple definition"), item.definition],
     [b("السؤال التشغيلي", "Operational question"), item.question],
@@ -253,8 +318,20 @@ function CognitiveExplorer({ lang }: { lang: Lang }) {
     [b("حدود التفسير", "Interpretation limit"), item.limit],
   ];
   return <div className="cognitive-explorer">
+    <div className="phase-map card-role-diagnostic">
+      <div className="phase-map-head"><div><MiniLabel>{local(b("الخريطة التشغيلية", "Operational map"), lang)}</MiniLabel><h2>{local(b("أربع مراحل · عشر عائلات", "Four phases · ten families"), lang)}</h2></div><SourceMark lang={lang}/></div>
+      <div className="phase-track" role="tablist" aria-label={local(b("مراحل الأداء الذهني", "Cognitive performance phases"), lang)}>
+        {phases.map((phase, index) => <button
+          key={phase.number}
+          role="tab"
+          aria-selected={activePhase === index}
+          onClick={() => setActive(cognitiveFamilies.findIndex(family => family.code === phase.codes[0]))}
+        ><span>PHASE {phase.number}</span><strong>{local(phase.name, lang)}</strong><small>{phase.codes.join(" · ")}</small></button>)}
+      </div>
+      <p className="phase-caution">{local(b("مش كل محطة لازم تقيس العشرة. حدّد العائلة المطلوبة، الدليل، وحدود التفسير قبل إضافة الحمل.", "Not every station should measure all ten. Define the target family, evidence, and interpretation limit before adding load."), lang)}</p>
+    </div>
     <div className="family-grid">{cognitiveFamilies.map((x, i) => <button key={x.code} aria-pressed={active === i} onClick={() => setActive(i)}><strong>{x.code}</strong><span>{x.name}</span></button>)}</div>
-    <article className="family-detail">
+    <article className="family-detail" key={item.code}>
       <div className="card-top"><Badge>{local(item.phase, lang)}</Badge><SourceMark lang={lang}/></div>
       <h2><bdi>{item.code}</bdi> — {item.name}</h2>
       <div className="detail-grid">{fields.map(([label, value], i) => <div className="detail" key={i}><MiniLabel>{local(label, lang)}</MiniLabel><p>{local(value, lang)}</p></div>)}</div>
@@ -274,6 +351,32 @@ function Comparison({ lang }: { lang: Lang }) {
     b("هل الإجراء الفني ثبت؟", "Did the technical procedure remain stable?"), b("هل لاحظ وتذكر وقرر صح؟", "Did the performer notice, remember, and decide correctly?"),
     b("ما أول نقطة انهيار وما دليلي؟", "What was the first breakdown point and what supports it?"), b("ما السبب البديل والبيانات الناقصة؟", "What alternative and missing data remain?"),
   ];
+  const patterns = [
+    {
+      code: "K",
+      cause: b("المعيار غير معروف", "Standard not known"),
+      evidence: b("لا يقدر يشرح المطلوب قبل المحاولة.", "Cannot explain the requirement before the trial."),
+      intervention: b("شرح قصير + مثال + Brief-Back.", "Short explanation + example + brief-back."),
+    },
+    {
+      code: "T",
+      cause: b("المهارة غير ثابتة", "Skill is not stable"),
+      evidence: b("الخطأ يظهر حتى في الـBaseline أو يتغير عشوائيًا.", "Error appears at baseline or varies randomly."),
+      intervention: b("Demonstration + ممارسة موجهة + تكرار متعمد.", "Demonstration + guided practice + deliberate repetition."),
+    },
+    {
+      code: "P",
+      cause: b("الحمل كسر الأداء", "Load broke performance"),
+      evidence: b("الأداء يبدأ قويًا ثم يتدهور مع التكرار ويعود بعد Reset.", "Performance starts strong, declines across repetitions, and returns after reset."),
+      intervention: b("ضبط الجرعة + Recovery + Load Progression.", "Adjust dose + recovery + load progression."),
+    },
+    {
+      code: "C",
+      cause: b("القرار انهار تحت الوقت", "Decision collapsed under time"),
+      evidence: b("الـBaseline ثابت، وأول خطأ ظهر بعد إضافة الوقت.", "Baseline is stable; the first error appears after time is added."),
+      intervention: b("تقليل الحمل + Decision Practice + وقت تدريجي.", "Reduce load + decision practice + progressive time."),
+    },
+  ];
   return <>
     <SectionHead eyebrow={local(b("عدستان · حالة واحدة", "Two lenses · one case"), lang)} title={local(b("مركز المقارنة", "Domains vs Trifecta"), lang)} intro={local(b("Learning Domains تبني القدرة. Trifecta تقرأ الناتج تحت الشرط الفعلي.", "Learning Domains build capability. The Trifecta reads output under actual conditions."), lang)}/>
     <div className="dual-list">
@@ -290,6 +393,15 @@ function Comparison({ lang }: { lang: Lang }) {
       </div>
       <div className="intervention-strip"><strong>{local(b("التدخل", "Intervention"), lang)}</strong><span>{local(b("Baseline → وقت تدريجي → عامل واحد → تسجيل أول انهيار → توقف عند Critical Failure → Reset → Retest", "Baseline → progressive time → one factor → record first breakdown → stop on Critical Failure → reset → retest"), lang)}</span></div>
     </article>
+    <section className="diagnosis-deck">
+      <div className="diagnosis-head"><div><MiniLabel>{local(b("نفس القرار · أسباب مختلفة", "Same decision · different causes"), lang)}</MiniLabel><h2>{local(b("أربع حالات No-Go لا تحتاج نفس العلاج", "Four No-Go cases do not need the same remedy"), lang)}</h2></div><SourceMark lang={lang}/></div>
+      <div className="diagnosis-grid">{patterns.map(pattern => <article className="diagnosis-card card-role-comparison" key={pattern.code}>
+        <span className="diagnosis-code">{pattern.code}</span>
+        <h3>{local(pattern.cause, lang)}</h3>
+        <p><MiniLabel>{local(b("الدليل الفارق", "Discriminating evidence"), lang)}</MiniLabel>{local(pattern.evidence, lang)}</p>
+        <p><MiniLabel>{local(b("التدخل", "Intervention"), lang)}</MiniLabel>{local(pattern.intervention, lang)}</p>
+      </article>)}</div>
+    </section>
   </>;
 }
 
@@ -663,10 +775,14 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
     </header>
     <aside id="main-nav" className={`sidebar ${menu?"open":""}`}>
       <div className="side-label">{local(b("مسار التعلم", "Learning path"),lang)}</div>
+      <div className="segmented mobile-mode" aria-label={local(b("اختيار الوضع", "Mode selection"),lang)}>
+        <button aria-pressed={mode==="learner"} onClick={()=>setMode("learner")}>{labels[lang].learner}</button>
+        <button aria-pressed={mode==="instructor"} onClick={()=>setMode("instructor")}>{labels[lang].instructor}</button>
+      </div>
       <nav>{visibleRoutes.map(([slug,title],i)=><button key={slug} className={section===slug?"active":""} aria-current={section===slug?"page":undefined} onClick={()=>go(slug)}><span>{String(i+1).padStart(2,"0")}</span>{local(title,lang)}</button>)}</nav>
       <div className="side-status"><div><span>{progress}%</span><small>{labels[lang].progress}</small></div><div className="side-bar"><span style={{height:`${progress}%`}}/></div></div>
     </aside>
-    <main id="main-content" tabIndex={-1}>{render()}</main>
+    <main id="main-content" tabIndex={-1}><div className="page-stage" key={section}>{render()}</div></main>
     <footer><span>TRIFECTA PERFORMANCE LAB · 2026</span><span>{local(b("بياناتك تبقى على جهازك", "Your data stays on your device"),lang)}</span></footer>
   </div>;
 }

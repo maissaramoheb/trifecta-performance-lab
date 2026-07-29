@@ -1,4 +1,4 @@
-const CACHE = "trifecta-core-v1";
+const CACHE = "trifecta-core-v2";
 const CORE = ["/", "/overview", "/domains", "/trifecta", "/comparison", "/cases", "/checks", "/references"];
 
 self.addEventListener("install", (event) => {

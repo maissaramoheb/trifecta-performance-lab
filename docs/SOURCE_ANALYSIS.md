@@ -4,8 +4,10 @@
 
 1. `alamwd-althhny-walasby-fy-alTrifecta.pdf` — 14-page internal course document focused on Cognitive / Neurophysiological Performance.
 2. `qraah-aladaa-alkaml-fy-tdryb-alrmayh-3.pdf` — 27-page internal course document combining Learning Domains, the Trifecta, field examples, assessment gates, and references.
+3. `Trifecta .docx` — 35-page working course source containing the 90-minute Trifecta session, 15 progressive station examples, the full cognitive-family tree, Station Card fields, and explicit coverage gaps.
+4. `Learning Domains + The Trifecta.docx` — 30-page bilingual course source containing the complete-performance framing, Learning Domain progressions, Trifecta distinctions, visual directions, and cause-to-intervention examples.
 
-Both PDFs were text-extracted and every page was rendered for visual inspection. The documents share the same dark operational visual language and the same core framing.
+The PDFs and Word sources were text-extracted and rendered for inspection. They share the same dark operational visual language and the same core framing. The Word sources add the four-phase cognitive map, visual directions, and a direct statement that SA, RSVMI, ERSI, FRFRC, and SCR need cautious or stronger coverage.
 
 ## Source-derived framework structure
 
@@ -68,4 +70,3 @@ The application states what each source supports and what it does not prove. It 
 ## Safety boundary
 
 Examples stay at the level of safe training progression, cues, timing, observable compliance, station design, and assessment. The product excludes engagement tactics, room clearing, offensive procedures, detailed weapon manipulation, and clinical/personality diagnosis.
-
