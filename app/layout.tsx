@@ -13,7 +13,7 @@ const baseMetadata: Metadata = {
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: "/favicon.png", type: "image/png", sizes: "64x64" }],
-    shortcut: "/favicon.png",
+    shortcut: "/favicon.ico",
   },
   other: {
     "content-language": "ar, en",
