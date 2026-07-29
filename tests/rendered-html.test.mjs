@@ -28,7 +28,7 @@ test("server-renders the Arabic-first application shell", async () => {
 
 test("all public module routes return the application", async () => {
   const routes = [
-    "overview", "domains", "trifecta", "comparison", "cases",
+    "overview", "curriculum", "domains", "trifecta", "comparison", "cases",
     "objective-builder", "station-builder", "calibration", "profile",
     "aar", "checks", "references", "about",
   ];
@@ -50,6 +50,24 @@ test("critical safety and diagnostic-restraint rules are encoded", async () => {
   assert.match(content, /لا تشخّص من ملاحظة واحدة|لا نستنتج SA/);
   assert.match(content, /تتطلب بيانات طولية|Requires longitudinal data/);
   assert.equal((content.match(/\bC\(\d+,/g) ?? []).length, 15);
+});
+
+test("curriculum hierarchy, evidence roll-up, and Gate safety are encoded", async () => {
+  const [workspace, curriculum, component] = await Promise.all([
+    readFile(new URL("../components/CurriculumWorkspace.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/curriculum.ts", import.meta.url), "utf8"),
+    readFile(new URL("../components/TrainingApp.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(curriculum, /CurriculumLevel/);
+  assert.match(curriculum, /CurriculumStation/);
+  assert.match(curriculum, /CurriculumDrill/);
+  assert.match(curriculum, /fromStationId/);
+  assert.match(workspace, /"need-more-data"/);
+  assert.match(workspace, /"retest"/);
+  assert.match(workspace, /if \(hasCritical\) return "no-go"/);
+  assert.match(workspace, /decision: "no-go"/);
+  assert.match(component, /schemaVersion:\s*2/);
+  assert.match(component, /x\.curriculum\?\.schemaVersion === 1/);
 });
 
 test("source-driven cognitive phases and diagnostic intervention patterns are present", async () => {
@@ -76,7 +94,8 @@ test("PWA core and privacy controls are present", async () => {
   assert.match(manifest, /icon-192\.png/);
   assert.match(manifest, /icon-512\.png/);
   assert.match(sw, /caches\.open/);
-  assert.match(sw, /trifecta-core-v2/);
+  assert.match(sw, /trifecta-core-v3/);
+  assert.match(sw, /"\/curriculum"/);
   assert.match(component, /localStorage/);
   assert.match(component, /navigator\.serviceWorker/);
 });

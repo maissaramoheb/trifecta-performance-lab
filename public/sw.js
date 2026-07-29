@@ -1,5 +1,5 @@
-const CACHE = "trifecta-core-v2";
-const CORE = ["/", "/overview", "/domains", "/trifecta", "/comparison", "/cases", "/checks", "/references"];
+const CACHE = "trifecta-core-v3";
+const CORE = ["/", "/overview", "/curriculum", "/domains", "/trifecta", "/comparison", "/cases", "/checks", "/references"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(CORE)).catch(() => undefined));

@@ -3,24 +3,35 @@
 ## Information architecture
 
 1. Home / Framework overview
-2. Learning Domains explorer
-3. Trifecta explorer
-4. Domains vs Trifecta comparison centre
-5. Case diagnostic lab
-6. Objective builder
-7. Station builder
-8. Assessment calibration
-9. Performance profile
-10. AAR and intervention
-11. Knowledge checks
-12. Reference library
-13. About and framework boundaries
+2. Curriculum pathway
+3. Learning Domains explorer
+4. Trifecta explorer
+5. Domains vs Trifecta comparison centre
+6. Case diagnostic lab
+7. Objective builder
+8. Station builder
+9. Assessment calibration
+10. Performance profile
+11. AAR and intervention
+12. Knowledge checks
+13. Reference library
+14. About and framework boundaries
 
 The interface exposes Learner mode for explanations, cases, checks, and progress. Instructor mode adds all builders, calibration, profiles, and printable outputs.
 
+## Authoritative curriculum hierarchy
+
+Curriculum → Levels → Stations → Drills, with an evidence-based Gate between Station N and Station N+1.
+
+Drill evidence → Station performance record → Gate decision → Level progress → Curriculum progress.
+
+The Gate supports Go, No-Go, Need More Data, and Retest. A Critical Safety Failure always forces No-Go and cannot be offset by another Drill or an aggregate score.
+
+“Lesson” and “Module” are supporting instructional material only. They are not competing hierarchy layers.
+
 ## Primary workflow
 
-Learning Requirement → Learning Domain → Learning Level → Lesson / Module → Training Station → Observable Performance → Trifecta Diagnosis → Assessment Decision → AAR → Training Intervention → Curriculum Improvement.
+Learning Requirement → Learning Domain → Learning Level → Station → Drill → Observable Evidence → Trifecta Diagnosis → Gate Decision → AAR → Training Intervention → Curriculum Improvement.
 
 ## Data model
 
@@ -31,6 +42,11 @@ Learning Requirement → Learning Domain → Learning Level → Lesson / Module 
 - `ObjectiveState`: requirement, gap, domain, level, behaviour, condition, criterion, critical failure, and evidence.
 - `StationState`: full Station Card including baseline, variables, loads, checklist, critical failures, collected data, AAR, remediation, and retest.
 - `Assessor`: observation, checklist, framework selections, critical failure, decision, evidence, confidence, and missing information.
+- `Curriculum`: bilingual curriculum identity and ordered Levels.
+- `CurriculumLevel`: outcome, ordered Stations, and transition Gates.
+- `CurriculumStation`: performance requirement, baseline, purpose, and Drills.
+- `CurriculumDrill`: condition, required evidence, Learning Domain, and Trifecta pillar.
+- `CurriculumProgress`: versioned device-local Drill records, Gate decisions, and current location.
 
 All content models are typed in TypeScript and stored in editable source files.
 
@@ -44,6 +60,8 @@ All content models are typed in TypeScript and stored in editable source files.
 6. A Critical Safety Failure always overrides additive scoring and produces No-Go.
 7. Profiles contain dimensional ratings and evidence notes; there is no default total.
 8. Calibration displays descriptive agreement/disagreement only and states that it is not formal scientific validation.
+9. Drill evidence rolls up to a Station summary without becoming a compensating total score.
+10. A following Station unlocks only when the preceding Gate’s effective decision is Go.
 
 ## MVP delivered
 
@@ -59,4 +77,3 @@ All content models are typed in TypeScript and stored in editable source files.
 - Versioned station/checklist libraries and approval workflows.
 - Longitudinal performance imports with provenance and confidence rules.
 - Formal assessor-study module only after an appropriate measurement design is approved.
-

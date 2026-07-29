@@ -9,6 +9,9 @@ Arabic-first bilingual trainer-development application for Learning Domains, the
 - Organizes the ten cognitive families through the source-derived four-phase operational map.
 - Makes the build-versus-diagnose distinction explicit.
 - Uses an interactive Trifecta performance instrument and a cause–evidence–intervention comparison deck.
+- Implements the authoritative Curriculum → Levels → Stations → Drills hierarchy.
+- Places an evidence-based Gate between consecutive Stations with Go, No-Go, Need More Data, and Retest decisions.
+- Rolls Drill evidence into Station, Level, and Curriculum progress without creating a compensating total performance score.
 - Includes 15 guided cases at basic, intermediate, and advanced levels.
 - Provides objective, station, calibration, performance-profile, AAR, and intervention tools.
 - Enforces Critical Safety Failure as a non-compensable No-Go gate.
@@ -43,7 +46,9 @@ npm test
 
 - `app/` — Next.js routes, metadata, PWA manifest, and global design system.
 - `components/TrainingApp.tsx` — accessible application shell and interactive modules.
+- `components/CurriculumWorkspace.tsx` — interactive Levels, Stations, Drills, evidence records, and Gate decisions.
 - `lib/content.ts` — typed bilingual source content, cases, checks, and references.
+- `lib/curriculum.ts` — typed bilingual curriculum hierarchy and safe sample curriculum.
 - `public/sw.js` — offline-first cache for the core learning routes.
 - `docs/` — source analysis, content architecture, assessment logic, and test report.
 - `docs/UPGRADE_GAP_MAP.md` — comparison of previous coverage, source gaps, and implemented upgrades.
@@ -57,6 +62,7 @@ The application builds with vinext for the OpenAI Sites / Cloudflare Worker runt
 ## Known limitations
 
 - Local progress does not sync between devices.
+- The included curriculum is an applied, editable demonstration structure rather than a centrally governed curriculum library.
 - Printable outputs use the browser’s print/PDF capability rather than generating signed or centrally managed records.
 - The calibration consistency view is descriptive, not a validated inter-rater reliability statistic.
 - Sleep/circadian and other longitudinal interpretations require data gathered outside a single session.

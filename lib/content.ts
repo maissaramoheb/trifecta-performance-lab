@@ -5,6 +5,7 @@ export const b = (ar: string, en: string): Bi => ({ ar, en });
 
 export const routes = [
   ["overview", b("نظرة عامة", "Framework overview")],
+  ["curriculum", b("مسار المنهج", "Curriculum pathway")],
   ["domains", b("Learning Domains", "Learning Domains")],
   ["trifecta", b("Trifecta", "Trifecta")],
   ["comparison", b("مركز المقارنة", "Comparison centre")],

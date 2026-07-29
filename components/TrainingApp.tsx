@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import CurriculumWorkspace from "./CurriculumWorkspace";
+import {
+  createInitialCurriculumProgress,
+  type CurriculumProgress,
+} from "../lib/curriculum";
 import {
   affectiveLevels,
   b,
@@ -18,12 +23,14 @@ import {
 
 type Mode = "learner" | "instructor";
 type SavedState = {
+  schemaVersion?: 2;
   lang: Lang;
   mode: Mode;
   completedCases: number[];
   quizAnswers: Record<number, number>;
   objective?: ObjectiveState;
   station?: StationState;
+  curriculum?: CurriculumProgress;
 };
 
 type ObjectiveState = {
@@ -187,29 +194,39 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
         <h1>{local(b("اقرأ الأداء كاملًا.", "Read the whole performance."), lang)}</h1>
         <p className="hero-lead">{local(b("Learning Domains بتحدد إحنا عايزين نبني إيه داخل المتدرب. والـTrifecta بتساعدنا نفهم الأداء الفعلي نجح أو فشل ليه.", "Learning Domains define what we want to build in the learner. The Trifecta helps explain why actual performance succeeded or failed."), lang)}</p>
         <div className="hero-actions">
-          <button className="primary" onClick={() => go("domains")}>{local(b("ابدأ بالإطارين", "Explore the frameworks"), lang)}</button>
+          <button className="primary" onClick={() => go("curriculum")}>{local(b("افتح مسار المنهج", "Open the curriculum pathway"), lang)}</button>
           <button className="secondary" onClick={() => go("cases")}>{local(b("افتح معمل الحالات", "Open the case lab"), lang)}</button>
         </div>
       </div>
       <TrifectaInstrument lang={lang}/>
     </section>
 
-    <section className="metric-deck" aria-label={local(b("نطاق المنصة", "Platform scope"), lang)}>
-      {[
-        ["03", b("مجالات تعلم", "Learning domains"), b("معرفة · مهارة · سلوك", "Knowledge · skill · behaviour")],
-        ["03", b("أعمدة أداء", "Performance pillars"), b("بدني · فني · ذهني", "Physical · technical · cognitive")],
-        ["10", b("عائلات ذهنية", "Cognitive families"), b("من الإدراك إلى الاستعادة", "From perception to recovery")],
-      ].map(([value, title, note]) => <article className="metric-card card-role-metric" key={local(title as Bi, "en")}>
-        <strong>{value as string}</strong><div><span>{local(title as Bi, lang)}</span><small>{local(note as Bi, lang)}</small></div>
-      </article>)}
+    <section className="curriculum-preview" aria-label={local(b("هيكل المنهج", "Curriculum structure"), lang)}>
+      <div className="curriculum-preview-copy">
+        <MiniLabel>{local(b("الهيكل المعتمد", "Authoritative structure"), lang)}</MiniLabel>
+        <h2>{local(b("التعلم بيتبني في طبقات. والانتقال محتاج دليل.", "Learning is built in layers. Progression requires evidence."), lang)}</h2>
+        <p>{local(b("كل Curriculum فيه Levels، وكل Level فيه Stations، وكل Station فيها Drills. بين كل محطتين Gate يقرر Go أو No-Go أو Need More Data أو Retest.", "Each Curriculum contains Levels, each Level contains Stations, and each Station contains Drills. A Gate between stations decides Go, No-Go, Need More Data, or Retest."), lang)}</p>
+        <button className="secondary" onClick={() => go("curriculum")}>{local(b("استكشف المسار التفاعلي", "Explore the interactive pathway"), lang)}</button>
+      </div>
+      <div className="curriculum-anatomy" aria-hidden="true">
+        <div className="anatomy-tier tier-curriculum"><span>C</span><strong>Curriculum</strong></div>
+        <div className="anatomy-connector"/>
+        <div className="anatomy-tier tier-level"><span>L</span><strong>Levels</strong></div>
+        <div className="anatomy-connector"/>
+        <div className="anatomy-sequence">
+          <div className="anatomy-tier"><span>S1</span><strong>Station</strong><small>Drills × 3</small></div>
+          <div className="anatomy-gate"><span>G</span><small>Gate</small></div>
+          <div className="anatomy-tier"><span>S2</span><strong>Station</strong><small>Drills × 3</small></div>
+        </div>
+      </div>
     </section>
 
     <section className="workflow-rail" aria-label={local(b("سلسلة الأداء", "Performance evidence chain"), lang)}>
       <div className="workflow-line" aria-hidden="true"/>
       <div className="workflow-steps">
         {[
-          b("متطلب", "Requirement"), b("تعلم", "Learning"), b("محطة", "Station"),
-          b("دليل", "Evidence"), b("تشخيص", "Diagnosis"), b("تحسين", "Improve"),
+          b("متطلب", "Requirement"), b("Level", "Level"), b("Station", "Station"), b("Drill", "Drill"),
+          b("دليل", "Evidence"), b("Gate", "Gate"), b("تشخيص", "Diagnosis"), b("تحسين", "Improve"),
         ].map((x, i) => <div key={i}><span>{String(i + 1).padStart(2, "0")}</span><strong>{local(x, lang)}</strong></div>)}
       </div>
     </section>
@@ -617,7 +634,7 @@ function PerformanceProfile({ lang }: { lang: Lang }) {
       <div className="profile-name"><span>{String(i + 1).padStart(2, "0")}</span><strong>{local(x, lang)}</strong></div>
       <div className="anchor-buttons">{anchors.map((a, n) => <button key={n} className={ratings[i] === n ? "active" : ""} onClick={() => setRatings(rs => rs.map((v, j) => j === i ? n : v))}><b>{n}</b>{local(a, lang)}</button>)}</div>
       <label><span>{labels[lang].evidence}</span><input value={notes[i]} onChange={e => setNotes(ns => ns.map((v, j) => j === i ? e.target.value : v))} aria-invalid={ratings[i] > 0 && !notes[i]}/></label>
-      <div className="profile-bar"><span style={{ width: `${(ratings[i] / 3) * 100}%` }}/></div>
+      <div className="profile-bar"><span style={{ transform: `scaleX(${ratings[i] / 3})` }}/></div>
     </article>)}</div>
     <div className="profile-footer"><SourceMark lang={lang} applied/><p>{local(b("الفراغ ليس صفرًا؛ قد يعني أن الدليل لم يُجمع بعد. استخدم Need More Data بدل ملء الملف بالتخمين.", "A blank is not zero; it may mean evidence was not collected. Use Need More Data rather than completing a profile with assumptions."), lang)}</p><button className="secondary" onClick={() => window.print()}>{labels[lang].print}</button></div>
   </>;
@@ -666,7 +683,7 @@ function Checks({ lang, answers, setAnswer }: { lang: Lang; answers: Record<numb
   const completed = Object.keys(answers).length;
   return <>
     <SectionHead eyebrow={local(b("تغذية راجعة فورية", "Immediate explanation"), lang)} title={local(b("اختبارات المعرفة", "Knowledge checks"), lang)} intro={local(b("ركز على جودة الحكم والتدخل، لا حفظ الاختصارات.", "Focus on judgement and intervention quality, not acronym recall."), lang)}/>
-    <div className="quiz-progress"><span style={{width:`${completed/knowledgeChecks.length*100}%`}}/><strong>{completed}/{knowledgeChecks.length}</strong></div>
+    <div className="quiz-progress"><span style={{transform:`scaleX(${completed / knowledgeChecks.length})`}}/><strong>{completed}/{knowledgeChecks.length}</strong></div>
     <div className="quiz-list">{knowledgeChecks.map((q,i)=><article key={i} className="quiz-card">
       <div className="quiz-number">0{i+1}</div><h2>{local(q.q,lang)}</h2>
       <div className="quiz-options">{q.options.map((x,n)=><button key={n} className={answers[i]===n ? (n===q.answer?"correct":"wrong"):""} onClick={()=>setAnswer(i,n)}>{local(x,lang)}</button>)}</div>
@@ -707,6 +724,7 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
   const [quizAnswers, setQuizAnswers] = useState<Record<number,number>>({});
   const [objective, setObjective] = useState(initialObjective);
   const [station, setStation] = useState(initialStation);
+  const [curriculum, setCurriculum] = useState<CurriculumProgress>(createInitialCurriculumProgress);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -717,6 +735,7 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
           const x = JSON.parse(raw) as SavedState;
           setLang(x.lang || "ar"); setMode(x.mode || "learner"); setCompletedCases(x.completedCases || []);
           setQuizAnswers(x.quizAnswers || {}); if (x.objective) setObjective(x.objective); if (x.station) setStation(x.station);
+          if (x.curriculum?.schemaVersion === 1) setCurriculum(x.curriculum);
         }
       } catch { /* retain safe defaults */ }
       setHydrated(true);
@@ -727,9 +746,9 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
 
   useEffect(() => {
     if (!hydrated) return;
-    localStorage.setItem("performance-lab-state", JSON.stringify({ lang, mode, completedCases, quizAnswers, objective, station } satisfies SavedState));
+    localStorage.setItem("performance-lab-state", JSON.stringify({ schemaVersion: 2, lang, mode, completedCases, quizAnswers, objective, station, curriculum } satisfies SavedState));
     document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
-  }, [lang, mode, completedCases, quizAnswers, objective, station, hydrated]);
+  }, [lang, mode, completedCases, quizAnswers, objective, station, curriculum, hydrated]);
 
   useEffect(() => {
     const pop = () => setSection(location.pathname.split("/").filter(Boolean)[0] || "overview");
@@ -744,9 +763,16 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
 
   const instructorOnly = new Set(["objective-builder","station-builder","calibration","profile","aar"]);
   const visibleRoutes = routes.filter(([slug]) => mode === "instructor" || !instructorOnly.has(slug));
+  const routeGroups = [
+    { label: b("ابني الفهم", "Build understanding"), slugs: ["overview", "domains", "trifecta", "comparison"] },
+    { label: b("طبّق وقَيّم", "Apply and assess"), slugs: ["curriculum", "cases", "checks"] },
+    { label: b("أدوات المدرب", "Instructor tools"), slugs: ["objective-builder", "station-builder", "calibration", "profile", "aar"] },
+    { label: b("المصادر والحدود", "Sources and boundaries"), slugs: ["references", "about"] },
+  ].map(group => ({ ...group, items: visibleRoutes.filter(([slug]) => group.slugs.includes(slug)) })).filter(group => group.items.length);
   const progress = Math.round(((completedCases.length + Object.keys(quizAnswers).length) / (cases.length + knowledgeChecks.length)) * 100);
   const render = () => {
     switch(section) {
+      case "curriculum": return <CurriculumWorkspace lang={lang} mode={mode} progress={curriculum} onChange={setCurriculum}/>;
       case "domains": return <Domains lang={lang}/>;
       case "trifecta": return <Trifecta lang={lang}/>;
       case "comparison": return <Comparison lang={lang}/>;
@@ -767,20 +793,23 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
     <header className="topbar">
       <button className="brand" onClick={() => go("overview")} aria-label={local(b("الرئيسية", "Home"),lang)}><span className="brand-mark">T³</span><span><strong>TRIFECTA</strong><small>PERFORMANCE LAB</small></span></button>
       <nav className="top-actions" aria-label={local(b("أدوات العرض", "View controls"),lang)}>
-        <div className="progress-mini" title={`${labels[lang].progress} ${progress}%`}><span style={{width:`${progress}%`}}/></div>
+        <div className="progress-mini" title={`${labels[lang].progress} ${progress}%`}><span style={{transform:`scaleX(${progress / 100})`}}/></div>
         <div className="segmented compact"><button aria-pressed={mode==="learner"} onClick={()=>setMode("learner")}>{labels[lang].learner}</button><button aria-pressed={mode==="instructor"} onClick={()=>setMode("instructor")}>{labels[lang].instructor}</button></div>
         <button className="language" onClick={()=>setLang(x=>x==="ar"?"en":"ar")} aria-label={lang==="ar"?"Switch to English":"التبديل إلى العربية"}>{lang==="ar"?"EN":"ع"}</button>
         <button className="menu-button" onClick={()=>setMenu(x=>!x)} aria-expanded={menu} aria-controls="main-nav">{labels[lang].menu}</button>
       </nav>
     </header>
-    <aside id="main-nav" className={`sidebar ${menu?"open":""}`}>
-      <div className="side-label">{local(b("مسار التعلم", "Learning path"),lang)}</div>
+    {menu && <button className="nav-scrim" aria-label={local(b("إغلاق القائمة", "Close menu"),lang)} onClick={()=>setMenu(false)}/>}
+    <aside id="main-nav" className={`sidebar ${menu?"open":""}`} aria-label={local(b("التنقل الرئيسي", "Primary navigation"),lang)}>
       <div className="segmented mobile-mode" aria-label={local(b("اختيار الوضع", "Mode selection"),lang)}>
-        <button aria-pressed={mode==="learner"} onClick={()=>setMode("learner")}>{labels[lang].learner}</button>
-        <button aria-pressed={mode==="instructor"} onClick={()=>setMode("instructor")}>{labels[lang].instructor}</button>
+        <button aria-pressed={mode==="learner"} onClick={()=>{setMode("learner");setMenu(false);}}>{labels[lang].learner}</button>
+        <button aria-pressed={mode==="instructor"} onClick={()=>{setMode("instructor");setMenu(false);}}>{labels[lang].instructor}</button>
       </div>
-      <nav>{visibleRoutes.map(([slug,title],i)=><button key={slug} className={section===slug?"active":""} aria-current={section===slug?"page":undefined} onClick={()=>go(slug)}><span>{String(i+1).padStart(2,"0")}</span>{local(title,lang)}</button>)}</nav>
-      <div className="side-status"><div><span>{progress}%</span><small>{labels[lang].progress}</small></div><div className="side-bar"><span style={{height:`${progress}%`}}/></div></div>
+      <nav>{routeGroups.map(group => <div className="nav-group" key={group.label.en}>
+        <div className="side-label">{local(group.label,lang)}</div>
+        {group.items.map(([slug,title])=><button key={slug} className={section===slug?"active":""} aria-current={section===slug?"page":undefined} onClick={()=>go(slug)}><span className="nav-indicator" aria-hidden="true"/>{local(title,lang)}</button>)}
+      </div>)}</nav>
+      <div className="side-status"><div><span>{progress}%</span><small>{labels[lang].progress}</small></div><div className="side-bar"><span style={{transform:`scaleY(${progress / 100})`}}/></div></div>
     </aside>
     <main id="main-content" tabIndex={-1}><div className="page-stage" key={section}>{render()}</div></main>
     <footer><span>TRIFECTA PERFORMANCE LAB · 2026</span><span>{local(b("بياناتك تبقى على جهازك", "Your data stays on your device"),lang)}</span></footer>

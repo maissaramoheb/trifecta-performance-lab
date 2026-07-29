@@ -10,10 +10,12 @@ Application: Trifecta Performance Lab
 | ESLint | Pass | No warnings or errors. |
 | TypeScript | Pass | Strict project type-check completed with no errors. |
 | Production build | Pass | vinext generated the Cloudflare-compatible worker output. |
-| Rendered application tests | Pass | 5/5 tests passed. |
-| Route rendering | Pass | Home plus all 13 module routes returned HTTP 200. |
+| Rendered application tests | Pass | 6/6 tests passed. |
+| Route rendering | Pass | Home plus all 14 module routes returned HTTP 200. |
 | Safety logic | Pass | Tests confirm Critical Safety Gate, non-compensable output, Need More Data, and 15 cases. |
-| PWA/privacy | Pass | Manifest, service worker cache, localStorage persistence, and no backend data path confirmed. |
+| Curriculum logic | Pass | Typed Levels, Stations, Drills, transition Gates, evidence roll-up, and versioned persistence confirmed. |
+| Impeccable detector | Pass | No remaining design anti-pattern or layout-animation findings. |
+| PWA/privacy | Pass | Manifest, v3 service-worker cache, localStorage persistence, and no backend data path confirmed. |
 
 ## Real-browser functional checks
 
@@ -30,8 +32,14 @@ Application: Trifecta Performance Lab
 - Mobile menu open/close state: Pass.
 - Mobile Learner/Instructor mode control: Pass.
 - Local progress restored after reload: Pass.
+- Legacy saved-state migration: objective data preserved, schema upgraded to v2, and curriculum defaults added: Pass.
+- Drill evidence and 0–3 performance anchors: Pass.
+- Learner sequential Station locking: Pass.
+- Instructor Level preview: Pass.
+- Gate decisions for Go, No-Go, Need More Data, and Retest: Pass.
+- Drill-level Critical Safety Failure immediately forces Gate No-Go, disables all compensating decisions, and persists after reload: Pass.
 - Case model-answer reveal and No-Go decision control: Pass.
-- Offline core route (`/trifecta`) loaded from the service-worker cache: Pass.
+- Offline core route (`/curriculum`) loaded from the service-worker cache: Pass.
 - Browser console warnings/errors: none observed.
 
 ## Responsive and visual checks
@@ -45,16 +53,18 @@ Representative viewports:
 Results:
 
 - No horizontal overflow on any tested viewport.
-- All 13 modules returned HTTP 200 with correct page headings in English at 1024 × 768.
-- All 13 modules returned HTTP 200 with correct Arabic headings, `lang=ar`, `dir=rtl`, and no horizontal overflow at 390 × 844.
+- All 14 modules returned HTTP 200 with `lang=en`, `dir=ltr`, and no horizontal overflow at 1280 × 900.
+- All 14 modules returned HTTP 200 with correct Arabic headings, `lang=ar`, `dir=rtl`, and no horizontal overflow at 390 × 844.
 - Arabic text was not clipped.
 - Mixed-direction terms such as `Learning Domains`, `Trifecta`, `Timer`, `Critical Safety Failure`, and `Checklist` remained legible.
 - Sticky navigation and output cards did not cover page headings after navigation.
 - Mobile layout reduces the sidebar to an accessible menu and preserves RTL order.
+- The closed mobile sidebar is removed from keyboard navigation until opened.
+- Curriculum and Gate sequences mirror correctly between RTL and LTR.
 - Reduced-motion behavior was emulated in Chromium; page and workflow animation durations collapsed to `0.00001s`.
 - Print CSS removes navigation and prints trainer output surfaces.
 
-Visual evidence is stored in `output/playwright/`; the deliverable screenshots are copied to `outputs/qa/`.
+Visual QA evidence is stored in `output/playwright/`.
 
 ## Accessibility checks
 
@@ -64,6 +74,8 @@ Visual evidence is stored in `output/playwright/`; the deliverable screenshots a
 - Skip-to-content link is present.
 - Buttons expose selected/pressed state where applicable.
 - Color palette uses off-white text on charcoal with restrained amber; muted text remains legible at normal sizes.
+- Faint text token was raised to a WCAG-AA-safe contrast against the primary panel surface.
+- Placeholder text uses the same readable token rather than the browser’s low-contrast default.
 - No motion is required to understand or operate the interface.
 
 ## Cross-browser note

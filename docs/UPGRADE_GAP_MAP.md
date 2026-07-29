@@ -17,6 +17,9 @@
 | Weaker source coverage | ERSI, RSVMI, FRFRC, and SCR cases already present; SA included in the explorer | The source warns that these families need cautious, stronger interpretation | Elevated phase navigation and retained explicit limits against single-metric or single-observation diagnosis |
 | Arabic/RTL | Arabic-first and functional RTL | Dense cards needed more expansion space and stronger mixed-direction handling | Increased responsive card space, preserved logical CSS properties, and retained `bdi`/direction controls |
 | Safety and scope | Critical Failure gate and safe examples present | No content gap | Preserved the non-compensable gate and excluded offensive tactics, detailed manipulation, and clinical diagnosis |
+| Curriculum architecture | Stations existed as a builder concept | No Curriculum → Levels → Stations → Drills model or transition Gate experience | Added typed hierarchy, an interactive pathway, Drill evidence records, Station roll-up, and evidence-based Gates |
+| Information architecture | Thirteen flat navigation items | Learning, practice, instructor work, and references competed in one list | Grouped navigation by user task and added persistent location context in the curriculum workspace |
+| Mobile navigation | Off-canvas navigation was visually hidden | Closed navigation remained keyboard-accessible | Added visibility/pointer-state control and a dismissible mobile scrim |
 
 ## Source-derived additions
 
