@@ -2,6 +2,35 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 
+const preloadRecovery = `
+(() => {
+  const retryKey = "trifecta-preload-retry";
+  const failedCache = "trifecta-core-v3";
+
+  window.addEventListener("trifecta:ready", () => {
+    try { sessionStorage.removeItem(retryKey); } catch {}
+  });
+
+  window.addEventListener("vite:preloadError", (event) => {
+    event.preventDefault();
+
+    let shouldRetry = true;
+    try {
+      shouldRetry = sessionStorage.getItem(retryKey) !== location.href;
+      sessionStorage.setItem(retryKey, location.href);
+    } catch {}
+
+    if (!shouldRetry) return;
+
+    const clearStaleCache = "caches" in window
+      ? caches.delete(failedCache).catch(() => false)
+      : Promise.resolve(false);
+
+    clearStaleCache.finally(() => location.reload());
+  });
+})();
+`;
+
 const baseMetadata: Metadata = {
   title: {
     default: "Trifecta Performance Lab",
@@ -52,6 +81,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ar" dir="rtl">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: preloadRecovery }} />
+      </head>
       <body>{children}</body>
     </html>
   );

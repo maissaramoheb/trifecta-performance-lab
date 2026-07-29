@@ -85,17 +85,22 @@ test("source-driven cognitive phases and diagnostic intervention patterns are pr
 });
 
 test("PWA core and privacy controls are present", async () => {
-  const [manifest, sw, component] = await Promise.all([
-    readFile(new URL("../app/manifest.ts", import.meta.url), "utf8"),
+  const [manifest, sw, component, layout] = await Promise.all([
+    readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"),
     readFile(new URL("../public/sw.js", import.meta.url), "utf8"),
     readFile(new URL("../components/TrainingApp.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(manifest, /display:\s*"standalone"/);
+  assert.match(manifest, /"display":\s*"standalone"/);
   assert.match(manifest, /icon-192\.png/);
   assert.match(manifest, /icon-512\.png/);
   assert.match(sw, /caches\.open/);
-  assert.match(sw, /trifecta-core-v3/);
+  assert.match(sw, /trifecta-core-v4/);
   assert.match(sw, /"\/curriculum"/);
+  assert.match(sw, /response\.ok/);
+  assert.match(sw, /pathname\.startsWith\("\/assets\/"\)/);
   assert.match(component, /localStorage/);
   assert.match(component, /navigator\.serviceWorker/);
+  assert.match(layout, /vite:preloadError/);
+  assert.match(layout, /trifecta-preload-retry/);
 });

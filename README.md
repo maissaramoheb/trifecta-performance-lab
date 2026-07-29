@@ -44,12 +44,13 @@ npm test
 
 ## Architecture
 
-- `app/` — Next.js routes, metadata, PWA manifest, and global design system.
+- `app/` — Next.js routes, metadata, global error recovery, and global design system.
 - `components/TrainingApp.tsx` — accessible application shell and interactive modules.
 - `components/CurriculumWorkspace.tsx` — interactive Levels, Stations, Drills, evidence records, and Gate decisions.
 - `lib/content.ts` — typed bilingual source content, cases, checks, and references.
 - `lib/curriculum.ts` — typed bilingual curriculum hierarchy and safe sample curriculum.
-- `public/sw.js` — offline-first cache for the core learning routes.
+- `public/manifest.webmanifest` — static install metadata compatible with the production host.
+- `public/sw.js` — guarded offline cache for core learning routes; content-hashed modules bypass it.
 - `docs/` — source analysis, content architecture, assessment logic, and test report.
 - `docs/UPGRADE_GAP_MAP.md` — comparison of previous coverage, source gaps, and implemented upgrades.
 

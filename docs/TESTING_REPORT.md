@@ -1,6 +1,6 @@
 # Testing report
 
-Date: 2026-07-29  
+Date: 2026-07-30
 Application: Trifecta Performance Lab
 
 ## Automated gates
@@ -15,7 +15,7 @@ Application: Trifecta Performance Lab
 | Safety logic | Pass | Tests confirm Critical Safety Gate, non-compensable output, Need More Data, and 15 cases. |
 | Curriculum logic | Pass | Typed Levels, Stations, Drills, transition Gates, evidence roll-up, and versioned persistence confirmed. |
 | Impeccable detector | Pass | No remaining design anti-pattern or layout-animation findings. |
-| PWA/privacy | Pass | Manifest, v3 service-worker cache, localStorage persistence, and no backend data path confirmed. |
+| PWA/privacy | Pass | Static manifest, v4 service-worker cache, localStorage persistence, and no backend data path confirmed. |
 
 ## Real-browser functional checks
 
@@ -41,6 +41,11 @@ Application: Trifecta Performance Lab
 - Case model-answer reveal and No-Go decision control: Pass.
 - Offline core route (`/curriculum`) loaded from the service-worker cache: Pass.
 - Browser console warnings/errors: none observed.
+- Safari production failure reproduced: the main client module intermittently failed to import and left only the background surface visible.
+- Safari recovery patch: content-hashed modules now bypass the service worker, failed responses are never cached, the old v3 cache is cleared, and a single controlled preload retry is available.
+- Safari local build: initial Arabic render passed.
+- Safari simulated `vite:preloadError`: controlled reload completed and the application remounted successfully.
+- Static PWA manifest: returned normally in the patched local build.
 
 ## Responsive and visual checks
 
@@ -80,7 +85,7 @@ Visual QA evidence is stored in `output/playwright/`.
 
 ## Cross-browser note
 
-The production runtime was tested in the connected Chromium-based in-app browser. The application uses standard React, CSS grid/flex, native form controls, browser print, localStorage, and service-worker APIs. Safari and Firefox-specific visual automation was not available in this environment; these remain a recommended release smoke test.
+The production runtime was tested in the connected Chromium-based in-app browser and directly in desktop Safari. Safari’s failed-module condition was reproduced through Web Inspector, corrected, and its recovery path was exercised against the patched build. Firefox remains a recommended manual release smoke test.
 
 ## Known limitations and risk
 

@@ -728,6 +728,7 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    window.dispatchEvent(new Event("trifecta:ready"));
     const frame = requestAnimationFrame(() => {
       try {
         const raw = localStorage.getItem("performance-lab-state");
