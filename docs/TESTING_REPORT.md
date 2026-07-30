@@ -21,6 +21,7 @@ Application: Trifecta Performance Lab
 - Desktop Curriculum: Pass at 1440 × 1000.
 - Mobile navigation: closed sidebar is hidden; opened RTL sidebar is visible, correctly mirrored, and exposes both mode controls.
 - Console: no warnings or errors during the clean desktop, tablet, mobile, route-matrix, bilingual, disclosure, and Critical Failure checks.
+- Release cache: service-worker core cache advanced to v5 so existing Safari/PWA sessions replace the previous application shell.
 - Added dependency: none.
 
 The source benchmark, adopted patterns, rejected patterns, and imagery decision are documented in `docs/UI_UX_BENCHMARK_2026.md`.
@@ -37,7 +38,7 @@ The source benchmark, adopted patterns, rejected patterns, and imagery decision 
 | Safety logic | Pass | Tests confirm Critical Safety Gate, non-compensable output, Need More Data, and 15 cases. |
 | Curriculum logic | Pass | Typed Levels, Stations, Drills, transition Gates, evidence roll-up, and versioned persistence confirmed. |
 | Impeccable detector | Pass | No remaining design anti-pattern or layout-animation findings. |
-| PWA/privacy | Pass | Static manifest, v4 service-worker cache, localStorage persistence, and no backend data path confirmed. |
+| PWA/privacy | Pass | Static manifest, v5 service-worker cache, localStorage persistence, and no backend data path confirmed. |
 
 ## Real-browser functional checks
 

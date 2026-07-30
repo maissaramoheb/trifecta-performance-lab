@@ -95,7 +95,7 @@ test("PWA core and privacy controls are present", async () => {
   assert.match(manifest, /icon-192\.png/);
   assert.match(manifest, /icon-512\.png/);
   assert.match(sw, /caches\.open/);
-  assert.match(sw, /trifecta-core-v4/);
+  assert.match(sw, /trifecta-core-v5/);
   assert.match(sw, /"\/curriculum"/);
   assert.match(sw, /response\.ok/);
   assert.match(sw, /pathname\.startsWith\("\/assets\/"\)/);

@@ -1,4 +1,4 @@
-const CACHE = "trifecta-core-v4";
+const CACHE = "trifecta-core-v5";
 const CORE = [
   "/",
   "/overview",
