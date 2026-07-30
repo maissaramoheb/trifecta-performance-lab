@@ -1,0 +1,14 @@
+node_modules
+.next
+.vinext
+.wrangler
+dist
+out
+outputs
+output
+work
+.playwright-cli
+.git
+.agents
+.gemini
+scratch
