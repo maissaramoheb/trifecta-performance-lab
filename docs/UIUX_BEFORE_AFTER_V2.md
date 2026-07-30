@@ -1,28 +1,44 @@
-# UI/UX Before-and-After Comparison V2: Trifecta Performance Lab
+# UI/UX Before & After Evidence Matrix: Trifecta Performance Lab
 
 **Date:** July 30, 2026  
-**Author:** Quality Assurance Lead & Visual Design Director  
-**Purpose:** Comparative analysis of UI/UX baseline vs V2 transformation across key routes, viewports, and interaction flows.  
+**Target Branch:** `design/ui-ux-v2`  
+**Current Commit:** `a9bc3ee`  
 
 ---
 
-## 1. Comparative Analysis Matrix
+## 1. Summary of Visual & Technical Transformation
 
-| Route / Component | Baseline Experience (V1) | Transformed Experience (V2) | Core UX Benefit |
+| View / Feature | Baseline (`main` / `e45b42e`) | Redesign (`design/ui-ux-v2` / `a9bc3ee`) | Demonstrated Benefit |
 | :--- | :--- | :--- | :--- |
-| **Global Navigation** | 14 flat, un-grouped links; generic dot indicators; cramped topbar metadata. | 5 grouped functional archetypes (`Orientation`, `Curriculum`, `Builders`, `Diagnostics`, `Review & Reference`) with clear category labels, breadcrumb context, and mode indicators. | Reduces cognitive load; makes navigation predictable across 14 routes; clarifies location. |
-| **Home & Overview (`/`)** | Uniform card wall; generic hero text; unclear entry point into curriculum. | Editorial hierarchy with high-contrast typography, interactive Trifecta instrument preview, and direct action triggers. | Immediately explains the core framework message: *"Learning Domains build capability; Trifecta diagnoses performance."* |
-| **Curriculum Hierarchy (`/curriculum`)** | Flat station list; unclear distinction between Level, Station, Drill, and Gate. | Explicit 4-level visual progression map (`Curriculum → Level → Station → Drill → Gate`) with status indicators (`Complete`, `Available`, `Locked`). | Makes curriculum progression clear, evidence-based, and traceable without gamification. |
-| **Critical Safety Gate** | Danger text badge (`#dc786b`); easily overlooked within station rollup. | High-visibility Critical Failure warning surface with explicit red border glow, ARIA screen-reader alert, and non-compensable `No-Go` enforcement. | Guarantees that critical safety breaches can never be compensated by high numerical scores or visual emphasis. |
-| **Objective & Station Builders** | Single-column form inputs requiring constant scrolling to view preview output. | 2-column responsive workspace (`Form Inputs` on start, `Sticky Live Preview Card` on end) with step navigation and quick export bar. | Streamlines trainer workspace flow; provides immediate visual feedback during objective and station authoring. |
-| **Case Diagnostic Lab (`/cases`)** | Text-dense case description with mixed evidence and assumptions. | Structured diagnostic lab card with explicit evidence vs assumption tags (`badge-evidence`, `badge-assumption`), diagnostic restraint scoring, and model answer toggle. | Teaches diagnostic discipline; prevents jump-to-conclusion bias during performance evaluation. |
-| **Mobile Navigation (390px)** | Crowded topbar; drawer slide without focus trap or backdrop dismiss. | Clean mobile header with slide-over drawer navigation, touch targets (`≥ 44px × 44px`), and backdrop scrim dismiss. | Ensures a seamless mobile experience on iPhone and Android handheld devices. |
+| **Application Shell & Navigation** | Flat 14-link list without hierarchy | 5 grouped functional archetypes with category headers & active breadcrumbs | Clear location context and faster route discovery |
+| **Mobile Drawer Navigation** | Simple menu overlay | Accessible mobile drawer with focus trap, ESC listener, and focus return | Full keyboard accessibility & mobile usability |
+| **Instructor Mode Banner** | Silent toggle | Prominent top banner: `⚡ Instructor Mode Active` | Immediate visual feedback for elevated tools |
+| **Curriculum Pathway** | Basic level switcher | Visual 4-level progression map (`Curriculum → Level → Station → Drill → Gate`) | Explicit progression tracking without gamification |
+| **Critical Safety Gate** | Standard decision text | Unmissable red alert surface container (`role="alert"`) enforcing `No-Go` | Non-compensable safety enforcement |
+| **Case Diagnostic Lab** | Mixed fact/assumption list | Distinct `.badge-evidence` (Observable Evidence) vs `.badge-assumption` tags | Clear separation of facts vs unverified assumptions |
+| **Objective Builder** | Single column layout | 2-column `WorkspaceShell` with SMART guidance & live bilingual output card | Faster workflow with real-time output preview |
+| **Station Builder** | Basic card layout | 2-column `WorkspaceShell` with variable count badges, warnings, and JSON export | Structured trainer station design workspace |
 
 ---
 
-## 2. Accessibility & Typography Enhancements
+## 2. Route-by-Route Evidence Matrix
 
-- **Arabic Typography:** Line-height locked to `1.7` to prevent descender glyph clipping.
-- **Embedded Latin Text:** Wrapped in `<bdi>` elements to preserve correct punctuation ordering in Arabic.
-- **Tabular Numerals:** Enabled `font-variant-numeric: tabular-nums` for metrics and ratings.
-- **Focus Indicators:** Enforced `outline: 3px solid var(--amber-bright); outline-offset: 3px;` on all interactive controls.
+### 1. Home & Overview (`/` and `/overview`)
+- **Baseline:** Single-column hero section with basic text.
+- **Redesign:** Modular `PageHeader` with category eyebrow, editorial hero hierarchy, Trifecta lens preview cards, and recommended entry point actions.
+- **Languages Tested:** Arabic RTL & English LTR at 390x844 and 1440x900 viewports.
+
+### 2. Curriculum Pathway (`/curriculum`)
+- **Baseline:** Inline gate decision buttons without clear status banner.
+- **Redesign:** Reusable `GateDecisionPanel` component with evidence roll-up, level progression map, and `StatusBanner` type `"critical"` (`role="alert"`).
+- **Demonstrated Benefit:** Guarantees that Critical Safety Failures are non-compensable and unmissable.
+
+### 3. Builder Workspaces (`/objective-builder` & `/station-builder`)
+- **Baseline:** Flat form layout.
+- **Redesign:** Reusable `WorkspaceShell` component providing a 2-column layout with form input on start, sticky live preview card on end, and JSON export bar.
+- **Demonstrated Benefit:** Clear visual separation of input vs live output.
+
+### 4. Case Diagnostic Lab (`/cases`)
+- **Baseline:** Fact list without evidence tags.
+- **Redesign:** Reusable `EvidenceBadge` tags (`type="evidence"` vs `type="assumption"`), diagnostic restraint scoring, and model answer reveal.
+- **Demonstrated Benefit:** Prevents unverified assumptions from driving diagnostic decisions.

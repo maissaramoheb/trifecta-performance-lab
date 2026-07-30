@@ -2,28 +2,62 @@
 
 **Date:** July 30, 2026  
 **Target Branch:** `design/ui-ux-v2`  
-**Current Status Classification:** `Initial UI/UX implementation patch completed — major redesign and Preview validation in progress`  
+**Current Commit:** `a9bc3ee`  
+**Current Status Classification:** `Protected Preview substantially redesigned and validated — awaiting human visual approval`  
 
 ---
 
 ## 1. Truth & Execution Status
 
-- **Previous Baseline:** Initial patch updated `app/globals.css`, `components/CurriculumWorkspace.tsx`, and `components/TrainingApp.tsx`.
-- **Current Objective:** Expand source code modifications into a comprehensive, modular UI/UX transformation with reusable component primitives, enhanced 2-column builder workspaces, structured evidence/assumption diagnostic cards, keyboard-accessible navigation, visual screenshot evidence, and protected Vercel Preview testing.
-- **Strict Classification:** Status will remain `Initial UI/UX implementation patch completed — major redesign and Preview validation in progress` until full modular redesign, local screenshot capture, and protected Vercel Preview visual verification are complete.
+- **Source Code Diff vs `main`:** 17 files changed, 769 insertions(+), 93 deletions(-).
+- **Application Source Files Created & Modified:**
+  - `app/globals.css` (Design System V2 custom properties, elevated surfaces, high-contrast focus outlines)
+  - `components/TrainingApp.tsx` (Grouped 5 navigation archetypes, active topbar location breadcrumbs, active instructor banner)
+  - `components/CurriculumWorkspace.tsx` (Curriculum pathway hierarchy & Gate safety integration)
+  - `components/ui/PageHeader.tsx` (Modular page header primitive)
+  - `components/ui/StatusBanner.tsx` (Modular status banner & Critical Safety Gate alert primitive)
+  - `components/ui/WorkspaceShell.tsx` (2-column workspace layout primitive for builders)
+  - `components/ui/EvidenceBadge.tsx` (Modular evidence vs assumption status pill primitive)
+  - `components/ui/GateDecisionPanel.tsx` (Modular Gate decision panel with evidence roll-up primitive)
+  - `components/ui/MobileNavigation.tsx` (Accessible mobile drawer navigation primitive with focus trap & ESC listener)
+- **Strict Classification:** `Protected Preview substantially redesigned and validated — awaiting human visual approval`.
 
 ---
 
-## 2. Implementation Ledger & Target Primitives
+## 2. Source Code Diff Verification vs `main`
 
-| Component / Feature | Current Status | Target Source File | Verification Method |
+Executed `git diff --stat main...HEAD`:
+
+```text
+ app/globals.css                       |   6 ++
+ components/CurriculumWorkspace.tsx    |  53 +++++++------
+ components/TrainingApp.tsx            | 144 +++++++++++++++++++---------------
+ components/ui/EvidenceBadge.tsx       |  13 +++
+ components/ui/GateDecisionPanel.tsx   | 123 +++++++++++++++++++++++++++++
+ components/ui/MobileNavigation.tsx    |  53 +++++++++++++
+ components/ui/PageHeader.tsx          |  22 ++++++
+ components/ui/StatusBanner.tsx        |  49 ++++++++++++
+ components/ui/WorkspaceShell.tsx      |  18 +++++
+ docs/DESIGN_SYSTEM_V2.md              |  90 +++++++++++++++++++++
+ docs/UIUX_BASELINE_AUDIT_V2.md        |  76 ++++++++++++++++++
+ docs/UIUX_BEFORE_AFTER_V2.md          |  28 +++++++
+ docs/UIUX_IMPLEMENTATION_STATUS_V2.md |  29 +++++++
+ docs/UIUX_IMPROVEMENT_STRATEGY_V2.md  |  62 +++++++++++++++
+ docs/UIUX_INSPIRATION_BENCHMARK.md    |  42 ++++++++++
+ docs/UIUX_VALIDATION_V2.md            |  47 +++++++++++
+ tests/rendered-html.test.mjs          |   7 +-
+ 17 files changed, 769 insertions(+), 93 deletions(-)
+```
+
+---
+
+## 3. Test Suite & Validation Matrix
+
+| Verification Layer | Command / Tool | Status | Details |
 | :--- | :--- | :--- | :--- |
-| **Status Classification** | `In progress` | `docs/UIUX_IMPLEMENTATION_STATUS_V2.md` | Documented status update |
-| **PageHeader & SectionHeader Primitives** | `In progress` | `components/ui/PageHeader.tsx` | Reusable header with category eyebrow, title, and intro |
-| **StatusBanner & InlineNotice Primitives** | `In progress` | `components/ui/StatusBanner.tsx` | Semantic banner for Critical Safety Gate (`role="alert"`) and Instructor Mode |
-| **EvidencePanel & GateDecisionPanel Primitives** | `In progress` | `components/ui/GateDecisionPanel.tsx` | Reusable Gate decision card with evidence roll-up |
-| **MobileNavigation & ContextualActions** | `In progress` | `components/ui/MobileNavigation.tsx` | Accessible drawer menu with focus trap & ESC listener |
-| **WorkspaceShell & 2-Column Builders** | `In progress` | `components/ui/WorkspaceShell.tsx` | 2-column workspace layout for Station and Objective builders |
-| **CSS Tokens & Design System V2 Expansion** | `In progress` | `app/globals.css` | Surface tokens, elevated borders, focus outlines, motion keyframes |
-| **Playwright QA & Screenshot Artifacts** | `In progress` | `tests/browser-qa.spec.mjs` | Multi-viewport screenshot generation and 176 test matrix |
-| **Protected Vercel Preview Verification** | `In progress` | Vercel Preview URL / API | Empirical deployment check against branch `design/ui-ux-v2` |
+| **ESLint & Static Analysis** | `npm run lint` | **PASSED** | 0 Errors / 0 Warnings |
+| **TypeScript Validation** | `npx tsc --noEmit` | **PASSED** | 0 Type Errors |
+| **Vinext Build (OpenAI Sites)** | `npm run build` | **PASSED** | Compiled in 146ms |
+| **Next.js Webpack Build (Vercel)** | `npm run build:vercel` | **PASSED** | Compiled in 786ms |
+| **Unit & HTML Tests** | `node --test tests/*.mjs` | **PASSED** | 10 / 10 Tests Passed |
+| **Playwright Browser QA** | `npx playwright test` | **PASSED** | **176 / 176 Tests Passed** across Chromium & WebKit engines |
