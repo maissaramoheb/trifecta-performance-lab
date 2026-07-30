@@ -12,6 +12,7 @@ Arabic-first bilingual trainer-development application for Learning Domains, the
 - Implements the authoritative Curriculum → Levels → Stations → Drills hierarchy.
 - Places an evidence-based Gate between consecutive Stations with Go, No-Go, Need More Data, and Retest decisions.
 - Rolls Drill evidence into Station, Level, and Curriculum progress without creating a compensating total performance score.
+- Visualizes that roll-up as an Evidence Chain and progressively discloses each Drill workspace.
 - Includes 15 guided cases at basic, intermediate, and advanced levels.
 - Provides objective, station, calibration, performance-profile, AAR, and intervention tools.
 - Enforces Critical Safety Failure as a non-compensable No-Go gate.
@@ -53,6 +54,7 @@ npm test
 - `public/sw.js` — guarded offline cache for core learning routes; content-hashed modules bypass it.
 - `docs/` — source analysis, content architecture, assessment logic, and test report.
 - `docs/UPGRADE_GAP_MAP.md` — comparison of previous coverage, source gaps, and implemented upgrades.
+- `docs/UI_UX_BENCHMARK_2026.md` — inspiration-source assessment, audit findings, adopted patterns, and rejected directions.
 
 No backend or authentication is used. User-entered content is stored only in `localStorage`.
 

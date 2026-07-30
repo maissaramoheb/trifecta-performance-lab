@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   trainerCurriculum,
   type CurriculumLevel,
@@ -49,6 +50,11 @@ const copy = {
     progression: "تقدم مبني على الدليل",
     rollup: "ملخص دليل المحطة",
     noTotal: "هذه نسبة اكتمال للأدلة والـGates، وليست درجة أداء كلية.",
+    evidenceFlow: "سلسلة الدليل",
+    recorded: "مسجل",
+    anchored: "مُقيّم",
+    decision: "قرار",
+    expandDrill: "افتح تفاصيل الـDrill",
     anchors: ["غير مُثبت", "بدعم كبير", "عدم اتساق بسيط", "مستقل وثابت"],
     decisions: {
       pending: "لم يُتخذ قرار",
@@ -92,6 +98,11 @@ const copy = {
     progression: "Evidence-based progress",
     rollup: "Station evidence summary",
     noTotal: "This is evidence and Gate completion—not a total performance score.",
+    evidenceFlow: "Evidence chain",
+    recorded: "Recorded",
+    anchored: "Anchored",
+    decision: "Decision",
+    expandDrill: "Open Drill details",
     anchors: ["Not demonstrated", "Major support", "Minor inconsistency", "Independent and consistent"],
     decisions: {
       pending: "No decision",
@@ -141,6 +152,7 @@ export default function CurriculumWorkspace({
   const t = copy[lang];
   const level = trainerCurriculum.levels.find((item) => item.id === progress.activeLevelId) ?? trainerCurriculum.levels[0];
   const station = level.stations.find((item) => item.id === progress.activeStationId) ?? level.stations[0];
+  const [expandedDrill, setExpandedDrill] = useState(station.drills[0]?.id ?? "");
   const gate = level.gates.find((item) => item.fromStationId === station.id);
   const gateRecord = gate ? progress.gates[gate.id] ?? { decision: "pending" as GateDecision, evidence: "", remediation: "" } : undefined;
   const hasCritical = station.drills.some((item) => progress.drills[item.id]?.criticalFailure);
@@ -168,6 +180,7 @@ export default function CurriculumWorkspace({
   const setActiveLevel = (next: CurriculumLevel, index: number) => {
     const previousComplete = index === 0 || levelComplete(trainerCurriculum.levels[index - 1], progress);
     if (mode !== "instructor" && !previousComplete) return;
+    setExpandedDrill(next.stations[0]?.drills[0]?.id ?? "");
     onChange({ ...progress, activeLevelId: next.id, activeStationId: next.stations[0].id });
   };
 
@@ -181,6 +194,7 @@ export default function CurriculumWorkspace({
 
   const setActiveStation = (next: CurriculumStation) => {
     if (!stationUnlocked(next)) return;
+    setExpandedDrill(next.drills[0]?.id ?? "");
     onChange({ ...progress, activeStationId: next.id });
   };
 
@@ -263,6 +277,20 @@ export default function CurriculumWorkspace({
           </div>;
         })}
       </div>
+      <div className="evidence-ledger" aria-label={t.evidenceFlow}>
+        <span>{t.evidenceFlow}</span>
+        <div className={evidenceCount === station.drills.length ? "complete" : ""}>
+          <bdi>D</bdi><strong>{evidenceCount}/{station.drills.length}</strong><small>{t.recorded}</small>
+        </div>
+        <i aria-hidden="true">→</i>
+        <div className={anchoredCount === station.drills.length ? "complete" : ""}>
+          <bdi>S</bdi><strong>{anchoredCount}/{station.drills.length}</strong><small>{t.anchored}</small>
+        </div>
+        <i aria-hidden="true">→</i>
+        <div className={`decision-${effectiveDecision}`}>
+          <bdi>G</bdi><strong>{t.decisions[effectiveDecision]}</strong><small>{t.decision}</small>
+        </div>
+      </div>
     </section>
 
     <div className="station-workspace">
@@ -288,36 +316,38 @@ export default function CurriculumWorkspace({
         {station.drills.map((item, index) => {
           const record = progress.drills[item.id] ?? { rating: 0 as DrillRating, evidence: "", criticalFailure: false };
           const complete = Boolean(record.evidence.trim()) && Boolean(record.rating);
-          return <article className={`drill-row ${record.criticalFailure ? "critical" : complete ? "complete" : ""}`} key={item.id}>
-            <div className="drill-head">
+          return <details className={`drill-row ${record.criticalFailure ? "critical" : complete ? "complete" : ""}`} key={item.id} open={expandedDrill === item.id}>
+            <summary className="drill-head" aria-label={`${t.expandDrill}: ${local(item.name, lang)}`} onClick={(event) => { event.preventDefault(); setExpandedDrill(expandedDrill === item.id ? "" : item.id); }}>
               <span>D{index + 1}</span>
               <div><h3>{local(item.name, lang)}</h3><p>{local(item.purpose, lang)}</p></div>
-              <div className="drill-state">{record.criticalFailure ? "NO-GO" : complete ? `✓ ${t.complete}` : t.available}</div>
+              <div className="drill-state"><span>{record.criticalFailure ? "!" : complete ? "✓" : "○"}</span>{record.criticalFailure ? "NO-GO" : complete ? t.complete : t.available}</div>
+            </summary>
+            <div className="drill-body">
+              <div className="drill-spec">
+                <p><span>{t.condition}</span>{local(item.condition, lang)}</p>
+                <p><span>{t.requiredEvidence}</span>{local(item.evidence, lang)}</p>
+                <div><span>{t.domain}</span><bdi>{item.domain}</bdi></div>
+                <div><span>{t.pillar}</span><bdi>{item.pillar}</bdi></div>
+              </div>
+              <label className="evidence-field">
+                <span>{t.evidence}</span>
+                <textarea dir="auto" value={record.evidence} onChange={(event) => updateDrill(item.id, { evidence: event.target.value })}/>
+              </label>
+              <fieldset className="rating-field">
+                <legend>{t.rating}</legend>
+                <div>{t.anchors.map((anchor, rating) => <button
+                  key={rating}
+                  type="button"
+                  aria-pressed={record.rating === rating}
+                  onClick={() => updateDrill(item.id, { rating: rating as DrillRating })}
+                ><b>{rating}</b><span>{anchor}</span></button>)}</div>
+              </fieldset>
+              <label className="critical-toggle">
+                <input type="checkbox" checked={record.criticalFailure} onChange={(event) => updateDrill(item.id, { criticalFailure: event.target.checked })}/>
+                <span><strong>{t.critical}</strong><small>{t.criticalNote}</small></span>
+              </label>
             </div>
-            <div className="drill-spec">
-              <p><span>{t.condition}</span>{local(item.condition, lang)}</p>
-              <p><span>{t.requiredEvidence}</span>{local(item.evidence, lang)}</p>
-              <div><span>{t.domain}</span><bdi>{item.domain}</bdi></div>
-              <div><span>{t.pillar}</span><bdi>{item.pillar}</bdi></div>
-            </div>
-            <label className="evidence-field">
-              <span>{t.evidence}</span>
-              <textarea dir="auto" value={record.evidence} onChange={(event) => updateDrill(item.id, { evidence: event.target.value })}/>
-            </label>
-            <fieldset className="rating-field">
-              <legend>{t.rating}</legend>
-              <div>{t.anchors.map((anchor, rating) => <button
-                key={rating}
-                type="button"
-                aria-pressed={record.rating === rating}
-                onClick={() => updateDrill(item.id, { rating: rating as DrillRating })}
-              ><b>{rating}</b><span>{anchor}</span></button>)}</div>
-            </fieldset>
-            <label className="critical-toggle">
-              <input type="checkbox" checked={record.criticalFailure} onChange={(event) => updateDrill(item.id, { criticalFailure: event.target.checked })}/>
-              <span><strong>{t.critical}</strong><small>{t.criticalNote}</small></span>
-            </label>
-          </article>;
+          </details>;
         })}
       </section>
     </div>

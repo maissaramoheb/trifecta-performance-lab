@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages -- this local-first SPA owns section history and safely degrades to server routes */
 
 import { useEffect, useMemo, useState } from "react";
 import CurriculumWorkspace from "./CurriculumWorkspace";
@@ -64,6 +65,7 @@ const labels = {
     previous: "السابق", save: "محفوظ محليًا", evidence: "الدليل الملاحظ", assumption: "الافتراض",
     facts: "حقائق ملاحظة", reveal: "اعرض الإجابة النموذجية", select: "اختر", warnings: "تنبيهات الجودة",
     empty: "ابدأ بإدخال البيانات المطلوبة.", download: "تصدير JSON", progress: "التقدم",
+    workspace: "مساحة العمل", localState: "محفوظ على الجهاز", currentPage: "الموقع الحالي",
   },
   en: {
     skip: "Skip to content", menu: "Menu", learner: "Learner mode", instructor: "Instructor mode",
@@ -71,6 +73,7 @@ const labels = {
     previous: "Previous", save: "Saved on this device", evidence: "Observable evidence", assumption: "Assumption",
     facts: "Observed facts", reveal: "Reveal model answer", select: "Select", warnings: "Quality warnings",
     empty: "Start by entering the required information.", download: "Export JSON", progress: "Progress",
+    workspace: "Workspace", localState: "Saved on device", currentPage: "Current location",
   },
 };
 
@@ -770,6 +773,8 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
     { label: b("أدوات المدرب", "Instructor tools"), slugs: ["objective-builder", "station-builder", "calibration", "profile", "aar"] },
     { label: b("المصادر والحدود", "Sources and boundaries"), slugs: ["references", "about"] },
   ].map(group => ({ ...group, items: visibleRoutes.filter(([slug]) => group.slugs.includes(slug)) })).filter(group => group.items.length);
+  const activeRoute = routes.find(([slug]) => slug === section) ?? routes[0];
+  const activeGroup = routeGroups.find(group => group.items.some(([slug]) => slug === section));
   const progress = Math.round(((completedCases.length + Object.keys(quizAnswers).length) / (cases.length + knowledgeChecks.length)) * 100);
   const render = () => {
     switch(section) {
@@ -792,9 +797,15 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
   return <div className="app-shell" data-mode={mode}>
     <a className="skip-link" href="#main-content">{labels[lang].skip}</a>
     <header className="topbar">
-      <button className="brand" onClick={() => go("overview")} aria-label={local(b("الرئيسية", "Home"),lang)}><span className="brand-mark">T³</span><span><strong>TRIFECTA</strong><small>PERFORMANCE LAB</small></span></button>
+      {/* The shell owns client-side section state; this native link preserves open-in-new-tab and a safe no-JS destination. */}
+      <a className="brand" href="/" onClick={(event) => { event.preventDefault(); go("overview"); }} aria-label={local(b("الرئيسية", "Home"),lang)}><span className="brand-mark">T³</span><span><strong>TRIFECTA</strong><small>PERFORMANCE LAB</small></span></a>
+      <div className="top-context" aria-label={labels[lang].currentPage}>
+        <span>{activeGroup ? local(activeGroup.label, lang) : labels[lang].workspace}</span>
+        <strong>{local(activeRoute[1], lang)}</strong>
+      </div>
       <nav className="top-actions" aria-label={local(b("أدوات العرض", "View controls"),lang)}>
-        <div className="progress-mini" title={`${labels[lang].progress} ${progress}%`}><span style={{transform:`scaleX(${progress / 100})`}}/></div>
+        <div className="save-state" role="status"><span aria-hidden="true">✓</span>{labels[lang].localState}</div>
+        <div className="progress-mini" title={`${labels[lang].progress} ${progress}%`} aria-label={`${labels[lang].progress} ${progress}%`}><span style={{transform:`scaleX(${progress / 100})`}}/></div>
         <div className="segmented compact"><button aria-pressed={mode==="learner"} onClick={()=>setMode("learner")}>{labels[lang].learner}</button><button aria-pressed={mode==="instructor"} onClick={()=>setMode("instructor")}>{labels[lang].instructor}</button></div>
         <button className="language" onClick={()=>setLang(x=>x==="ar"?"en":"ar")} aria-label={lang==="ar"?"Switch to English":"التبديل إلى العربية"}>{lang==="ar"?"EN":"ع"}</button>
         <button className="menu-button" onClick={()=>setMenu(x=>!x)} aria-expanded={menu} aria-controls="main-nav">{labels[lang].menu}</button>
@@ -808,7 +819,7 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
       </div>
       <nav>{routeGroups.map(group => <div className="nav-group" key={group.label.en}>
         <div className="side-label">{local(group.label,lang)}</div>
-        {group.items.map(([slug,title])=><button key={slug} className={section===slug?"active":""} aria-current={section===slug?"page":undefined} onClick={()=>go(slug)}><span className="nav-indicator" aria-hidden="true"/>{local(title,lang)}</button>)}
+        {group.items.map(([slug,title])=><a key={slug} href={slug === "overview" ? "/" : `/${slug}`} className={section===slug?"active":""} aria-current={section===slug?"page":undefined} onClick={(event)=>{event.preventDefault();go(slug);}}><span className="nav-indicator" aria-hidden="true"/>{local(title,lang)}</a>)}
       </div>)}</nav>
       <div className="side-status"><div><span>{progress}%</span><small>{labels[lang].progress}</small></div><div className="side-bar"><span style={{transform:`scaleY(${progress / 100})`}}/></div></div>
     </aside>

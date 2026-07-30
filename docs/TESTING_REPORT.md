@@ -3,6 +3,28 @@
 Date: 2026-07-30
 Application: Trifecta Performance Lab
 
+## 2026-07-30 UI/UX enhancement verification
+
+- ESLint: Pass.
+- Strict TypeScript check: Pass.
+- Impeccable design detector: Pass with zero findings.
+- Production build and rendered tests: Pass, 6/6.
+- Semantic navigation: primary destinations expose real route links and preserve the single-page workflow.
+- Header context: correct active information group and page name in Arabic and English.
+- Curriculum Evidence Chain: Drill evidence, Station anchors, and Gate decision update independently; no total performance score introduced.
+- Drill progressive disclosure: exactly one Drill can be expanded; state changes remain keyboard-operable through native `details`/`summary`.
+- Critical Safety Failure end-to-end: evidence entered, anchor selected, Critical Failure checked, effective Gate forced to No-Go, every compensating decision disabled, and state retained after reload.
+- Arabic route matrix: all 14 routes have one `h1`, `lang=ar`, `dir=rtl`, and no document-level horizontal overflow at 1280 × 900.
+- English route matrix: all 14 routes have one `h1`, `lang=en`, `dir=ltr`, and no document-level horizontal overflow at 1280 × 900.
+- Mobile Arabic matrix: Home, Curriculum, Case Lab, Objective Builder, and Station Builder pass at 390 × 844 with the menu control visible and no document-level overflow.
+- Tablet Curriculum: Pass at 1024 × 768.
+- Desktop Curriculum: Pass at 1440 × 1000.
+- Mobile navigation: closed sidebar is hidden; opened RTL sidebar is visible, correctly mirrored, and exposes both mode controls.
+- Console: no warnings or errors during the clean desktop, tablet, mobile, route-matrix, bilingual, disclosure, and Critical Failure checks.
+- Added dependency: none.
+
+The source benchmark, adopted patterns, rejected patterns, and imagery decision are documented in `docs/UI_UX_BENCHMARK_2026.md`.
+
 ## Automated gates
 
 | Gate | Result | Notes |
