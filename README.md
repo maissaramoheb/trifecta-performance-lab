@@ -2,7 +2,7 @@
 
 Arabic-first bilingual trainer-development application for Learning Domains, the Trifecta, evidence-based assessment, station design, and AAR.
 
-## What the application does
+## Application Purpose
 
 - Explains Cognitive, Psychomotor, and Affective Learning Domains with five/six-level interactive progressions.
 - Explains Physical, Technical, and Cognitive / Neurophysiological Performance, including all ten cognitive families in the internal course reference.
@@ -19,11 +19,7 @@ Arabic-first bilingual trainer-development application for Learning Domains, the
 - Saves progress and drafts locally on the user’s device.
 - Supports Arabic RTL, English LTR, keyboard use, responsive layouts, print/PDF output, JSON station export, and offline core content.
 
-## Source boundary
-
-The attached internal course documents are the primary source for terminology, structure, examples, and framework framing. Additional validation and workflow rules are marked inside the application as “Applied recommendation / توصية تطبيقية.” The product is not a clinical, neurological, or personality assessment and does not teach operational tactics.
-
-## Local use
+## Local Development
 
 Requires Node.js 22.13 or newer.
 
@@ -34,35 +30,66 @@ npm run dev
 
 Open the local URL printed by the development server.
 
-## Verification
+## Build Targets
+
+The repository supports two parallel production build targets without duplicating source code:
+
+1. **OpenAI Sites (Cloudflare Worker runtime):**
+   ```bash
+   npm run build
+   ```
+   Generates Cloudflare Worker bundle using `vinext`.
+
+2. **Vercel (Standard Next.js App Router):**
+   ```bash
+   npm run build:vercel
+   ```
+   Generates standard Next.js optimized build (`.next`) configured via `vercel.json` and `next.config.ts`.
+
+## Verification and Testing
+
+Reruns both build targets, linter, type checker, and automated HTML/RTL/PWA tests:
 
 ```bash
 npm run lint
 npx tsc --noEmit
-npm run build
+npm run build:vercel
 npm test
 ```
 
-## Architecture
+## OpenAI Sites Deployment
 
-- `app/` — Next.js routes, metadata, global error recovery, and global design system.
-- `components/TrainingApp.tsx` — accessible application shell and interactive modules.
-- `components/CurriculumWorkspace.tsx` — interactive Levels, Stations, Drills, evidence records, and Gate decisions.
-- `lib/content.ts` — typed bilingual source content, cases, checks, and references.
-- `lib/curriculum.ts` — typed bilingual curriculum hierarchy and safe sample curriculum.
-- `public/manifest.webmanifest` — static install metadata compatible with the production host.
-- `public/sw.js` — guarded offline cache for core learning routes; content-hashed modules bypass it.
-- `docs/` — source analysis, content architecture, assessment logic, and test report.
-- `docs/UPGRADE_GAP_MAP.md` — comparison of previous coverage, source gaps, and implemented upgrades.
-- `docs/UI_UX_BENCHMARK_2026.md` — inspiration-source assessment, audit findings, adopted patterns, and rejected directions.
+- Hosting configuration is declared in `.openai/hosting.json`.
+- Uses `vinext build` and `worker/index.ts`.
+- Preserved as primary/fallback hosting environment.
 
-No backend or authentication is used. User-entered content is stored only in `localStorage`.
+## Vercel Deployment
 
-## Deployment
+- Configured via `vercel.json` and `next.config.ts`.
+- Uses `"buildCommand": "npm run build:vercel"`.
+- Tested and optimized for Vercel App Router serverless deployment.
 
-The application builds with vinext for the OpenAI Sites / Cloudflare Worker runtime. Hosting configuration is stored in `.openai/hosting.json`.
+## Privacy Model and Local Storage
 
-## Known limitations
+- **100% Local-First:** All user inputs, drafts, curriculum progress, station designs, and assessment notes are stored exclusively in the browser's `localStorage` (key: `trifecta-state-v2`).
+- **Zero Cloud Transmission:** No data, metrics, or logs are transmitted to any remote database, backend server, or analytics service.
+- **Privacy Assurance:** No credentials, real trainee names, or operational secrets are collected or stored.
+
+## PWA and Offline Behaviour
+
+- Service worker (`public/sw.js`, cache `trifecta-core-v5`) provides offline functionality for core application routes.
+- Content-hashed Next.js assets (`/_next/`) and Vite bundles (`/assets/`) bypass service worker caching for seamless updates.
+- Safari chunk reload recovery script (`preloadRecovery`) is embedded in `app/layout.tsx`.
+
+## Critical Safety Gate Rule
+
+A **Critical Safety Failure** (e.g. Range Safety Breach, Muzzle Direction Violation) immediately forces a **No-Go** decision. Critical failures are non-compensable and cannot be overridden by high numerical or aggregate scores across other rubrics.
+
+## Source Boundary
+
+The internal course documents are the primary source for terminology, structure, examples, and framework framing. Additional validation and workflow rules are marked inside the application as “Applied recommendation / توصية تطبيقية.” The product is not a clinical, neurological, or personality assessment and does not teach operational tactics.
+
+## Known Limitations
 
 - Local progress does not sync between devices.
 - The included curriculum is an applied, editable demonstration structure rather than a centrally governed curriculum library.

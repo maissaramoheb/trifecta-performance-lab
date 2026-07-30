@@ -43,3 +43,7 @@ next-env.d.ts
 /output/
 /work/
 /.playwright-cli/
+/.gemini/
+/scratch/
+*.log
+
