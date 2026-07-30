@@ -82,7 +82,7 @@ function local<T extends Bi>(value: T | string, lang: Lang): string {
   return value[lang];
 }
 
-function Badge({ children, tone = "default" }: { children: React.ReactNode; tone?: "default" | "safe" | "danger" | "source" }) {
+function Badge({ children, tone = "default" }: { children: React.ReactNode; tone?: "default" | "safe" | "danger" | "source" | "evidence" | "assumption" }) {
   return <span className={`badge badge-${tone}`}>{children}</span>;
 }
 
@@ -768,10 +768,11 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
   const instructorOnly = new Set(["objective-builder","station-builder","calibration","profile","aar"]);
   const visibleRoutes = routes.filter(([slug]) => mode === "instructor" || !instructorOnly.has(slug));
   const routeGroups = [
-    { label: b("ابني الفهم", "Build understanding"), slugs: ["overview", "domains", "trifecta", "comparison"] },
-    { label: b("طبّق وقَيّم", "Apply and assess"), slugs: ["curriculum", "cases", "checks"] },
-    { label: b("أدوات المدرب", "Instructor tools"), slugs: ["objective-builder", "station-builder", "calibration", "profile", "aar"] },
-    { label: b("المصادر والحدود", "Sources and boundaries"), slugs: ["references", "about"] },
+    { label: b("1. التوجيه والإطار", "1. Framework & Orientation"), slugs: ["overview", "domains", "trifecta", "comparison"] },
+    { label: b("2. مسار المنهج", "2. Curriculum Pathway"), slugs: ["curriculum"] },
+    { label: b("3. مساحات البناء", "3. Builder Workspaces"), slugs: ["objective-builder", "station-builder"] },
+    { label: b("4. معامل التشخيص", "4. Diagnostic Labs"), slugs: ["cases", "calibration", "profile"] },
+    { label: b("5. المراجعة والمراجع", "5. Review & References"), slugs: ["aar", "checks", "references", "about"] },
   ].map(group => ({ ...group, items: visibleRoutes.filter(([slug]) => group.slugs.includes(slug)) })).filter(group => group.items.length);
   const activeRoute = routes.find(([slug]) => slug === section) ?? routes[0];
   const activeGroup = routeGroups.find(group => group.items.some(([slug]) => slug === section));
@@ -823,7 +824,12 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
       </div>)}</nav>
       <div className="side-status"><div><span>{progress}%</span><small>{labels[lang].progress}</small></div><div className="side-bar"><span style={{transform:`scaleY(${progress / 100})`}}/></div></div>
     </aside>
-    <main id="main-content" tabIndex={-1}><div className="page-stage" key={section}>{render()}</div></main>
+    <main id="main-content" tabIndex={-1}>
+      {mode === "instructor" && <div className="instructor-mode-banner">
+        <span>⚡</span>{local(b("وضع المدرب نشط · أدوات البناء والتشخيص والـGate مفعّلة", "Instructor Mode Active · Builder, Diagnostic, and Gate tools enabled"), lang)}
+      </div>}
+      <div className="page-stage" key={section}>{render()}</div>
+    </main>
     <footer><span>TRIFECTA PERFORMANCE LAB · 2026</span><span>{local(b("بياناتك تبقى على جهازك", "Your data stays on your device"),lang)}</span></footer>
   </div>;
 }

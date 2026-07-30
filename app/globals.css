@@ -145,6 +145,12 @@ footer {
 .badge-safe { border-color: rgba(120,173,141,.45); color: #9bd2ae; background: rgba(120,173,141,.1); }
 .badge-danger { border-color: rgba(216,116,103,.5); color: #ed9b91; background: rgba(216,116,103,.1); }
 .badge-source { border-color: rgba(216,160,91,.45); color: var(--amber-bright); background: rgba(216,160,91,.09); }
+.badge-evidence { border-color: rgba(123,179,150,.5); color: #9bd2ae; background: rgba(123,179,150,.15); font-weight: 700; }
+.badge-assumption { border-color: rgba(216,160,91,.5); color: var(--amber-bright); background: rgba(216,160,91,.15); font-weight: 700; }
+.instructor-mode-banner {
+  background: var(--amber-soft); border-bottom: 2px solid var(--amber); color: var(--amber-bright);
+  padding: 6px 16px; font-size: .75rem; font-weight: 700; text-align: center; display: flex; justify-content: center; align-items: center; gap: 8px;
+}
 .eyebrow, .section-kicker {
   color: var(--amber); font-size: .78rem; letter-spacing: .01em; font-weight: 700;
 }

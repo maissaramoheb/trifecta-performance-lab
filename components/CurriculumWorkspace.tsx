@@ -352,7 +352,11 @@ export default function CurriculumWorkspace({
       </section>
     </div>
 
-    {gate && gateRecord && <section className={`gate-panel decision-${effectiveDecision}`}>
+    {gate && gateRecord && <section className={`gate-panel decision-${effectiveDecision}`} role={hasCritical ? "alert" : undefined} aria-live="polite">
+      {hasCritical && <div className="critical-safety-alert" style={{ background: "rgba(220,109,96,0.18)", borderBottom: "2px solid var(--danger)", color: "#ed9b91", padding: "12px 26px", fontWeight: 700, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "10px" }}>
+        <span style={{ fontSize: "1.2rem" }}>⛔</span>
+        <span>{t.automaticNoGo} {local(b("خرق أمان حرج غير قابل للتعويض بأي درجات أداء أخرى.", "Critical safety failure is non-compensable by any other performance score."), lang)}</span>
+      </div>}
       <div className="gate-panel-head">
         <div className="gate-emblem"><span>G</span><strong>{t.gate}</strong></div>
         <div><h2>{t.gate} · {local(level.stations.find((item) => item.id === gate.toStationId)?.name ?? b("", ""), lang)}</h2><p>{local(gate.requirement, lang)}</p></div>
