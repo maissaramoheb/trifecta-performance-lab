@@ -41,7 +41,7 @@ self.addEventListener("fetch", (event) => {
 
   // Content-hashed modules already have immutable HTTP caching. Intercepting them
   // risks replaying an authentication error as JavaScript in Safari.
-  if (url.pathname.startsWith("/assets/") || url.pathname === "/sw.js") return;
+  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/_next/") || url.pathname === "/sw.js") return;
 
   const isDocument = event.request.mode === "navigate" || event.request.destination === "document";
   event.respondWith(
