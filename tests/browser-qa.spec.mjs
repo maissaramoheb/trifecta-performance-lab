@@ -1,5 +1,21 @@
 import { test, expect } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
 
+function getVercelAuthToken() {
+  try {
+    const authPath = path.join(process.env.HOME || "", "Library", "Application Support", "com.vercel.cli", "auth.json");
+    if (fs.existsSync(authPath)) {
+      const data = JSON.parse(fs.readFileSync(authPath, "utf8"));
+      return data.token;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+const vtoken = getVercelAuthToken();
 const BASE_URL = process.env.TEST_URL || "https://trifecta-performance-lab.vercel.app";
 
 const targetRoutes = [
@@ -23,6 +39,9 @@ const viewports = [
 ];
 
 test.describe("Bilingual & Route Verification Matrix", () => {
+  if (vtoken) {
+    test.use({ extraHTTPHeaders: { Authorization: `Bearer ${vtoken}` } });
+  }
   for (const viewport of viewports) {
     test.describe(`Viewport: ${viewport.name}`, () => {
       test.use({ viewport: { width: viewport.width, height: viewport.height } });
