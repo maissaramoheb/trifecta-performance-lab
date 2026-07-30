@@ -46,4 +46,7 @@ next-env.d.ts
 /.gemini/
 /scratch/
 *.log
+/docs/playwright-report/
+/test-results/
+
 
