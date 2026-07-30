@@ -21,6 +21,8 @@ export interface GateDecisionPanelProps {
     instructorOnly: string;
     gateEvidenceLabel: string;
     remediationLabel: string;
+    gateLabel: string;
+    decisionLegend: string;
   };
   evidenceValue?: string;
   remediationValue?: string;
@@ -51,8 +53,8 @@ export function GateDecisionPanel({
   return (
     <section
       aria-live="polite"
+      aria-label={`${statusMessages.gateLabel}: ${title}`}
       className={`gate-panel decision-${effectiveDecision} ${className}`}
-      role={hasCritical ? "alert" : undefined}
     >
       {hasCritical && (
         <StatusBanner
@@ -63,7 +65,7 @@ export function GateDecisionPanel({
       <div className="gate-panel-head">
         <div className="gate-emblem">
           <span>G</span>
-          <strong>Gate</strong>
+          <strong>{statusMessages.gateLabel}</strong>
         </div>
         <div>
           <h2>{title}</h2>
@@ -83,11 +85,11 @@ export function GateDecisionPanel({
       {mode === "instructor" ? (
         <div className="gate-controls">
           <fieldset>
-            <legend>Gate Decision</legend>
+            <legend>{statusMessages.decisionLegend}</legend>
             <div className="decision-options">
               {decisionsList.map((decision) => (
                 <button
-                  aria-pressed={!hasCritical && effectiveDecision === decision}
+                  aria-pressed={effectiveDecision === decision}
                   disabled={hasCritical || (decision === "go" && !isReady)}
                   key={decision}
                   onClick={() => onDecisionChange?.(decision)}

@@ -68,7 +68,9 @@ test("curriculum hierarchy, evidence roll-up, and Gate safety are encoded", asyn
   assert.match(workspace, /if \(hasCritical\) return "no-go"/);
   assert.match(workspace, /decision: "no-go"/);
   assert.match(component, /schemaVersion:\s*2/);
-  assert.match(component, /x\.curriculum\?\.schemaVersion === 1/);
+  assert.match(component, /migrateCurriculumProgress\(x\.curriculum\)/);
+  assert.match(curriculum, /candidate\.schemaVersion === 1 && record\.rating === 0/);
+  assert.match(curriculum, /rating:\s*DrillRating \| null/);
 });
 
 test("source-driven cognitive phases and diagnostic intervention patterns are present", async () => {

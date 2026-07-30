@@ -1,143 +1,121 @@
 import { test, expect } from "@playwright/test";
-import fs from "node:fs";
-import path from "node:path";
 
-function getVercelAuthToken() {
-  try {
-    const authPath = path.join(process.env.HOME || "", "Library", "Application Support", "com.vercel.cli", "auth.json");
-    if (fs.existsSync(authPath)) {
-      const data = JSON.parse(fs.readFileSync(authPath, "utf8"));
-      return data.token;
-    }
-  } catch {
-    return null;
-  }
-  return null;
+const BASE_URL = process.env.TEST_URL || "http://localhost:3000";
+const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
+if (bypassSecret) {
+  test.use({
+    extraHTTPHeaders: {
+      "x-vercel-protection-bypass": bypassSecret,
+      "x-vercel-set-bypass-cookie": "true",
+    },
+  });
 }
 
-const vtoken = getVercelAuthToken();
-const BASE_URL = process.env.TEST_URL || "https://trifecta-performance-lab.vercel.app";
-
 const targetRoutes = [
-  "",
-  "overview",
-  "curriculum",
-  "cases",
-  "objective-builder",
-  "station-builder",
-  "calibration",
-  "checks",
-  "references",
-  "about",
+  "", "overview", "domains", "trifecta", "comparison", "curriculum", "cases",
+  "objective-builder", "station-builder", "calibration", "profile", "aar",
+  "checks", "references", "about",
 ];
 
 const viewports = [
-  { width: 390, height: 844, name: "Mobile (390x844)" },
-  { width: 768, height: 1024, name: "Tablet Portrait (768x1024)" },
-  { width: 1024, height: 768, name: "Tablet Landscape (1024x768)" },
-  { width: 1440, height: 900, name: "Desktop Large (1440x900)" },
+  { width: 390, height: 844, name: "mobile" },
+  { width: 768, height: 1024, name: "tablet" },
+  { width: 1440, height: 900, name: "desktop" },
 ];
 
-test.describe("Bilingual & Route Verification Matrix", () => {
-  if (vtoken) {
-    test.use({ extraHTTPHeaders: { Authorization: `Bearer ${vtoken}` } });
-  }
+async function openApp(page, route = "") {
+  const errors = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  await page.goto(`${BASE_URL}/${route}`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#main-content h1").first()).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ar");
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(page).toHaveTitle(/Trifecta Performance Lab/);
+  expect(errors).toEqual([]);
+}
+
+test.describe("route, direction, and responsive matrix", () => {
   for (const viewport of viewports) {
-    test.describe(`Viewport: ${viewport.name}`, () => {
-      test.use({ viewport: { width: viewport.width, height: viewport.height } });
-
-      for (const route of targetRoutes) {
-        test(`Route /${route} loads in Arabic RTL without console errors`, async ({ page }) => {
-          const consoleErrors = [];
-          page.on("console", (msg) => {
-            if (msg.type() === "error") consoleErrors.push(msg.text());
-          });
-
-          const url = route ? `${BASE_URL}/${route}` : `${BASE_URL}/`;
-          await page.goto(url, { waitUntil: "domcontentloaded" });
-          await page.waitForSelector("body");
-          await page.waitForTimeout(300);
-
-          // Verify language & direction
-          const htmlLang = await page.getAttribute("html", "lang");
-          const htmlDir = await page.getAttribute("html", "dir");
-          expect(htmlLang).toBe("ar");
-          expect(htmlDir).toBe("rtl");
-
-          // Verify title
-          const title = await page.title();
-          expect(title).toContain("Trifecta Performance Lab");
-
-          // Verify no critical console errors
-          expect(consoleErrors).toHaveLength(0);
-        });
-      }
-    });
+    for (const route of targetRoutes) {
+      test(`${viewport.name} /${route} renders the application in Arabic RTL`, async ({ page }) => {
+        await page.setViewportSize(viewport);
+        await openApp(page, route);
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        expect(overflow).toBeLessThanOrEqual(1);
+      });
+    }
   }
 });
 
-test.describe("Interactive Features, Persistence & Safety Gates", () => {
-  test.use({ viewport: { width: 1440, height: 900 } });
+test("language preference persists and changes the complete document direction", async ({ page }) => {
+  await openApp(page);
+  await page.locator(".language").click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("#main-content h1").first()).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  const savedLanguage = await page.evaluate(() => JSON.parse(localStorage.getItem("performance-lab-state") || "{}").lang);
+  expect(savedLanguage).toBe("en");
+});
 
-  test("Language switching updates direction and content dynamically", async ({ page }) => {
-    await page.goto(`${BASE_URL}/`, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("body");
+test("mobile drawer traps focus, closes with Escape, and restores trigger focus", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openApp(page, "curriculum");
+  const trigger = page.locator(".menu-button");
+  await trigger.click();
+  const drawer = page.locator("#main-nav");
+  await expect(drawer).toHaveClass(/open/);
+  await expect(drawer).toHaveAttribute("role", "dialog");
+  await expect(drawer).toHaveAttribute("aria-modal", "true");
+  await expect.poll(() => page.evaluate(() => {
+    const navigation = document.querySelector("#main-nav");
+    return Boolean(navigation && document.activeElement && navigation.contains(document.activeElement));
+  })).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(drawer).not.toHaveClass(/open/);
+  await expect(trigger).toBeFocused();
+});
 
-    const langBtn = page.locator("button.lang-btn").first();
-    if (await langBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await langBtn.click({ force: true });
-      await page.waitForTimeout(300);
-      expect(await page.getAttribute("html", "lang")).toBe("en");
-      expect(await page.getAttribute("html", "dir")).toBe("ltr");
-    }
-  });
+test("critical failure overrides every Gate score and decision", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openApp(page, "curriculum");
+  await page.getByRole("button", { name: /وضع المدرب/ }).click();
+  const critical = page.locator(".critical-toggle input").first();
+  await critical.check();
+  const gate = page.locator(".gate-panel");
+  await expect(gate).toHaveClass(/decision-no-go/);
+  await expect(gate.getByRole("alert")).toContainText(/No-Go/);
+  await expect(gate.getByRole("button", { name: "No-Go", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(gate.getByRole("button", { name: "Go", exact: true })).toBeDisabled();
+});
 
-  test("Local storage persistence and reset flow", async ({ page }) => {
-    await page.goto(`${BASE_URL}/station-builder`, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("body");
+test("rating zero is a valid selected anchor but still requires observable evidence", async ({ page }) => {
+  await openApp(page, "curriculum");
+  const firstDrill = page.locator(".drill-row").first();
+  await firstDrill.getByRole("button", { name: /غير مُثبت/ }).click();
+  await expect(firstDrill.getByRole("button", { name: /غير مُثبت/ })).toHaveAttribute("aria-pressed", "true");
+  await expect(firstDrill).not.toHaveClass(/complete/);
+  await firstDrill.locator("textarea").fill("توقف عند الـCue وسجل المقيم الاستجابة.");
+  await expect(firstDrill).toHaveClass(/complete/);
+});
 
-    // Verify localStorage key can be set
-    await page.evaluate(() => {
-      localStorage.setItem("trifecta-state-v2", JSON.stringify({
-        lang: "ar",
-        mode: "instructor",
-        completedCases: [1, 2],
-        quizAnswers: { 1: 0 }
-      }));
-    });
+test("reduced motion removes meaningful transition duration", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openApp(page);
+  const duration = await page.locator(".page-stage").evaluate((element) => getComputedStyle(element).animationDuration);
+  expect(parseFloat(duration)).toBeLessThanOrEqual(0.001);
+});
 
-    // Reload and verify state restoration
-    await page.reload({ waitUntil: "domcontentloaded" });
-    const stored = await page.evaluate(() => localStorage.getItem("trifecta-state-v2"));
-    expect(stored).toBeTruthy();
-    const parsed = JSON.parse(stored);
-    expect(parsed.completedCases).toEqual([1, 2]);
-
-    // Test clear site data reset
-    await page.evaluate(() => localStorage.clear());
-    const cleared = await page.evaluate(() => localStorage.getItem("trifecta-state-v2"));
-    expect(cleared).toBeNull();
-  });
-
-  test("Critical Safety Gate logic enforcement", async ({ page }) => {
-    await page.goto(`${BASE_URL}/curriculum`, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("body");
-
-    // Verify Critical Safety Failure rule is present in UI text
-    const textContent = await page.textContent("body");
-    expect(textContent).toMatch(/No-Go|Critical Failure|غير قابل للتعويض/i);
-  });
-
-  test("PWA webmanifest and service worker availability", async ({ page }) => {
-    const manifestRes = await page.request.get(`${BASE_URL}/manifest.webmanifest`);
-    expect(manifestRes.status()).toBe(200);
-    const manifestJson = await manifestRes.json();
-    expect(manifestJson.display).toBe("standalone");
-
-    const swRes = await page.request.get(`${BASE_URL}/sw.js`);
-    expect(swRes.status()).toBe(200);
-    const swText = await swRes.text();
-    expect(swText).toContain("trifecta-core-v5");
-    expect(swText).toContain("/_next/");
-  });
+test("PWA manifest and service worker remain available", async ({ request }) => {
+  const headers = bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {};
+  const manifestResponse = await request.get(`${BASE_URL}/manifest.webmanifest`, { headers });
+  expect(manifestResponse.status()).toBe(200);
+  expect((await manifestResponse.json()).display).toBe("standalone");
+  const workerResponse = await request.get(`${BASE_URL}/sw.js`, { headers });
+  expect(workerResponse.status()).toBe(200);
+  expect(await workerResponse.text()).toContain("trifecta-core-v5");
 });

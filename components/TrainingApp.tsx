@@ -1,10 +1,11 @@
 "use client";
 /* eslint-disable @next/next/no-html-link-for-pages -- this local-first SPA owns section history and safely degrades to server routes */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CurriculumWorkspace from "./CurriculumWorkspace";
 import {
   createInitialCurriculumProgress,
+  migrateCurriculumProgress,
   type CurriculumProgress,
 } from "../lib/curriculum";
 import {
@@ -475,7 +476,8 @@ function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) =>
         <div className="card-top"><Badge tone={item.decision === "No-Go" ? "danger" : "safe"}>{item.decision}</Badge><SourceMark lang={lang}/></div>
         <h3>{local(b("إجابة مبنية على الدليل", "Evidence-based model answer"), lang)}</h3>
         <div className="model-grid">
-          <p><MiniLabel>{labels[lang].facts}</MiniLabel>{item.facts.map((x, i) => <span key={i}>• {local(x, lang)} </span>)}</p>
+          <p><MiniLabel><Badge tone="evidence">{labels[lang].evidence}</Badge></MiniLabel>{item.facts.map((x, i) => <span key={i}>• {local(x, lang)} </span>)}</p>
+          <p><MiniLabel><Badge tone="assumption">{labels[lang].assumption}</Badge></MiniLabel>{item.assumptions.map((x, i) => <span key={i}>• {local(x, lang)} </span>)}</p>
           <p><MiniLabel>Learning Domain / Trifecta</MiniLabel>{item.domain} / {item.pillar}</p>
           <p><MiniLabel>{local(b("أساسي / ثانوي", "Primary / secondary"), lang)}</MiniLabel>{local(item.primary, lang)} · {local(item.secondary, lang)}</p>
           <p><MiniLabel>{local(b("بيانات ناقصة", "Missing evidence"), lang)}</MiniLabel>{local(item.missing, lang)}</p>
@@ -505,9 +507,22 @@ function ObjectiveBuilder({ lang, value, onChange }: { lang: Lang; value: Object
     return out;
   }, [value, lang]);
   const ready = value.behaviour && value.condition && value.criterion;
+  const activeStep = !value.requirement || !value.gap ? 0
+    : !value.behaviour ? 1
+    : !value.condition || !value.criterion ? 2
+    : 3;
   return <>
     <SectionHead eyebrow={local(b("أداة المدرب", "Instructor tool"), lang)} title={local(b("بناء هدف قابل للملاحظة", "Objective builder"), lang)} intro={local(b("من متطلب الأداء والفجوة إلى هدف SMART ودليل نجاح واضح.", "Move from performance requirement and gap to a SMART objective with clear evidence."), lang)}/>
     <WorkspaceShell
+      label={local(b("مراحل بناء الهدف", "Objective-building stages"), lang)}
+      steps={[
+        local(b("المتطلب والفجوة", "Requirement & gap"), lang),
+        local(b("المجال والسلوك", "Domain & behaviour"), lang),
+        local(b("الشرط والمعيار", "Condition & standard"), lang),
+        local(b("الدليل والمراجعة", "Evidence & review"), lang),
+      ]}
+      activeStep={activeStep}
+      summary={<><strong>{ready ? local(b("جاهز للمراجعة", "Ready to review"), lang) : local(b("مسودة قيد البناء", "Draft in progress"), lang)}</strong><span>{warnings.length ? `${warnings.length} ${labels[lang].warnings}` : labels[lang].save}</span></>}
       form={
         <form className="builder-card" onSubmit={e => e.preventDefault()}>
           <div className="field-row"><Field label={local(b("متطلب الأداء", "Performance requirement"), lang)} value={value.requirement} onChange={x => set("requirement", x)}/><Field label={local(b("فجوة الأداء", "Performance gap"), lang)} value={value.gap} onChange={x => set("gap", x)}/></div>
@@ -525,7 +540,7 @@ function ObjectiveBuilder({ lang, value, onChange }: { lang: Lang; value: Object
       }
       preview={
         <aside className="output-card">
-          <div className="card-top"><Badge tone={warnings.length ? "danger" : "safe"}>{warnings.length ? `${warnings.length} ${labels[lang].warnings}` : "Ready"}</Badge><span>{labels[lang].save}</span></div>
+          <div className="card-top"><Badge tone={warnings.length ? "danger" : "safe"}>{warnings.length ? `${warnings.length} ${labels[lang].warnings}` : local(b("جاهز", "Ready"), lang)}</Badge><span>{labels[lang].save}</span></div>
           <h2>SMART Objective</h2>
           {warnings.length > 0 && <ul className="warning-list">{warnings.map((x, i) => <li key={i}>{x}</li>)}</ul>}
           {ready ? <div className="bilingual-output">
@@ -550,6 +565,10 @@ function StationBuilder({ lang, value, onChange }: { lang: Lang; value: StationS
     value.primary === "Cognitive" && !/(قرار|تذكر|cue|زمن|خطأ|decision|recall|time|error)/i.test(value.data) && b("البيانات المجمعة لا تدعم التشخيص الذهني المعلن.", "Collected data do not support the stated cognitive diagnosis."),
     !value.safetyGate && value.critical && b("لا يجوز أن تعوض الدرجة Critical Safety Failure.", "A score cannot compensate for a Critical Safety Failure."),
   ].filter(Boolean) as Bi[];
+  const activeStep = !value.name || !value.requirement ? 0
+    : !value.baseline ? 1
+    : !value.behaviour || !value.checklist ? 2
+    : 3;
   const exportJson = () => {
     const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), ...value }, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "station-card.json"; a.click(); URL.revokeObjectURL(url);
@@ -557,6 +576,15 @@ function StationBuilder({ lang, value, onChange }: { lang: Lang; value: StationS
   return <>
     <SectionHead eyebrow="Station Card" title={local(b("صمّم محطة تقيس ما تقصده", "Design a station that measures what you intend"), lang)} intro={local(b("اعزل المتغيرات، ابدأ من Baseline، واربط كل تشخيص بدليل تجمعه فعلًا.", "Isolate variables, start from baseline, and link each diagnosis to data you actually collect."), lang)}/>
     <WorkspaceShell
+      label={local(b("مراحل تصميم المحطة", "Station-design stages"), lang)}
+      steps={[
+        local(b("المتطلب", "Requirement"), lang),
+        local(b("Baseline والحمل", "Baseline & load"), lang),
+        local(b("الدليل والمعيار", "Evidence & standard"), lang),
+        local(b("Gate وRetest", "Gate & retest"), lang),
+      ]}
+      activeStep={activeStep}
+      summary={<><strong>{value.name || local(b("محطة غير مسماة", "Untitled station"), lang)}</strong><span>{warnings.length ? `${warnings.length} ${labels[lang].warnings}` : local(b("المنطق الأساسي مكتمل", "Core logic complete"), lang)}</span></>}
       form={
         <form className="builder-card dense" onSubmit={e => e.preventDefault()}>
           <div className="field-row"><Field label={local(b("اسم المحطة", "Station name"), lang)} value={value.name} onChange={x => set("name", x)}/><Field label={local(b("متطلب الأداء", "Performance requirement"), lang)} value={value.requirement} onChange={x => set("requirement", x)}/></div>
@@ -573,17 +601,17 @@ function StationBuilder({ lang, value, onChange }: { lang: Lang; value: StationS
       }
       preview={
         <aside className="station-preview">
-          <div className="card-top"><Badge>{variableCount} variables</Badge><SourceMark lang={lang} applied/></div>
-          <h2>{value.name || "Station Card"}</h2>
+          <div className="card-top"><Badge>{variableCount} {local(b("متغيرات", "variables"), lang)}</Badge><SourceMark lang={lang} applied/></div>
+          <h2>{value.name || local(b("بطاقة المحطة", "Station Card"), lang)}</h2>
           {warnings.length ? <div><MiniLabel>{labels[lang].warnings}</MiniLabel><ul className="warning-list">{warnings.map((x, i) => <li key={i}>{local(x, lang)}</li>)}</ul></div> : <StatusBanner message={local(b("المنطق الأساسي مكتمل.", "Core logic is complete."), lang)} type="success" />}
           <dl className="station-dl">
-            <div><dt>Requirement</dt><dd>{value.requirement || "—"}</dd></div>
+            <div><dt>{local(b("المتطلب", "Requirement"), lang)}</dt><dd>{value.requirement || "—"}</dd></div>
             <div><dt>Baseline</dt><dd>{value.baseline || "—"}</dd></div>
-            <div><dt>Domains</dt><dd>{value.domain} → {value.primary}</dd></div>
+            <div><dt>{local(b("الأطر", "Frameworks"), lang)}</dt><dd>{value.domain} → {value.primary}</dd></div>
             <div><dt>Go / No-Go</dt><dd>{value.standard || "—"}</dd></div>
             <div><dt>Retest</dt><dd>{value.retest || "—"}</dd></div>
           </dl>
-          <div className="gate-result"><span>{value.critical ? "CRITICAL" : "GATE"}</span><strong>{value.safetyGate ? "NON-COMPENSABLE" : "UNSAFE LOGIC"}</strong></div>
+          <div className="gate-result"><span>{value.critical ? "CRITICAL" : "GATE"}</span><strong>{value.safetyGate ? local(b("غير قابل للتعويض", "NON-COMPENSABLE"), lang) : local(b("منطق غير آمن", "UNSAFE LOGIC"), lang)}</strong></div>
           <div className="button-row"><button className="secondary" onClick={() => window.print()}>{labels[lang].print}</button><button className="secondary" onClick={exportJson}>{labels[lang].download}</button></div>
         </aside>
       }
@@ -737,6 +765,8 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
   const [station, setStation] = useState(initialStation);
   const [curriculum, setCurriculum] = useState<CurriculumProgress>(createInitialCurriculumProgress);
   const [hydrated, setHydrated] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     window.dispatchEvent(new Event("trifecta:ready"));
@@ -747,7 +777,7 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
           const x = JSON.parse(raw) as SavedState;
           setLang(x.lang || "ar"); setMode(x.mode || "learner"); setCompletedCases(x.completedCases || []);
           setQuizAnswers(x.quizAnswers || {}); if (x.objective) setObjective(x.objective); if (x.station) setStation(x.station);
-          if (x.curriculum?.schemaVersion === 1) setCurriculum(x.curriculum);
+          if (x.curriculum) setCurriculum(migrateCurriculumProgress(x.curriculum));
         }
       } catch { /* retain safe defaults */ }
       setHydrated(true);
@@ -766,6 +796,48 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
     const pop = () => setSection(location.pathname.split("/").filter(Boolean)[0] || "overview");
     addEventListener("popstate", pop); return () => removeEventListener("popstate", pop);
   }, []);
+
+  useEffect(() => {
+    if (!menu) return;
+    const sidebar = sidebarRef.current;
+    if (!sidebar) return;
+    document.body.classList.add("nav-open");
+    const focusable = () => Array.from(
+      sidebar.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+    ).filter((element) => !element.hasAttribute("hidden"));
+    const focusTimer = window.setTimeout(() => {
+      // Safari can omit links from keyboard focus unless Full Keyboard Access is
+      // enabled, so land on the first drawer button before the active route link.
+      (sidebar.querySelector<HTMLElement>("button:not([disabled])") ?? sidebar.querySelector<HTMLElement>('[aria-current="page"]') ?? focusable()[0])?.focus();
+    }, 220);
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMenu(false);
+        requestAnimationFrame(() => menuButtonRef.current?.focus());
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.classList.remove("nav-open");
+      clearTimeout(focusTimer);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menu]);
 
   const go = (slug: string) => {
     setSection(slug); setMenu(false); history.pushState({}, "", slug === "overview" ? "/" : `/${slug}`);
@@ -817,11 +889,20 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
         <div className="progress-mini" title={`${labels[lang].progress} ${progress}%`} aria-label={`${labels[lang].progress} ${progress}%`}><span style={{transform:`scaleX(${progress / 100})`}}/></div>
         <div className="segmented compact"><button aria-pressed={mode==="learner"} onClick={()=>setMode("learner")}>{labels[lang].learner}</button><button aria-pressed={mode==="instructor"} onClick={()=>setMode("instructor")}>{labels[lang].instructor}</button></div>
         <button className="language" onClick={()=>setLang(x=>x==="ar"?"en":"ar")} aria-label={lang==="ar"?"Switch to English":"التبديل إلى العربية"}>{lang==="ar"?"EN":"ع"}</button>
-        <button className="menu-button" onClick={()=>setMenu(x=>!x)} aria-expanded={menu} aria-controls="main-nav">{labels[lang].menu}</button>
+        <button
+          ref={menuButtonRef}
+          className="menu-button"
+          onClick={() => setMenu((current) => {
+            return !current;
+          })}
+          aria-expanded={menu}
+          aria-controls="main-nav"
+          aria-haspopup="dialog"
+        >{labels[lang].menu}</button>
       </nav>
     </header>
-    {menu && <button className="nav-scrim" aria-label={local(b("إغلاق القائمة", "Close menu"),lang)} onClick={()=>setMenu(false)}/>}
-    <aside id="main-nav" className={`sidebar ${menu?"open":""}`} aria-label={local(b("التنقل الرئيسي", "Primary navigation"),lang)}>
+    {menu && <button className="nav-scrim" aria-label={local(b("إغلاق القائمة", "Close menu"),lang)} onClick={()=>{setMenu(false); requestAnimationFrame(()=>menuButtonRef.current?.focus());}}/>}
+    <aside ref={sidebarRef} id="main-nav" className={`sidebar ${menu?"open":""}`} aria-label={local(b("التنقل الرئيسي", "Primary navigation"),lang)} role={menu ? "dialog" : undefined} aria-modal={menu ? "true" : undefined}>
       <div className="segmented mobile-mode" aria-label={local(b("اختيار الوضع", "Mode selection"),lang)}>
         <button aria-pressed={mode==="learner"} onClick={()=>{setMode("learner");setMenu(false);}}>{labels[lang].learner}</button>
         <button aria-pressed={mode==="instructor"} onClick={()=>{setMode("instructor");setMenu(false);}}>{labels[lang].instructor}</button>
@@ -832,10 +913,11 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
       </div>)}</nav>
       <div className="side-status"><div><span>{progress}%</span><small>{labels[lang].progress}</small></div><div className="side-bar"><span style={{transform:`scaleY(${progress / 100})`}}/></div></div>
     </aside>
-    <main id="main-content" tabIndex={-1}>
-      {mode === "instructor" && <div className="instructor-mode-banner">
-        <span>⚡</span>{local(b("وضع المدرب نشط · أدوات البناء والتشخيص والـGate مفعّلة", "Instructor Mode Active · Builder, Diagnostic, and Gate tools enabled"), lang)}
-      </div>}
+    <main id="main-content" tabIndex={-1} data-route={section}>
+      {mode === "instructor" && <StatusBanner
+        type="instructor"
+        message={local(b("وضع المدرب نشط · أدوات البناء والتشخيص والـGate مفعّلة", "Instructor mode active · Builder, diagnostic, and Gate tools enabled"), lang)}
+      />}
       <div className="page-stage" key={section}>{render()}</div>
     </main>
     <footer><span>TRIFECTA PERFORMANCE LAB · 2026</span><span>{local(b("بياناتك تبقى على جهازك", "Your data stays on your device"),lang)}</span></footer>

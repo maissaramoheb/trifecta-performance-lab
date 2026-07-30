@@ -1,70 +1,75 @@
-# UI/UX V2 Visual Review Package: Trifecta Performance Lab
+# UI/UX V2 visual review package
 
-**Date:** July 30, 2026  
-**Target Branch:** `design/ui-ux-v2`  
-**Final Source Commit SHA:** `037aa62a0677687149b687beb980172accb32c26`  
-**Exact Protected Preview URL:** [https://trifecta-performance-3qfo8ik8i-delta4ce20-5830s-projects.vercel.app](https://trifecta-performance-3qfo8ik8i-delta4ce20-5830s-projects.vercel.app)  
-**Deployment ID:** `dpl_J2WQkEknNvbJtELRBjvnV7tr9B5s`  
-**Authoritative Vercel Project ID:** `prj_nmY16TUA0tP6IcC6Ae3vUTSL2tca`  
+Review scope: Arabic-first operational training product, with equivalent English layouts.
 
----
+Capture matrix:
 
-## 1. Review Sequence & Flagship Components
+- Routes: Home, Curriculum, Case Lab, Objective Builder, Station Builder, Calibration, AAR, References
+- Languages: Arabic RTL and English LTR
+- Viewports: 390 × 844 and 1440 × 900
+- Local artifact location: `artifacts/uiux-v2/final-local/`
+- Artifact policy: local review only; screenshots are ignored by Git
 
-This visual review package compares baseline production (`https://trifecta-performance-lab.vercel.app`) against the exact protected Vercel Preview deployment `dpl_J2WQkEknNvbJtELRBjvnV7tr9B5s` serving commit `037aa62`.
+## Priority comparisons
 
-### 1. Home & Orientation (`/`)
-- **Baseline Screenshot:** `artifacts/uiux-v2/baseline/home-ar-desktop-1440x900.png`
-- **Preview Screenshot:** `artifacts/uiux-v2/preview/home-ar-desktop-1440x900.png`
-- **Language / Viewport:** Arabic RTL & English LTR @ 1440x900 & 390x844
-- **Implemented Change:** Added `PageHeader` primitive, editorial hero typography, Trifecta lens preview cards, and structured action routes.
-- **Reviewer Assessment:** Evaluate visual hierarchy, clarity of application entry points, and typography balance.
+### 1. Home
 
-### 2. Curriculum Pathway (`/curriculum`)
-- **Baseline Screenshot:** `artifacts/uiux-v2/baseline/curriculum-ar-desktop-1440x900.png`
-- **Preview Screenshot:** `artifacts/uiux-v2/preview/curriculum-ar-desktop-1440x900.png`
-- **Language / Viewport:** Arabic RTL @ 1440x900
-- **Implemented Change:** Integrated visual 4-level progression map (`Curriculum → Level → Station → Drill → Gate`) and `GateDecisionPanel` primitive with non-compensable `No-Go` alert (`role="alert"`).
-- **Reviewer Assessment:** Verify that progression status is unmissable without gamification, and Critical Safety Failures strictly enforce `No-Go`.
+- Previous problem: the inherited branch was visually indistinguishable from its baseline and depended on repeated large surfaces.
+- Current benefit: the existing strong thesis and Trifecta instrument are preserved while motion timing and shell interaction are more disciplined.
+- Remaining concern: Home and `/overview` intentionally render the same orientation experience; a later content architecture pass may consolidate the duplicate URL.
 
-### 3. Objective Builder (`/objective-builder`)
-- **Baseline Screenshot:** `artifacts/uiux-v2/baseline/objective-builder-ar-desktop-1440x900.png`
-- **Preview Screenshot:** `artifacts/uiux-v2/preview/objective-builder-ar-desktop-1440x900.png`
-- **Language / Viewport:** Arabic RTL & English LTR @ 1440x900
-- **Implemented Change:** 2-column `WorkspaceShell` separating form inputs on start from sticky live bilingual output preview on end.
-- **Reviewer Assessment:** Assess input responsiveness, live preview alignment, and warning checks.
+### 2. Curriculum
 
-### 4. Station Builder (`/station-builder`)
-- **Baseline Screenshot:** `artifacts/uiux-v2/baseline/station-builder-ar-desktop-1440x900.png`
-- **Preview Screenshot:** `artifacts/uiux-v2/preview/station-builder-ar-desktop-1440x900.png`
-- **Language / Viewport:** Arabic RTL @ 1440x900
-- **Implemented Change:** 2-column trainer station workspace layout with variable badges, baseline inputs, safety gate toggle, and single-click JSON export.
-- **Reviewer Assessment:** Check workspace density, readability of station summary card, and export action bar.
+- Previous problem: a rating of zero was treated as incomplete even though zero is a valid evidence anchor.
+- Current benefit: Drill evidence, explicit anchors, station roll-up, and Gate decisions now form a reliable progression chain.
+- Remaining concern: the professional horizontal station map uses contained scrolling on narrow screens; future usability testing should confirm discoverability with trainers.
 
-### 5. Case Diagnostic Lab (`/cases`)
-- **Baseline Screenshot:** `artifacts/uiux-v2/baseline/cases-ar-desktop-1440x900.png`
-- **Preview Screenshot:** `artifacts/uiux-v2/preview/cases-ar-desktop-1440x900.png`
-- **Language / Viewport:** Arabic RTL & English LTR @ 1440x900
-- **Implemented Change:** Explicit visual separation of observed facts (`badge-evidence`) vs unverified assumptions (`badge-assumption`), diagnostic restraint scoring, and model answer reveal.
-- **Reviewer Assessment:** Verify distinction between evidence vs assumption tags and model answer presentation.
+### 3. Case Lab
 
-### 6. Critical Safety Gate Alert (`/curriculum` Gate State)
-- **Baseline Screenshot:** `artifacts/uiux-v2/baseline/curriculum-ar-mobile-390x844.png`
-- **Preview Screenshot:** `artifacts/uiux-v2/preview/curriculum-ar-mobile-390x844.png`
-- **Language / Viewport:** Arabic RTL @ 390x844
-- **Implemented Change:** Red border alert surface (`role="alert"`) enforcing `No-Go` when Critical Safety Failure occurs.
-- **Reviewer Assessment:** Ensure non-compensable safety warning remains clear even without color.
+- Previous problem: model answers did not visibly separate observed evidence from assumptions.
+- Current benefit: evidence and assumption markers now make diagnostic restraint visible at the point of feedback.
+- Remaining concern: advanced cases remain text-dense on small screens; progressive disclosure is a candidate for the next phase.
 
-### 7. Arabic Mobile Navigation (390x844)
-- **Baseline Screenshot:** `artifacts/uiux-v2/baseline/home-ar-mobile-390x844.png`
-- **Preview Screenshot:** `artifacts/uiux-v2/preview/home-ar-mobile-390x844.png`
-- **Language / Viewport:** Arabic RTL @ 390x844
-- **Implemented Change:** Accessible mobile drawer navigation with focus trap, ESC listener, and focus return.
-- **Reviewer Assessment:** Check drawer spacing, touch target dimensions (`≥ 44px`), and RTL direction.
+### 4. Objective Builder
 
-### 8. English Desktop Navigation (1440x900)
-- **Baseline Screenshot:** `artifacts/uiux-v2/baseline/home-en-desktop-1440x900.png`
-- **Preview Screenshot:** `artifacts/uiux-v2/preview/home-en-desktop-1440x900.png`
-- **Language / Viewport:** English LTR @ 1440x900
-- **Implemented Change:** Grouped sidebar navigation across 5 archetypes, active location breadcrumbs, and mode status bar.
-- **Reviewer Assessment:** Check LTR alignment, category headers, and active route indication.
+- Previous problem: a long form and preview had no visible workflow or current-stage context.
+- Current benefit: a four-stage rail separates requirement, learning design, conditions, and evidence while a live summary exposes readiness and warnings.
+- Remaining concern: domain-specific level options still share one select; contextual filtering would reduce choice load.
+
+### 5. Station Builder
+
+- Previous problem: the form exposed fields without communicating the order from requirement to Gate.
+- Current benefit: workflow stages clarify Baseline, load, evidence, standard, Gate, and Retest; Arabic output labels are more complete.
+- Remaining concern: a future Drill Builder should become a dedicated nested workspace rather than adding more fields to this page.
+
+### 6. Calibration
+
+- Previous problem: comparison logic was usable but visually similar to generic builder layouts.
+- Current benefit: the shared shell, card hierarchy, and explicit assessor states remain consistent with the rest of the product.
+- Remaining concern: inter-rater consistency is intentionally simplified and should not be presented as formal validation.
+
+### 7. AAR
+
+- Previous problem: the long question sequence lacked a persistent workflow indicator.
+- Current benefit: the current two-pane evidence-to-intervention relationship remains clear and responsive.
+- Remaining concern: AAR has not yet adopted the new staged rail; it is the next logical workflow conversion after trainer testing validates the builder pattern.
+
+### 8. References
+
+- Previous problem: reference cards repeated a uniform visual treatment.
+- Current benefit: the structured support / limitation / usage model remains readable in both directions and viewports.
+- Remaining concern: filtering by framework, source type, and application location would improve retrieval at scale.
+
+## Visual system judgment
+
+The product now uses size to communicate workflow depth: compact shell status, medium learning cards, larger builder workspaces, and full-width diagnostic/Gate panels. Motion is short and functional. No new visual dependency was added. The restrained charcoal, amber, safe, and critical palette remains the product identity; status never relies on color alone.
+
+## Human review focus
+
+Reviewers should concentrate on:
+
+1. whether the staged builder rail matches trainers’ mental sequence;
+2. whether mobile Curriculum horizontal scrolling is sufficiently discoverable;
+3. whether Arabic mixed-direction terminology reads naturally;
+4. whether Case Lab density is acceptable during instructor-led use;
+5. whether the 220 ms Safari drawer-focus timing feels immediate.

@@ -55,6 +55,7 @@ const copy = {
     recorded: "مسجل",
     anchored: "مُقيّم",
     decision: "قرار",
+    decisionLegend: "قرار الـGate",
     expandDrill: "افتح تفاصيل الـDrill",
     anchors: ["غير مُثبت", "بدعم كبير", "عدم اتساق بسيط", "مستقل وثابت"],
     decisions: {
@@ -103,6 +104,7 @@ const copy = {
     recorded: "Recorded",
     anchored: "Anchored",
     decision: "Decision",
+    decisionLegend: "Gate decision",
     expandDrill: "Open Drill details",
     anchors: ["Not demonstrated", "Major support", "Minor inconsistency", "Independent and consistent"],
     decisions: {
@@ -125,7 +127,7 @@ function getGateDecision(level: CurriculumLevel, station: CurriculumStation, pro
 function stationReady(station: CurriculumStation, progress: CurriculumProgress) {
   return station.drills.every((item) => {
     const record = progress.drills[item.id];
-    return Boolean(record?.evidence.trim()) && Boolean(record?.rating);
+    return Boolean(record?.evidence.trim()) && record?.rating !== null && record?.rating !== undefined;
   });
 }
 
@@ -160,7 +162,7 @@ export default function CurriculumWorkspace({
   const ready = stationReady(station, progress);
   const effectiveDecision = getGateDecision(level, station, progress);
   const evidenceCount = station.drills.filter((item) => progress.drills[item.id]?.evidence.trim()).length;
-  const anchoredCount = station.drills.filter((item) => Boolean(progress.drills[item.id]?.rating)).length;
+  const anchoredCount = station.drills.filter((item) => progress.drills[item.id]?.rating !== null && progress.drills[item.id]?.rating !== undefined).length;
 
   const totalUnits = trainerCurriculum.levels.reduce((sum, item) => (
     sum + item.stations.reduce((drillSum, current) => drillSum + current.drills.length, 0) + item.gates.length
@@ -169,7 +171,7 @@ export default function CurriculumWorkspace({
     sum
     + item.stations.reduce((drillSum, current) => drillSum + current.drills.filter((entry) => {
       const record = progress.drills[entry.id];
-      return Boolean(record?.evidence.trim()) && Boolean(record?.rating);
+      return Boolean(record?.evidence.trim()) && record?.rating !== null && record?.rating !== undefined;
     }).length, 0)
     + item.gates.filter((entry) => {
       const source = item.stations.find((station) => station.id === entry.fromStationId);
@@ -200,7 +202,7 @@ export default function CurriculumWorkspace({
   };
 
   const updateDrill = (id: string, patch: Partial<{ rating: DrillRating; evidence: string; criticalFailure: boolean }>) => {
-    const current = progress.drills[id] ?? { rating: 0 as DrillRating, evidence: "", criticalFailure: false };
+    const current = progress.drills[id] ?? { rating: null, evidence: "", criticalFailure: false };
     const nextGates = patch.criticalFailure && gate
       ? { ...progress.gates, [gate.id]: { ...(progress.gates[gate.id] ?? { evidence: "", remediation: "" }), decision: "no-go" as GateDecision } }
       : progress.gates;
@@ -315,8 +317,8 @@ export default function CurriculumWorkspace({
 
       <section className="drill-stack" aria-label={t.drill}>
         {station.drills.map((item, index) => {
-          const record = progress.drills[item.id] ?? { rating: 0 as DrillRating, evidence: "", criticalFailure: false };
-          const complete = Boolean(record.evidence.trim()) && Boolean(record.rating);
+          const record = progress.drills[item.id] ?? { rating: null, evidence: "", criticalFailure: false };
+          const complete = Boolean(record.evidence.trim()) && record.rating !== null;
           return <details className={`drill-row ${record.criticalFailure ? "critical" : complete ? "complete" : ""}`} key={item.id} open={expandedDrill === item.id}>
             <summary className="drill-head" aria-label={`${t.expandDrill}: ${local(item.name, lang)}`} onClick={(event) => { event.preventDefault(); setExpandedDrill(expandedDrill === item.id ? "" : item.id); }}>
               <span>D{index + 1}</span>
@@ -370,6 +372,8 @@ export default function CurriculumWorkspace({
           instructorOnly: t.instructorOnly,
           gateEvidenceLabel: t.gateEvidence,
           remediationLabel: t.remediation,
+          gateLabel: t.gate,
+          decisionLegend: t.decisionLegend,
         }}
         evidenceValue={gateRecord.evidence}
         remediationValue={gateRecord.remediation}
