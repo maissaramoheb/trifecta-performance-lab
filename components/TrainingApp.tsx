@@ -790,6 +790,7 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
     if (!hydrated) return;
     localStorage.setItem("performance-lab-state", JSON.stringify({ schemaVersion: 2, lang, mode, completedCases, quizAnswers, objective, station, curriculum } satisfies SavedState));
     document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.documentElement.dataset.appReady = "true";
   }, [lang, mode, completedCases, quizAnswers, objective, station, curriculum, hydrated]);
 
   useEffect(() => {

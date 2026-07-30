@@ -31,6 +31,7 @@ async function openApp(page, route = "") {
   });
   await page.goto(`${BASE_URL}/${route}`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("#main-content h1").first()).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("data-app-ready", "true");
   await expect(page.locator("html")).toHaveAttribute("lang", "ar");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page).toHaveTitle(/Trifecta Performance Lab/);

@@ -42,6 +42,7 @@ test.describe("UI/UX visual review capture matrix", () => {
         await page.setViewportSize(viewport);
         await page.goto(`${TARGET_URL}/${route.slug}`, { waitUntil: "domcontentloaded" });
         await expect(page.locator("#main-content h1").first()).toBeVisible();
+        await expect(page.locator("html")).toHaveAttribute("data-app-ready", "true");
         await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
 
         const directory = path.join(process.cwd(), "artifacts", "uiux-v2", MODE_ENV);
