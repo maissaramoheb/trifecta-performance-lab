@@ -10,6 +10,7 @@ import {
   type GateDecision,
 } from "../lib/curriculum";
 import { b, type Bi, type Lang } from "../lib/content";
+import { GateDecisionPanel } from "./ui/GateDecisionPanel";
 
 type Mode = "learner" | "instructor";
 
@@ -61,7 +62,7 @@ const copy = {
       go: "Go",
       "no-go": "No-Go",
       "need-more-data": "Need More Data",
-      retest: "Retest",
+      "retest": "Retest",
     },
   },
   en: {
@@ -109,7 +110,7 @@ const copy = {
       go: "Go",
       "no-go": "No-Go",
       "need-more-data": "Need More Data",
-      retest: "Retest",
+      "retest": "Retest",
     },
   },
 } as const;
@@ -352,32 +353,30 @@ export default function CurriculumWorkspace({
       </section>
     </div>
 
-    {gate && gateRecord && <section className={`gate-panel decision-${effectiveDecision}`} role={hasCritical ? "alert" : undefined} aria-live="polite">
-      {hasCritical && <div className="critical-safety-alert" style={{ background: "rgba(220,109,96,0.18)", borderBottom: "2px solid var(--danger)", color: "#ed9b91", padding: "12px 26px", fontWeight: 700, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "10px" }}>
-        <span style={{ fontSize: "1.2rem" }}>⛔</span>
-        <span>{t.automaticNoGo} {local(b("خرق أمان حرج غير قابل للتعويض بأي درجات أداء أخرى.", "Critical safety failure is non-compensable by any other performance score."), lang)}</span>
-      </div>}
-      <div className="gate-panel-head">
-        <div className="gate-emblem"><span>G</span><strong>{t.gate}</strong></div>
-        <div><h2>{t.gate} · {local(level.stations.find((item) => item.id === gate.toStationId)?.name ?? b("", ""), lang)}</h2><p>{local(gate.requirement, lang)}</p></div>
-        <div className="effective-decision"><span>{t.decisions[effectiveDecision]}</span><small>{hasCritical ? t.automaticNoGo : ready ? t.ready : t.incomplete}</small></div>
-      </div>
-      {mode === "instructor" ? <div className="gate-controls">
-        <fieldset>
-          <legend>{t.gate}</legend>
-          <div className="decision-options">
-            {(["go", "no-go", "need-more-data", "retest"] as GateDecision[]).map((decision) => <button
-              key={decision}
-              type="button"
-              aria-pressed={!hasCritical && gateRecord.decision === decision}
-              disabled={hasCritical || (decision === "go" && !ready)}
-              onClick={() => updateGate({ decision })}
-            >{t.decisions[decision]}</button>)}
-          </div>
-        </fieldset>
-        <label><span>{t.gateEvidence}</span><textarea dir="auto" value={gateRecord.evidence} onChange={(event) => updateGate({ evidence: event.target.value })}/></label>
-        <label><span>{t.remediation}</span><textarea dir="auto" value={gateRecord.remediation} onChange={(event) => updateGate({ remediation: event.target.value })}/></label>
-      </div> : <p className="mode-guidance">{t.instructorOnly}</p>}
-    </section>}
+    {gate && gateRecord && (
+      <GateDecisionPanel
+        title={`${t.gate} · ${local(level.stations.find((item) => item.id === gate.toStationId)?.name ?? b("", ""), lang)}`}
+        requirement={local(gate.requirement, lang)}
+        effectiveDecision={effectiveDecision}
+        hasCritical={hasCritical}
+        isReady={ready}
+        mode={mode}
+        decisionLabels={t.decisions}
+        statusMessages={{
+          automaticNoGo: t.automaticNoGo,
+          criticalExplanation: local(b("خرق أمان حرج غير قابل للتعويض بأي درجات أداء أخرى.", "Critical safety failure is non-compensable by any other performance score."), lang),
+          ready: t.ready,
+          incomplete: t.incomplete,
+          instructorOnly: t.instructorOnly,
+          gateEvidenceLabel: t.gateEvidence,
+          remediationLabel: t.remediation,
+        }}
+        evidenceValue={gateRecord.evidence}
+        remediationValue={gateRecord.remediation}
+        onDecisionChange={(decision) => updateGate({ decision: decision as GateDecision })}
+        onEvidenceChange={(evidence) => updateGate({ evidence })}
+        onRemediationChange={(remediation) => updateGate({ remediation })}
+      />
+    )}
   </div>;
 }

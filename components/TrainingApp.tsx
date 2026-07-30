@@ -21,6 +21,10 @@ import {
   type Lang,
   type Level,
 } from "../lib/content";
+import { PageHeader } from "./ui/PageHeader";
+import { StatusBanner } from "./ui/StatusBanner";
+import { EvidenceBadge } from "./ui/EvidenceBadge";
+import { WorkspaceShell } from "./ui/WorkspaceShell";
 
 type Mode = "learner" | "instructor";
 type SavedState = {
@@ -83,15 +87,11 @@ function local<T extends Bi>(value: T | string, lang: Lang): string {
 }
 
 function Badge({ children, tone = "default" }: { children: React.ReactNode; tone?: "default" | "safe" | "danger" | "source" | "evidence" | "assumption" }) {
-  return <span className={`badge badge-${tone}`}>{children}</span>;
+  return <EvidenceBadge type={tone}>{children}</EvidenceBadge>;
 }
 
 function SectionHead({ eyebrow, title, intro }: { eyebrow: string; title: string; intro: string }) {
-  return <header className="section-head">
-    <div className="eyebrow">{eyebrow}</div>
-    <h1>{title}</h1>
-    <p>{intro}</p>
-  </header>;
+  return <PageHeader eyebrow={eyebrow} title={title} intro={intro} />;
 }
 
 function SourceMark({ lang, applied = false }: { lang: Lang; applied?: boolean }) {
@@ -507,31 +507,35 @@ function ObjectiveBuilder({ lang, value, onChange }: { lang: Lang; value: Object
   const ready = value.behaviour && value.condition && value.criterion;
   return <>
     <SectionHead eyebrow={local(b("أداة المدرب", "Instructor tool"), lang)} title={local(b("بناء هدف قابل للملاحظة", "Objective builder"), lang)} intro={local(b("من متطلب الأداء والفجوة إلى هدف SMART ودليل نجاح واضح.", "Move from performance requirement and gap to a SMART objective with clear evidence."), lang)}/>
-    <div className="builder-layout">
-      <form className="builder-card" onSubmit={e => e.preventDefault()}>
-        <div className="field-row"><Field label={local(b("متطلب الأداء", "Performance requirement"), lang)} value={value.requirement} onChange={x => set("requirement", x)}/><Field label={local(b("فجوة الأداء", "Performance gap"), lang)} value={value.gap} onChange={x => set("gap", x)}/></div>
-        <div className="field-row"><label>Learning Domain<select value={value.domain} onChange={e => set("domain", e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><label>{local(b("المستوى", "Level"), lang)}<select value={value.level} onChange={e => set("level", e.target.value)}><option>Remember</option><option>Understand</option><option>Apply</option><option>Analyze</option><option>Evaluate</option><option>Create / Improve</option><option>Precision</option><option>Stable / Naturalized</option><option>Internalizing</option></select></label></div>
-        <Field label={local(b("السلوك الملاحظ", "Observable behaviour"), lang)} value={value.behaviour} onChange={x => set("behaviour", x)} placeholder={local(b("مثال: يطبق قرار الإيقاف", "Example: applies the stop decision"), lang)}/>
-        <div className="field-row"><Field label={local(b("الشرط", "Condition"), lang)} value={value.condition} onChange={x => set("condition", x)}/><Field label={local(b("الحد الأدنى للمعيار", "Minimum standard"), lang)} value={value.criterion} onChange={x => set("criterion", x)}/></div>
-        <div className="field-row"><Field label="Critical Failure" value={value.critical} onChange={x => set("critical", x)}/><Field label={local(b("الدليل المطلوب", "Evidence required"), lang)} value={value.evidence} onChange={x => set("evidence", x)}/></div>
-        <details className="translation-fields">
-          <summary>{local(b("المقابل الإنجليزي للإخراج الثنائي", "English equivalents for bilingual output"), lang)}</summary>
-          <Field label="Observable behaviour — English" value={value.behaviourEn || ""} onChange={x => set("behaviourEn", x)}/>
-          <div className="field-row"><Field label="Condition — English" value={value.conditionEn || ""} onChange={x => set("conditionEn", x)}/><Field label="Minimum standard — English" value={value.criterionEn || ""} onChange={x => set("criterionEn", x)}/></div>
-          <div className="field-row"><Field label="Critical Failure — English" value={value.criticalEn || ""} onChange={x => set("criticalEn", x)}/><Field label="Evidence — English" value={value.evidenceEn || ""} onChange={x => set("evidenceEn", x)}/></div>
-        </details>
-      </form>
-      <aside className="output-card">
-        <div className="card-top"><Badge tone={warnings.length ? "danger" : "safe"}>{warnings.length ? `${warnings.length} ${labels[lang].warnings}` : "Ready"}</Badge><span>{labels[lang].save}</span></div>
-        <h2>SMART Objective</h2>
-        {warnings.length > 0 && <ul className="warning-list">{warnings.map((x, i) => <li key={i}>{x}</li>)}</ul>}
-        {ready ? <div className="bilingual-output">
-          <div lang="ar" dir="rtl"><MiniLabel>العربية</MiniLabel><p>في {value.condition}، {value.behaviour}، بحد أدنى {value.criterion}{value.critical ? `، ودون ${value.critical}` : ""}. الدليل: {value.evidence || "Checklist وملاحظة مباشرة"}.</p></div>
-          <div lang="en" dir="ltr"><MiniLabel>English</MiniLabel><p>Under the condition “{value.conditionEn || value.condition}”, the learner will “{value.behaviourEn || value.behaviour}” to a minimum standard of “{value.criterionEn || value.criterion}”{value.critical ? `, with no “${value.criticalEn || value.critical}”` : ""}. Evidence: {value.evidenceEn || value.evidence || "checklist and direct observation"}.</p></div>
-        </div> : <p className="empty">{labels[lang].empty}</p>}
-        <SourceMark lang={lang} applied/>
-      </aside>
-    </div>
+    <WorkspaceShell
+      form={
+        <form className="builder-card" onSubmit={e => e.preventDefault()}>
+          <div className="field-row"><Field label={local(b("متطلب الأداء", "Performance requirement"), lang)} value={value.requirement} onChange={x => set("requirement", x)}/><Field label={local(b("فجوة الأداء", "Performance gap"), lang)} value={value.gap} onChange={x => set("gap", x)}/></div>
+          <div className="field-row"><label>Learning Domain<select value={value.domain} onChange={e => set("domain", e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><label>{local(b("المستوى", "Level"), lang)}<select value={value.level} onChange={e => set("level", e.target.value)}><option>Remember</option><option>Understand</option><option>Apply</option><option>Analyze</option><option>Evaluate</option><option>Create / Improve</option><option>Precision</option><option>Stable / Naturalized</option><option>Internalizing</option></select></label></div>
+          <Field label={local(b("السلوك الملاحظ", "Observable behaviour"), lang)} value={value.behaviour} onChange={x => set("behaviour", x)} placeholder={local(b("مثال: يطبق قرار الإيقاف", "Example: applies the stop decision"), lang)}/>
+          <div className="field-row"><Field label={local(b("الشرط", "Condition"), lang)} value={value.condition} onChange={x => set("condition", x)}/><Field label={local(b("الحد الأدنى للمعيار", "Minimum standard"), lang)} value={value.criterion} onChange={x => set("criterion", x)}/></div>
+          <div className="field-row"><Field label="Critical Failure" value={value.critical} onChange={x => set("critical", x)}/><Field label={local(b("الدليل المطلوب", "Evidence required"), lang)} value={value.evidence} onChange={x => set("evidence", x)}/></div>
+          <details className="translation-fields">
+            <summary>{local(b("المقابل الإنجليزي للإخراج الثنائي", "English equivalents for bilingual output"), lang)}</summary>
+            <Field label="Observable behaviour — English" value={value.behaviourEn || ""} onChange={x => set("behaviourEn", x)}/>
+            <div className="field-row"><Field label="Condition — English" value={value.conditionEn || ""} onChange={x => set("conditionEn", x)}/><Field label="Minimum standard — English" value={value.criterionEn || ""} onChange={x => set("criterionEn", x)}/></div>
+            <div className="field-row"><Field label="Critical Failure — English" value={value.criticalEn || ""} onChange={x => set("criticalEn", x)}/><Field label="Evidence — English" value={value.evidenceEn || ""} onChange={x => set("evidenceEn", x)}/></div>
+          </details>
+        </form>
+      }
+      preview={
+        <aside className="output-card">
+          <div className="card-top"><Badge tone={warnings.length ? "danger" : "safe"}>{warnings.length ? `${warnings.length} ${labels[lang].warnings}` : "Ready"}</Badge><span>{labels[lang].save}</span></div>
+          <h2>SMART Objective</h2>
+          {warnings.length > 0 && <ul className="warning-list">{warnings.map((x, i) => <li key={i}>{x}</li>)}</ul>}
+          {ready ? <div className="bilingual-output">
+            <div lang="ar" dir="rtl"><MiniLabel>العربية</MiniLabel><p>في {value.condition}، {value.behaviour}، بحد أدنى {value.criterion}{value.critical ? `، ودون ${value.critical}` : ""}. الدليل: {value.evidence || "Checklist وملاحظة مباشرة"}.</p></div>
+            <div lang="en" dir="ltr"><MiniLabel>English</MiniLabel><p>Under the condition “{value.conditionEn || value.condition}”, the learner will “{value.behaviourEn || value.behaviour}” to a minimum standard of “{value.criterionEn || value.criterion}”{value.critical ? `, with no “${value.criticalEn || value.critical}”` : ""}. Evidence: {value.evidenceEn || value.evidence || "checklist and direct observation"}.</p></div>
+          </div> : <p className="empty">{labels[lang].empty}</p>}
+          <SourceMark lang={lang} applied/>
+        </aside>
+      }
+    />
   </>;
 }
 
@@ -552,34 +556,38 @@ function StationBuilder({ lang, value, onChange }: { lang: Lang; value: StationS
   };
   return <>
     <SectionHead eyebrow="Station Card" title={local(b("صمّم محطة تقيس ما تقصده", "Design a station that measures what you intend"), lang)} intro={local(b("اعزل المتغيرات، ابدأ من Baseline، واربط كل تشخيص بدليل تجمعه فعلًا.", "Isolate variables, start from baseline, and link each diagnosis to data you actually collect."), lang)}/>
-    <div className="station-builder">
-      <form className="builder-card dense" onSubmit={e => e.preventDefault()}>
-        <div className="field-row"><Field label={local(b("اسم المحطة", "Station name"), lang)} value={value.name} onChange={x => set("name", x)}/><Field label={local(b("متطلب الأداء", "Performance requirement"), lang)} value={value.requirement} onChange={x => set("requirement", x)}/></div>
-        <div className="field-row thirds"><label>Learning Domain<select value={value.domain} onChange={e => set("domain", e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><Field label={local(b("المستوى", "Level"), lang)} value={value.level} onChange={x => set("level", x)}/><label>Trifecta<select value={value.primary} onChange={e => set("primary", e.target.value)}><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
-        <div className="field-row"><Field label="Baseline" value={value.baseline} onChange={x => set("baseline", x)}/><Field label={local(b("المتغيرات المضافة (افصل بفاصلة)", "Variables added (comma-separated)"), lang)} value={value.variables} onChange={x => set("variables", x)}/></div>
-        <div className="field-row thirds"><Field label={local(b("ضغط الوقت", "Time pressure"), lang)} value={value.time} onChange={x => set("time", x)}/><Field label="Cognitive Load" value={value.cognitive} onChange={x => set("cognitive", x)}/><Field label={local(b("الحمل البدني", "Physical load"), lang)} value={value.physical} onChange={x => set("physical", x)}/></div>
-        <Field label={local(b("السلوك الملاحظ", "Observable behaviour"), lang)} value={value.behaviour} onChange={x => set("behaviour", x)} area/>
-        <div className="field-row"><Field label="Checklist" value={value.checklist} onChange={x => set("checklist", x)} area/><Field label="Critical Failures" value={value.critical} onChange={x => set("critical", x)} area/></div>
-        <div className="field-row"><Field label="Go / No-Go" value={value.standard} onChange={x => set("standard", x)}/><Field label={local(b("البيانات التي ستجمعها", "Data to collect"), lang)} value={value.data} onChange={x => set("data", x)}/></div>
-        <div className="field-row"><Field label="AAR questions" value={value.aar} onChange={x => set("aar", x)} area/><Field label={local(b("المعالجة", "Remediation"), lang)} value={value.remediation} onChange={x => set("remediation", x)} area/></div>
-        <Field label="Retest rule" value={value.retest} onChange={x => set("retest", x)}/>
-        <label className="gate-toggle"><input type="checkbox" checked={value.safetyGate} onChange={e => set("safetyGate", e.target.checked)}/><span><strong>Critical Safety Gate</strong>{local(b("الفشل الحرج ينتج No-Go دائمًا.", "Critical failure always produces No-Go."), lang)}</span></label>
-      </form>
-      <aside className="station-preview">
-        <div className="card-top"><Badge>{variableCount} variables</Badge><SourceMark lang={lang} applied/></div>
-        <h2>{value.name || "Station Card"}</h2>
-        {warnings.length ? <div><MiniLabel>{labels[lang].warnings}</MiniLabel><ul className="warning-list">{warnings.map((x, i) => <li key={i}>{local(x, lang)}</li>)}</ul></div> : <div className="status-ok">✓ {local(b("المنطق الأساسي مكتمل.", "Core logic is complete."), lang)}</div>}
-        <dl className="station-dl">
-          <div><dt>Requirement</dt><dd>{value.requirement || "—"}</dd></div>
-          <div><dt>Baseline</dt><dd>{value.baseline || "—"}</dd></div>
-          <div><dt>Domains</dt><dd>{value.domain} → {value.primary}</dd></div>
-          <div><dt>Go / No-Go</dt><dd>{value.standard || "—"}</dd></div>
-          <div><dt>Retest</dt><dd>{value.retest || "—"}</dd></div>
-        </dl>
-        <div className="gate-result"><span>{value.critical ? "CRITICAL" : "GATE"}</span><strong>{value.safetyGate ? "NON-COMPENSABLE" : "UNSAFE LOGIC"}</strong></div>
-        <div className="button-row"><button className="secondary" onClick={() => window.print()}>{labels[lang].print}</button><button className="secondary" onClick={exportJson}>{labels[lang].download}</button></div>
-      </aside>
-    </div>
+    <WorkspaceShell
+      form={
+        <form className="builder-card dense" onSubmit={e => e.preventDefault()}>
+          <div className="field-row"><Field label={local(b("اسم المحطة", "Station name"), lang)} value={value.name} onChange={x => set("name", x)}/><Field label={local(b("متطلب الأداء", "Performance requirement"), lang)} value={value.requirement} onChange={x => set("requirement", x)}/></div>
+          <div className="field-row thirds"><label>Learning Domain<select value={value.domain} onChange={e => set("domain", e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><Field label={local(b("المستوى", "Level"), lang)} value={value.level} onChange={x => set("level", x)}/><label>Trifecta<select value={value.primary} onChange={e => set("primary", e.target.value)}><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
+          <div className="field-row"><Field label="Baseline" value={value.baseline} onChange={x => set("baseline", x)}/><Field label={local(b("المتغيرات المضافة (افصل بفاصلة)", "Variables added (comma-separated)"), lang)} value={value.variables} onChange={x => set("variables", x)}/></div>
+          <div className="field-row thirds"><Field label={local(b("ضغط الوقت", "Time pressure"), lang)} value={value.time} onChange={x => set("time", x)}/><Field label="Cognitive Load" value={value.cognitive} onChange={x => set("cognitive", x)}/><Field label={local(b("الحمل البدني", "Physical load"), lang)} value={value.physical} onChange={x => set("physical", x)}/></div>
+          <Field label={local(b("السلوك الملاحظ", "Observable behaviour"), lang)} value={value.behaviour} onChange={x => set("behaviour", x)} area/>
+          <div className="field-row"><Field label="Checklist" value={value.checklist} onChange={x => set("checklist", x)} area/><Field label="Critical Failures" value={value.critical} onChange={x => set("critical", x)} area/></div>
+          <div className="field-row"><Field label="Go / No-Go" value={value.standard} onChange={x => set("standard", x)}/><Field label={local(b("البيانات التي ستجمعها", "Data to collect"), lang)} value={value.data} onChange={x => set("data", x)}/></div>
+          <div className="field-row"><Field label="AAR questions" value={value.aar} onChange={x => set("aar", x)} area/><Field label={local(b("المعالجة", "Remediation"), lang)} value={value.remediation} onChange={x => set("remediation", x)} area/></div>
+          <Field label="Retest rule" value={value.retest} onChange={x => set("retest", x)}/>
+          <label className="gate-toggle"><input type="checkbox" checked={value.safetyGate} onChange={e => set("safetyGate", e.target.checked)}/><span><strong>Critical Safety Gate</strong>{local(b("الفشل الحرج ينتج No-Go دائمًا.", "Critical failure always produces No-Go."), lang)}</span></label>
+        </form>
+      }
+      preview={
+        <aside className="station-preview">
+          <div className="card-top"><Badge>{variableCount} variables</Badge><SourceMark lang={lang} applied/></div>
+          <h2>{value.name || "Station Card"}</h2>
+          {warnings.length ? <div><MiniLabel>{labels[lang].warnings}</MiniLabel><ul className="warning-list">{warnings.map((x, i) => <li key={i}>{local(x, lang)}</li>)}</ul></div> : <StatusBanner message={local(b("المنطق الأساسي مكتمل.", "Core logic is complete."), lang)} type="success" />}
+          <dl className="station-dl">
+            <div><dt>Requirement</dt><dd>{value.requirement || "—"}</dd></div>
+            <div><dt>Baseline</dt><dd>{value.baseline || "—"}</dd></div>
+            <div><dt>Domains</dt><dd>{value.domain} → {value.primary}</dd></div>
+            <div><dt>Go / No-Go</dt><dd>{value.standard || "—"}</dd></div>
+            <div><dt>Retest</dt><dd>{value.retest || "—"}</dd></div>
+          </dl>
+          <div className="gate-result"><span>{value.critical ? "CRITICAL" : "GATE"}</span><strong>{value.safetyGate ? "NON-COMPENSABLE" : "UNSAFE LOGIC"}</strong></div>
+          <div className="button-row"><button className="secondary" onClick={() => window.print()}>{labels[lang].print}</button><button className="secondary" onClick={exportJson}>{labels[lang].download}</button></div>
+        </aside>
+      }
+    />
   </>;
 }
 
