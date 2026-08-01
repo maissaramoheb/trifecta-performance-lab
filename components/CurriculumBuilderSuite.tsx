@@ -199,6 +199,9 @@ export default function CurriculumBuilderSuite({
       learnerActions: b("تنفيذ الإجراء المطلوب", "Execute required procedure"),
       safetyControls: b("إيقاف فوري عند الخرق", "Immediate stop on breach"),
       criticalFailures: b("مخالفة بند أمان حاسم", "Violation of critical safety item"),
+      criticalFailureCriteria: b("مخالفة بند أمان حاسم", "Violation of critical safety item"),
+      observedCriticalFailures: [],
+      rating: null,
       evidenceToCollect: b("دليل ملاحظ مسترجع", "Observable evidence"),
       assessmentMethod: b("Checklist + ملاحظة", "Checklist + direct observation"),
       repetitionsOrDuration: b("3 محاولات مستقلة", "3 independent trials"),
@@ -228,6 +231,8 @@ export default function CurriculumBuilderSuite({
       evidenceRequired: b("دليل مكتمل لجميع الـDrills", "Complete evidence for all drills"),
       mandatoryCriteria: b("لا يوجد Failure حرج", "No critical failure"),
       criticalFailures: b("أي خرق ينتج No-Go دائمًا", "Any breach always produces No-Go"),
+      criticalFailureCriteria: b("خرق شرط الأمان الحاسم", "Critical safety-condition breach"),
+      observedCriticalFailures: [],
       goConditions: b("توثيق الأدلة بنجاح", "Successfully document evidence"),
       noGoConditions: b("خرق أمان حرج أو نقص أدلة", "Critical safety breach or missing evidence"),
       needMoreDataConditions: b("بيانات غير كافية", "Insufficient data"),
@@ -238,6 +243,7 @@ export default function CurriculumBuilderSuite({
       nextPermittedAction: b("الانتقال أو المعالجة", "Proceed or remediate"),
       decision: "pending",
       decisionEvidence: "",
+      attempts: [],
       updatedAt: new Date().toISOString(),
     };
 
@@ -333,13 +339,16 @@ export default function CurriculumBuilderSuite({
         setImportStatus({
           type: res.warnings.length ? "warning" : "success",
           message: res.warnings.length
-            ? res.warnings.join(" ")
+            ? res.warnings.map((w) => (lang === "ar" ? w.textAr || w.code : w.textEn || w.code)).join(" ")
             : local(b("تم استيراد المنهج بنجاح واستعادة جميع العلاقات.", "Curriculum suite imported successfully."), lang),
         });
       } else {
+        const errorText = res.errors.length
+          ? res.errors.map((err) => (lang === "ar" ? err.textAr || err.code : err.textEn || err.code)).join(" | ")
+          : (res.rawErrors?.join(" | ") ?? local(b("فشل استيراد الملف.", "File import failed."), lang));
         setImportStatus({
           type: "danger",
-          message: res.errors.join(" "),
+          message: errorText,
         });
       }
     };

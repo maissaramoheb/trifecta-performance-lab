@@ -7,8 +7,8 @@ import CurriculumBuilderSuite from "./CurriculumBuilderSuite";
 import {
   createInitialCurriculumProgress,
   createInitialCurriculumSuiteStore,
+  loadAndMigrateStore,
   migrateCurriculumProgress,
-  migrateCurriculumSuiteStore,
   type CurriculumProgress,
 } from "../lib/curriculum";
 import type { CurriculumSuiteStore } from "../lib/curriculum-builder-types";
@@ -809,12 +809,6 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
       try {
         const raw = localStorage.getItem("performance-lab-state");
         if (raw) {
-          // Create backup before migration
-          try {
-            localStorage.setItem("performance-lab-state-backup-v2", raw);
-          } catch {
-            // ignore backup failure
-          }
           const x = JSON.parse(raw) as SavedState;
           setLang(x.lang || "ar");
           setMode(x.mode || "learner");
@@ -823,8 +817,9 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
           if (x.objective) setObjective(x.objective);
           if (x.station) setStation(x.station);
           if (x.curriculum) setCurriculum(migrateCurriculumProgress(x.curriculum));
-          setCurriculumSuite(migrateCurriculumSuiteStore(x.curriculumSuite || x.curriculum));
         }
+        const { store } = loadAndMigrateStore();
+        setCurriculumSuite(store);
       } catch { /* retain safe defaults */ }
       setHydrated(true);
     });

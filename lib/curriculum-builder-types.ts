@@ -4,6 +4,26 @@ import type { GateDecision } from "./curriculum";
 export type TrifectaPillar = "Physical" | "Technical" | "Cognitive";
 export type LearningDomain = "Cognitive" | "Psychomotor" | "Affective";
 
+export type ObservedCriticalFailure = {
+  id: string;
+  observedAt: string;
+  evidence: string;
+  description?: Bi | string;
+};
+
+export type GateAttempt = {
+  id: string;
+  gateId: string;
+  attemptNumber: number;
+  timestamp: string;
+  evidenceSnapshot: string;
+  observedCriticalFailures: ObservedCriticalFailure[];
+  decision: GateDecision;
+  rationale: Bi | string;
+  remediation: Bi | string;
+  assessorNotes?: string;
+};
+
 export type LevelEntity = {
   id: string;
   name: Bi;
@@ -19,6 +39,7 @@ export type LevelEntity = {
   estimatedDuration: Bi;
   instructorNotes: Bi;
   updatedAt: string;
+  legacyExtensions?: Record<string, unknown>;
 };
 
 export type StationEntity = {
@@ -48,6 +69,7 @@ export type StationEntity = {
   drillIds: string[];
   gateId: string;
   updatedAt: string;
+  legacyExtensions?: Record<string, unknown>;
 };
 
 export type DrillEntity = {
@@ -68,6 +90,10 @@ export type DrillEntity = {
   learnerActions: Bi;
   safetyControls: Bi;
   criticalFailures: Bi;
+  criticalFailureCriteria: Bi;
+  observedCriticalFailures: ObservedCriticalFailure[];
+  rating: number | null;
+  ambiguousRating?: boolean;
   evidenceToCollect: Bi;
   assessmentMethod: Bi;
   repetitionsOrDuration: Bi;
@@ -79,6 +105,7 @@ export type DrillEntity = {
     cognitive: number;
   };
   updatedAt: string;
+  legacyExtensions?: Record<string, unknown>;
 };
 
 export type GateEntity = {
@@ -89,6 +116,8 @@ export type GateEntity = {
   evidenceRequired: Bi;
   mandatoryCriteria: Bi;
   criticalFailures: Bi;
+  criticalFailureCriteria: Bi;
+  observedCriticalFailures: Array<string | ObservedCriticalFailure>;
   goConditions: Bi;
   noGoConditions: Bi;
   needMoreDataConditions: Bi;
@@ -99,7 +128,9 @@ export type GateEntity = {
   nextPermittedAction: Bi;
   decision: GateDecision;
   decisionEvidence: string;
+  attempts: GateAttempt[];
   updatedAt: string;
+  legacyExtensions?: Record<string, unknown>;
 };
 
 export type CurriculumSuiteStore = {
@@ -113,13 +144,23 @@ export type CurriculumSuiteStore = {
   stations: StationEntity[];
   drills: DrillEntity[];
   gates: GateEntity[];
-  unknownLegacyFields?: Record<string, unknown>;
+  legacyExtensions?: Record<string, unknown>;
+};
+
+export type ValidationError = {
+  code: string;
+  messageKey?: string;
+  params?: Record<string, string | number>;
+  path?: string;
+  textAr?: string;
+  textEn?: string;
 };
 
 export type ImportValidationResult = {
   valid: boolean;
-  errors: string[];
-  warnings: string[];
+  errors: ValidationError[];
+  warnings: ValidationError[];
+  rawErrors?: string[];
   importedStore?: CurriculumSuiteStore;
 };
 

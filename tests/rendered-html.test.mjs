@@ -54,9 +54,11 @@ test("critical safety and diagnostic-restraint rules are encoded", async () => {
 });
 
 test("curriculum hierarchy, evidence roll-up, and Gate safety are encoded", async () => {
-  const [workspace, curriculum, component] = await Promise.all([
+  const [workspace, curriculum, gateBuilder, types, component] = await Promise.all([
     readFile(new URL("../components/CurriculumWorkspace.tsx", import.meta.url), "utf8"),
     readFile(new URL("../lib/curriculum.ts", import.meta.url), "utf8"),
+    readFile(new URL("../components/GateBuilder.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/curriculum-builder-types.ts", import.meta.url), "utf8"),
     readFile(new URL("../components/TrainingApp.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(curriculum, /CurriculumLevel/);
@@ -69,7 +71,14 @@ test("curriculum hierarchy, evidence roll-up, and Gate safety are encoded", asyn
   assert.match(workspace, /decision: "no-go"/);
   assert.match(component, /schemaVersion:\s*3/);
   assert.match(curriculum, /migrateCurriculumSuiteStore/);
+  assert.match(curriculum, /loadAndMigrateStore/);
   assert.match(curriculum, /performance-lab-state-backup-v2/);
+  assert.match(curriculum, /detectCircularProgression/);
+  assert.match(curriculum, /deleteStationWithIntegrity/);
+  assert.match(curriculum, /recordGateAttempt/);
+  assert.match(gateBuilder, /observedCriticalFailures\.length > 0/);
+  assert.match(types, /ObservedCriticalFailure/);
+  assert.match(types, /GateAttempt/);
 });
 
 test("source-driven cognitive phases and diagnostic intervention patterns are present", async () => {

@@ -36,12 +36,10 @@ export function GateBuilder({
 
   const fromStation = store.stations.find((s) => s.id === currentGate.fromStationId);
   const nextStation = store.stations.find((s) => s.id === currentGate.nextStationId);
-
-  // Check if any drill under the parent station has critical failure toggled
   const stationDrills = store.drills.filter((d) => d.stationId === currentGate.fromStationId);
 
-  // Is there a critical failure logged or explicitly entered?
-  const hasCritical = Boolean(currentGate.criticalFailures.ar.trim());
+  // Check if an observed critical failure event exists (NOT just authored criteria)
+  const hasCritical = currentGate.observedCriticalFailures.length > 0;
   const effectiveDecision: GateDecision = hasCritical ? "no-go" : currentGate.decision;
 
   const setBi = (key: keyof GateEntity, langKey: "ar" | "en", text: string) => {
@@ -51,6 +49,18 @@ export function GateBuilder({
       ...currentGate,
       [key]: nextBi,
       decision: hasCritical ? "no-go" : currentGate.decision,
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
+  const toggleObservedCritical = (observed: boolean) => {
+    const nextObserved = observed
+      ? [{ id: `cf_${Date.now()}`, observedAt: new Date().toISOString(), evidence: local(b("خرق شرط أمان حاسم ملاحظ", "Observed critical safety-condition breach"), lang) }]
+      : [];
+    onUpdateGate({
+      ...currentGate,
+      observedCriticalFailures: nextObserved,
+      decision: observed ? "no-go" : currentGate.decision === "no-go" ? "pending" : currentGate.decision,
       updatedAt: new Date().toISOString(),
     });
   };
@@ -66,7 +76,7 @@ export function GateBuilder({
     warnings.push(local(b("فشل أمان حرج مسجل: القرار مؤكد No-Go وغير قابل للتعويض.", "Critical safety failure logged: decision is strictly forced to No-Go."), lang));
   }
 
-  const isValid = warnings.length === 0 || (warnings.length === 1 && hasCritical);
+  const isValid = warnings.length === 0;
 
   const labels = {
     ar: {
@@ -225,13 +235,24 @@ export function GateBuilder({
                 />
               </label>
               <label className="card-role-danger" style={{ padding: "0.75rem", borderRadius: "8px" }}>
-                <strong>⚠️ {labels.criticalFailures}</strong>
+                <strong>⚠️ {labels.criticalFailures} (Authored Criteria)</strong>
                 <textarea
                   dir="auto"
                   value={currentGate.criticalFailures.ar}
                   onChange={(e) => setBi("criticalFailures", "ar", e.target.value)}
-                  placeholder={local(b("أي إدخال هنا يفرض قرار No-Go تلقائيًا ولا يمكن تعويضه", "Any entry here automatically forces No-Go"), lang)}
+                  placeholder={local(b("وصف المعايير الشارحة لما يعتبر خرقًا حرجًا", "Authored criteria describing what counts as a critical failure"), lang)}
                 />
+                <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <input
+                    type="checkbox"
+                    id="observed-cf-toggle"
+                    checked={hasCritical}
+                    onChange={(e) => toggleObservedCritical(e.target.checked)}
+                  />
+                  <label htmlFor="observed-cf-toggle" style={{ margin: 0, fontWeight: 600, fontSize: "0.85rem" }}>
+                    {local(b("تسجيل خرق أمان حرج ملاحظ (Observed Failure Event)", "Record an observed critical safety failure event"), lang)}
+                  </label>
+                </div>
               </label>
             </div>
 
