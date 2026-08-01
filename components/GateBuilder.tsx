@@ -138,10 +138,11 @@ export function GateBuilder({
   }[lang];
 
   return (
-    <div>
-      <PageHeader eyebrow={labels.eyebrow} title={labels.title} intro={labels.intro} />
+    <div className="gate-builder-screen">
+      <PageHeader className="gate-page-header" eyebrow={labels.eyebrow} title={labels.title} intro={labels.intro} />
 
       <WorkspaceShell
+        className="gate-workspace"
         label={local(b("مراحل بناء الـGate", "Gate Building Stages"), lang)}
         steps={[
           local(b("الربط والشرط", "Link & Requirement"), lang),
@@ -160,8 +161,16 @@ export function GateBuilder({
           </>
         }
         form={
-          <form className="builder-card dense" onSubmit={(e) => e.preventDefault()}>
-            <div className="field-row">
+          <form className="builder-card dense gate-authoring-form" onSubmit={(e) => e.preventDefault()}>
+            <section className="gate-form-section gate-route-section" aria-label={local(b("مسار الانتقال", "Progression route"), lang)}>
+              <div className="gate-section-heading">
+                <span aria-hidden="true">01</span>
+                <div>
+                  <strong>{local(b("مسار الانتقال", "Progression route"), lang)}</strong>
+                  <small>{local(b("حدد المحطة المصدر والمحطة التالية قبل صياغة القرار.", "Set the source and next Station before defining the decision."), lang)}</small>
+                </div>
+              </div>
+              <div className="field-row">
               <label>
                 {labels.fromStation}
                 <select
@@ -204,9 +213,18 @@ export function GateBuilder({
                     ))}
                 </select>
               </label>
-            </div>
+              </div>
+            </section>
 
-            <div className="field-row">
+            <section className="gate-form-section gate-evidence-section" aria-label={local(b("الشرط والدليل", "Requirement and evidence"), lang)}>
+              <div className="gate-section-heading">
+                <span aria-hidden="true">02</span>
+                <div>
+                  <strong>{local(b("الشرط والدليل", "Requirement and evidence"), lang)}</strong>
+                  <small>{local(b("اكتب ما يجب إثباته بصورة قابلة للملاحظة.", "Describe what must be demonstrated through observable evidence."), lang)}</small>
+                </div>
+              </div>
+              <div className="field-row">
               <label>
                 {labels.requirement}
                 <textarea
@@ -223,9 +241,18 @@ export function GateBuilder({
                   onChange={(e) => setBi("evidenceRequired", "ar", e.target.value)}
                 />
               </label>
-            </div>
+              </div>
+            </section>
 
-            <div className="field-row">
+            <section className="gate-form-section gate-criteria-section" aria-label={local(b("المعايير والفشل الحرج", "Criteria and Critical Failure"), lang)}>
+              <div className="gate-section-heading">
+                <span aria-hidden="true">03</span>
+                <div>
+                  <strong>{local(b("المعايير والفشل الحرج", "Criteria and Critical Failure"), lang)}</strong>
+                  <small>{local(b("افصل تعريف الفشل الحرج عن تسجيل واقعة ملاحظة.", "Keep authored failure criteria separate from an observed event."), lang)}</small>
+                </div>
+              </div>
+              <div className="field-row">
               <label>
                 {labels.mandatoryCriteria}
                 <textarea
@@ -234,29 +261,41 @@ export function GateBuilder({
                   onChange={(e) => setBi("mandatoryCriteria", "ar", e.target.value)}
                 />
               </label>
-              <label className="card-role-danger" style={{ padding: "0.75rem", borderRadius: "8px" }}>
-                <strong>⚠️ {labels.criticalFailures} (Authored Criteria)</strong>
+              <div className={`observed-critical-card ${hasCritical ? "is-observed" : ""}`}>
+                <label>
+                <strong>{labels.criticalFailures} <bdi dir="ltr">— Authored Criteria</bdi></strong>
                 <textarea
                   dir="auto"
                   value={currentGate.criticalFailures.ar}
                   onChange={(e) => setBi("criticalFailures", "ar", e.target.value)}
                   placeholder={local(b("وصف المعايير الشارحة لما يعتبر خرقًا حرجًا", "Authored criteria describing what counts as a critical failure"), lang)}
                 />
-                <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                </label>
+                <div className="observed-critical-toggle">
                   <input
                     type="checkbox"
                     id="observed-cf-toggle"
                     checked={hasCritical}
                     onChange={(e) => toggleObservedCritical(e.target.checked)}
                   />
-                  <label htmlFor="observed-cf-toggle" style={{ margin: 0, fontWeight: 600, fontSize: "0.85rem" }}>
-                    {local(b("تسجيل خرق أمان حرج ملاحظ (Observed Failure Event)", "Record an observed critical safety failure event"), lang)}
+                  <label htmlFor="observed-cf-toggle">
+                    <strong>{local(b("تسجيل فشل أمان حرج ملاحظ", "Record an observed Critical Safety Failure"), lang)}</strong>
+                    <small>{local(b("فعّل فقط عند وجود دليل ملاحظ. القرار يصبح", "Enable only for observed evidence. The decision becomes"), lang)} <bdi dir="ltr">No-Go</bdi>.</small>
                   </label>
                 </div>
-              </label>
-            </div>
+              </div>
+              </div>
+            </section>
 
-            <div className="field-row thirds">
+            <section className="gate-form-section gate-decision-rules-section" aria-label={local(b("قواعد القرار", "Decision rules"), lang)}>
+              <div className="gate-section-heading">
+                <span aria-hidden="true">04</span>
+                <div>
+                  <strong>{local(b("قواعد القرار", "Decision rules"), lang)}</strong>
+                  <small>{local(b("حدد شروط كل نتيجة دون استخدام درجة كلية تعويضية.", "Define each outcome without a compensating aggregate score."), lang)}</small>
+                </div>
+              </div>
+              <div className="field-row thirds">
               <label>
                 {labels.goConditions}
                 <input
@@ -281,9 +320,18 @@ export function GateBuilder({
                   onChange={(e) => setBi("needMoreDataConditions", "ar", e.target.value)}
                 />
               </label>
-            </div>
+              </div>
+            </section>
 
-            <div className="field-row thirds">
+            <section className="gate-form-section gate-remediation-section" aria-label={local(b("المعالجة وإعادة الاختبار", "Remediation and Retest"), lang)}>
+              <div className="gate-section-heading">
+                <span aria-hidden="true">05</span>
+                <div>
+                  <strong>{local(b("المعالجة وإعادة الاختبار", "Remediation and Retest"), lang)}</strong>
+                  <small>{local(b("حدد الـReset وشروط الـRetest قبل السماح بمحاولة جديدة.", "Define Reset and Retest conditions before another attempt."), lang)}</small>
+                </div>
+              </div>
+              <div className="field-row thirds">
               <label>
                 {labels.remediation}
                 <input
@@ -308,7 +356,34 @@ export function GateBuilder({
                   onChange={(e) => setBi("resetConditions", "ar", e.target.value)}
                 />
               </label>
-            </div>
+              </div>
+            </section>
+
+            <section className="gate-attempt-history" aria-labelledby="gate-attempt-history-title">
+              <div className="gate-section-heading">
+                <span aria-hidden="true">06</span>
+                <div>
+                  <strong id="gate-attempt-history-title">{local(b("سجل محاولات الـGate", "Gate attempt history"), lang)}</strong>
+                  <small>{local(b("المحاولات السابقة تظل محفوظة ولا يستبدلها الـRetest.", "Retest never replaces an earlier attempt."), lang)}</small>
+                </div>
+              </div>
+              {currentGate.attempts.length ? (
+                <ol>
+                  {currentGate.attempts.map((attempt) => (
+                    <li key={attempt.id}>
+                      <div>
+                        <strong>{local(b("محاولة", "Attempt"), lang)} <bdi dir="ltr">#{attempt.attemptNumber}</bdi></strong>
+                        <time dateTime={attempt.timestamp}>{new Date(attempt.timestamp).toLocaleString(lang === "ar" ? "ar-EG" : "en-GB")}</time>
+                      </div>
+                      <bdi className={`attempt-decision decision-${attempt.decision}`} dir="ltr">{labels.decisions[attempt.decision]}</bdi>
+                      <p>{attempt.evidenceSnapshot || local(b("لم يُسجل دليل لهذه المحاولة.", "No evidence was recorded for this attempt."), lang)}</p>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="gate-attempt-empty">{local(b("لا توجد محاولات مسجلة بعد. أول قرار موثق سيظهر هنا.", "No attempts recorded yet. The first documented decision will appear here."), lang)}</p>
+              )}
+            </section>
 
             <div className="builder-actions-row">
               <button
@@ -322,7 +397,7 @@ export function GateBuilder({
           </form>
         }
         preview={
-          <aside className="output-card">
+          <aside className="output-card gate-decision-card">
             <div className="card-top">
               <EvidenceBadge type={effectiveDecision === "no-go" ? "danger" : effectiveDecision === "go" ? "safe" : "default"}>
                 {labels.decisions[effectiveDecision]}
@@ -337,7 +412,7 @@ export function GateBuilder({
 
             {hasCritical && (
               <StatusBanner
-                type="instructor"
+                type="critical"
                 message={local(b("خرق أمان حرج مسجل: القرار الفعلي No-Go وغير قابل للتعويض بأي درجات.", "Critical safety failure logged: decision is strictly forced to No-Go."), lang)}
               />
             )}

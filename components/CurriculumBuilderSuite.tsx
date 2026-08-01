@@ -453,7 +453,7 @@ export default function CurriculumBuilderSuite({
         </div>
       </header>
 
-      <div className="suite-body-layout">
+      <div className={`suite-body-layout ${showTreeMobile ? "hierarchy-open" : ""}`}>
         <aside className={`suite-sidebar ${showTreeMobile ? "show-mobile" : ""}`}>
           <HierarchyTree
             lang={lang}

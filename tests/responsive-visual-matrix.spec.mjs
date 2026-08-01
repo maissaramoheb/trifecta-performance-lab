@@ -76,8 +76,8 @@ test.describe("Visual Assertions & Motion Sequences", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`${BASE_URL}/`, { waitUntil: "networkidle" });
 
-    const facet = page.locator(".architecture-facet").first();
-    await expect(facet).toBeVisible();
+    const settledStream = page.locator(".architecture-node").first();
+    await expect(settledStream).toBeVisible();
   });
 
   test("Deliberate replay button triggers motion sequence restart", async ({ page }) => {

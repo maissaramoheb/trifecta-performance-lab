@@ -384,7 +384,7 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
       <div className="hero-copy">
         <Badge tone="source">{local(b("نظام تطوير المدربين", "Trainer development system"), lang)}</Badge>
         <h1>{local(b("اقرأ الأداء كاملًا.", "Read the whole performance."), lang)}</h1>
-        <p className="hero-lead">{local(b("Learning Domains بتحدد إحنا عايزين نبني إيه داخل المتدرب. والـTrifecta بتساعدنا نفهم الأداء الفعلي نجح أو فشل ليه.", "Learning Domains define what we want to build in the learner. The Trifecta helps explain why actual performance succeeded or failed."), lang)}</p>
+        <p className="hero-lead">{lang === "ar" ? <><bdi dir="ltr">Learning Domains</bdi> بتحدد إحنا عايزين نبني إيه داخل المتدرب. و<bdi dir="ltr">Trifecta</bdi> بتساعدنا نفهم الأداء الفعلي نجح أو فشل ليه.</> : "Learning Domains define what we want to build in the learner. The Trifecta helps explain why actual performance succeeded or failed."}</p>
         <div className="hero-actions">
           <button className="primary" onClick={() => go("curriculum")}>{local(b("افتح مسار المنهج", "Open the curriculum pathway"), lang)}</button>
           <button className="secondary" onClick={() => go("cases")}>{local(b("افتح معمل الحالات", "Open the case lab"), lang)}</button>
@@ -397,7 +397,7 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
       <div className="curriculum-preview-copy">
         <MiniLabel>{local(b("الهيكل المعتمد", "Authoritative structure"), lang)}</MiniLabel>
         <h2>{local(b("التعلم بيتبني في طبقات. والانتقال محتاج دليل.", "Learning is built in layers. Progression requires evidence."), lang)}</h2>
-        <p>{local(b("كل Curriculum فيه Levels، وكل Level فيه Stations، وكل Station فيها Drills. بين كل محطتين Gate يقرر Go أو No-Go أو Need More Data أو Retest.", "Each Curriculum contains Levels, each Level contains Stations, and each Station contains Drills. A Gate between stations decides Go, No-Go, Need More Data, or Retest."), lang)}</p>
+        <p>{lang === "ar" ? <>كل <bdi dir="ltr">Curriculum</bdi> فيه <bdi dir="ltr">Levels</bdi>، وكل <bdi dir="ltr">Level</bdi> فيه <bdi dir="ltr">Stations</bdi>، وكل <bdi dir="ltr">Station</bdi> فيها <bdi dir="ltr">Drills</bdi>. بين كل محطتين <bdi dir="ltr">Gate</bdi> يقرر <bdi dir="ltr">Go</bdi> أو <bdi dir="ltr">No-Go</bdi> أو <bdi dir="ltr">Need More Data</bdi> أو <bdi dir="ltr">Retest</bdi>.</> : "Each Curriculum contains Levels, each Level contains Stations, and each Station contains Drills. A Gate between stations decides Go, No-Go, Need More Data, or Retest."}</p>
         <button className="secondary" onClick={() => go("curriculum")}>{local(b("استكشف المسار التفاعلي", "Explore the interactive pathway"), lang)}</button>
       </div>
       <div className="curriculum-anatomy" aria-hidden="true">
