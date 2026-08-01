@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-html-link-for-pages -- this local-first SPA owns section history and safely degrades to server routes */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CurriculumWorkspace from "./CurriculumWorkspace";
 import CurriculumBuilderSuite from "./CurriculumBuilderSuite";
 import {
@@ -154,11 +154,11 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
       return;
     }
 
-    const t1 = setTimeout(() => setMotionStage(1), 120);
-    const t2 = setTimeout(() => setMotionStage(2), 360);
-    const t3 = setTimeout(() => setMotionStage(3), 600);
-    const t4 = setTimeout(() => setMotionStage(4), 840);
-    const t5 = setTimeout(() => setMotionStage(5), 1080);
+    const t1 = setTimeout(() => setMotionStage(1), 160);
+    const t2 = setTimeout(() => setMotionStage(2), 480);
+    const t3 = setTimeout(() => setMotionStage(3), 800);
+    const t4 = setTimeout(() => setMotionStage(4), 1120);
+    const t5 = setTimeout(() => setMotionStage(5), 1440);
 
     return () => {
       clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5);
@@ -166,12 +166,16 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
   }, []);
 
   const triggerReplay = () => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setMotionStage(5);
+      return;
+    }
     setMotionStage(0);
-    setTimeout(() => setMotionStage(1), 120);
-    setTimeout(() => setMotionStage(2), 360);
-    setTimeout(() => setMotionStage(3), 600);
-    setTimeout(() => setMotionStage(4), 840);
-    setTimeout(() => setMotionStage(5), 1080);
+    setTimeout(() => setMotionStage(1), 160);
+    setTimeout(() => setMotionStage(2), 480);
+    setTimeout(() => setMotionStage(3), 800);
+    setTimeout(() => setMotionStage(4), 1120);
+    setTimeout(() => setMotionStage(5), 1440);
   };
 
   const pillars = {
@@ -226,127 +230,83 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
       </div>
 
       <div className="performance-architecture">
-        <div className="architecture-canvas" aria-hidden="true">
-          <svg viewBox="0 0 540 320" role="presentation">
+        <div className="pyramid-stage">
+          <div className="architecture-canvas" aria-hidden="true">
+          <svg className="trifecta-pyramid-svg" viewBox="0 0 720 520" role="presentation">
             <defs>
-              <linearGradient id="stream-physical-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#0f766e" stopOpacity="0.85" />
-                <stop offset="100%" stopColor="#0d9488" stopOpacity="0.4" />
+              <linearGradient id="face-physical" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#20C7B7" stopOpacity="0.88" />
+                <stop offset="100%" stopColor="#0B5E59" stopOpacity="0.92" />
               </linearGradient>
-              <linearGradient id="stream-technical-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#0284c7" stopOpacity="0.85" />
-                <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.4" />
+              <linearGradient id="face-technical" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#3AA7D8" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#173D58" stopOpacity="0.96" />
               </linearGradient>
-              <linearGradient id="stream-cognitive-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#9a3412" stopOpacity="0.85" />
-                <stop offset="100%" stopColor="#f97316" stopOpacity="0.4" />
+              <linearGradient id="face-cognitive" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#D5A04A" stopOpacity="0.88" />
+                <stop offset="100%" stopColor="#6A3C24" stopOpacity="0.94" />
               </linearGradient>
+              <radialGradient id="integrated-core" cx="50%" cy="40%" r="62%">
+                <stop offset="0%" stopColor="#FFFFFF" />
+                <stop offset="55%" stopColor="#D7F8F3" />
+                <stop offset="100%" stopColor="#20C7B7" />
+              </radialGradient>
+              <filter id="core-glow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="8" result="blur" />
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <pattern id="tactical-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+                <path d="M36 0H0V36" fill="none" stroke="#334756" strokeWidth="1" opacity="0.28" />
+              </pattern>
             </defs>
-
-            {/* Background Grid Guide Lines */}
-            <line x1="40" y1="50" x2="500" y2="50" stroke="#e2e8f0" strokeDasharray="3 3" />
-            <line x1="40" y1="160" x2="500" y2="160" stroke="#e2e8f0" strokeDasharray="3 3" />
-            <line x1="40" y1="270" x2="500" y2="270" stroke="#e2e8f0" strokeDasharray="3 3" />
-
-            {/* Synthesis Zone Box */}
-            <rect
-              className={`synthesis-field ${motionStage >= 2 ? "visible" : ""}`}
-              x="200" y="35" width="160" height="250" rx="12"
-              fill="#f8fafc" stroke="#cbd5e1" strokeDasharray="4 4"
-            />
-            <text x="280" y="24" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="700">
-              FIELD SYNTHESIS / مجال التفاعل
-            </text>
-
-            {/* Stream 1: Physical Path */}
-            <path
-              className={`stream-path stream-physical ${active === "physical" || active === "integrated" ? "active" : "dimmed"} ${motionStage >= 1 ? "visible" : ""}`}
-              d="M 40,60 C 160,60 220,130 280,150 C 340,170 380,160 450,160"
-              fill="none"
-              stroke={active === "physical" ? "#0f766e" : "url(#stream-physical-grad)"}
-              strokeWidth={active === "physical" ? "5" : "3.5"}
-            />
-            <circle
-              className={`stream-node node-p ${motionStage >= 1 ? "visible" : ""}`}
-              cx="40" cy="60" r="10" fill="#0f766e"
-            />
-            <text x="40" y="64" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="800">P</text>
-
-            {/* Stream 2: Technical Path */}
-            <path
-              className={`stream-path stream-technical ${active === "technical" || active === "integrated" ? "active" : "dimmed"} ${motionStage >= 2 ? "visible" : ""}`}
-              d="M 40,160 C 160,160 220,160 280,160 C 340,160 380,160 450,160"
-              fill="none"
-              stroke={active === "technical" ? "#0284c7" : "url(#stream-technical-grad)"}
-              strokeWidth={active === "technical" ? "5" : "3.5"}
-            />
-            <circle
-              className={`stream-node node-t ${motionStage >= 2 ? "visible" : ""}`}
-              cx="40" cy="160" r="10" fill="#0284c7"
-            />
-            <text x="40" y="164" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="800">T</text>
-
-            {/* Stream 3: Cognitive Path */}
-            <path
-              className={`stream-path stream-cognitive ${active === "cognitive" || active === "integrated" ? "active" : "dimmed"} ${motionStage >= 3 ? "visible" : ""}`}
-              d="M 40,260 C 160,260 220,190 280,170 C 340,150 380,160 450,160"
-              fill="none"
-              stroke={active === "cognitive" ? "#9a3412" : "url(#stream-cognitive-grad)"}
-              strokeWidth={active === "cognitive" ? "5" : "3.5"}
-            />
-            <circle
-              className={`stream-node node-c ${motionStage >= 3 ? "visible" : ""}`}
-              cx="40" cy="260" r="10" fill="#9a3412"
-            />
-            <text x="40" y="264" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="800">C</text>
-
-            {/* Actual Performance Result Output Hub */}
-            <g className={`output-hub ${motionStage >= 4 ? "visible" : ""}`}>
-              <circle cx="450" cy="160" r="22" fill="#0f172a" stroke="#0f766e" strokeWidth="2.5" />
-              <circle cx="450" cy="160" r="8" fill="#38bdf8" />
-              <text x="450" y="202" textAnchor="middle" fill="#0f172a" fontSize="12" fontWeight="800">
-                ACTUAL PERFORMANCE / الأداء الفعلي
-              </text>
+            <rect x="52" y="40" width="616" height="430" rx="22" fill="url(#tactical-grid)" opacity="0.55" />
+            <path className={`pyramid-outline ${motionStage >= 1 ? "visible" : ""}`} d="M360 62 116 360 360 458 604 360Z" />
+            <polygon className={`pyramid-face face-cognitive ${motionStage >= 4 ? "visible" : ""}`} points="360,62 116,360 360,326 604,360" fill="url(#face-cognitive)" />
+            <polygon className={`pyramid-face face-physical ${motionStage >= 2 ? "visible" : ""}`} points="116,360 360,326 360,458" fill="url(#face-physical)" />
+            <polygon className={`pyramid-face face-technical ${motionStage >= 3 ? "visible" : ""}`} points="360,326 604,360 360,458" fill="url(#face-technical)" />
+            <path className={`pyramid-edge edge-left ${motionStage >= 4 ? "visible" : ""}`} d="M360 62 116 360 360 458" />
+            <path className={`pyramid-edge edge-right ${motionStage >= 4 ? "visible" : ""}`} d="M360 62 604 360 360 458" />
+            <path className={`pyramid-edge edge-base ${motionStage >= 4 ? "visible" : ""}`} d="M116 360 604 360" />
+            <path className={`pyramid-edge edge-centre ${motionStage >= 4 ? "visible" : ""}`} d="M360 62 360 458" />
+            <path className={`edge-sweep ${motionStage >= 5 ? "visible" : ""}`} d="M360 62 604 360 360 458 116 360Z" />
+            <g className={`integrated-core ${motionStage >= 5 ? "visible" : ""}`} filter="url(#core-glow)">
+              <circle cx="360" cy="326" r="34" fill="#071018" stroke="#F2F6F8" strokeWidth="2" />
+              <circle cx="360" cy="326" r="17" fill="url(#integrated-core)" />
+              <path d="M351 326h18M360 317v18" stroke="#071018" strokeWidth="2" />
             </g>
           </svg>
-        </div>
-
-        {/* Stream Selector Controls */}
-        <div
-          className="architecture-controls"
-          role="tablist"
-          aria-label={local(b("اختيار مسار التقييم والتشخيص", "Select Stream Lens"), lang)}
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={active === "integrated"}
-            className={`architecture-node node-integrated ${active === "integrated" ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
-            onClick={() => setActive("integrated")}
-          >
-            <bdi>ALL</bdi>
-            <span>
-              <strong><bdi>{local(b("تأثير المسارات المكتملة", "Integrated Streams Outcome"), lang)}</bdi></strong>
-              <small>{local(b("التقاء المسارات الثلاثة", "Stream convergence"), lang)}</small>
-            </span>
-          </button>
-
-          {dimensionKeys.map((key) => (
+          </div>
+          <div className="architecture-controls" role="tablist" aria-label={local(b("اختيار بُعد الأداء", "Select performance dimension"), lang)}>
+            {dimensionKeys.map((key) => (
             <button
               key={key}
               type="button"
               role="tab"
               aria-selected={active === key}
-              className={`architecture-node node-${key} ${active === key ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
+              className={`architecture-node pyramid-label label-${key} node-${key} ${active === key ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
               onClick={() => setActive(key)}
             >
               <bdi>{pillars[key].code}</bdi>
               <span>
                 <strong><bdi>{local(pillars[key].name, lang)}</bdi></strong>
-                <small><bdi>{local(pillars[key].prompt, lang)}</bdi></small>
+                <small>{local(b("حدد البُعد لقراءة الدليل", "Focus this evidence stream"), lang)}</small>
               </span>
             </button>
           ))}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={active === "integrated"}
+              className={`architecture-node pyramid-label label-integrated node-integrated ${active === "integrated" ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
+              onClick={() => setActive("integrated")}
+            >
+              <bdi>ALL</bdi>
+              <span>
+                <strong>{local(b("الأداء الفعلي الملاحظ", "Observable Actual Performance"), lang)}</strong>
+                <small>{local(b("نقطة التقاء الأبعاد الثلاثة", "Three-dimension convergence"), lang)}</small>
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -388,6 +348,11 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
         <div className="hero-actions">
           <button className="primary" onClick={() => go("curriculum")}>{local(b("افتح مسار المنهج", "Open the curriculum pathway"), lang)}</button>
           <button className="secondary" onClick={() => go("cases")}>{local(b("افتح معمل الحالات", "Open the case lab"), lang)}</button>
+        </div>
+        <div className="hero-status-strip" aria-label={local(b("حالة النظام", "System status"), lang)}>
+          <div><span aria-hidden="true">●</span><strong>{local(b("محلي وآمن", "Local-first"), lang)}</strong><small>{local(b("البيانات على جهازك", "Data stays on device"), lang)}</small></div>
+          <div><span aria-hidden="true">◇</span><strong>{local(b("جاهز بدون اتصال", "Offline ready"), lang)}</strong><small>{local(b("المحتوى الأساسي متاح", "Core content available"), lang)}</small></div>
+          <div><span aria-hidden="true">▣</span><strong>{local(b("قرار مبني على دليل", "Evidence gated"), lang)}</strong><small>{local(b("لا انتقال بلا إثبات", "No progression without proof"), lang)}</small></div>
         </div>
       </div>
       <TrifectaInstrument lang={lang}/>
@@ -799,15 +764,31 @@ function AAR({ lang }: { lang: Lang }) {
   };
   return <>
     <SectionHead eyebrow="After Action Review" title={local(b("حوّل التشخيص إلى فعل", "Turn diagnosis into action"), lang)} intro={local(b("AAR جيد لا يسأل فقط «من أخطأ؟»؛ يراجع المؤدي والـBrief والمعيار والتدريب وتصميم المحطة.", "A good AAR does not only ask “who failed?”; it reviews performer, brief, criterion, coaching, station design, and load progression."), lang)}/>
+    <nav className="aar-stage-rail" aria-label={local(b("مراحل المراجعة بعد الفعل", "After Action Review stages"), lang)}>
+      {[
+        b("الأداء المتوقع", "Expected performance"),
+        b("الأداء الملاحظ", "Observed performance"),
+        b("التحليل", "Analysis"),
+        b("الإجراء والملكية", "Action & ownership"),
+      ].map((stage, index) => <div key={stage.en}><span>{String(index + 1).padStart(2, "0")}</span><strong>{local(stage, lang)}</strong></div>)}
+    </nav>
     <div className="builder-layout">
-      <form className="builder-card" onSubmit={e=>e.preventDefault()}>
-        <Field label={local(b("1. ماذا حدث؟", "1. What happened?"), lang)} value={data.happened} onChange={x=>set("happened",x)} area/>
-        <Field label={local(b("2. ما الدليل الملاحظ؟", "2. What is the observable evidence?"), lang)} value={data.evidence} onChange={x=>set("evidence",x)} area/>
-        <div className="field-row"><label>3. Learning Domain<select value={data.domain} onChange={e=>set("domain",e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><label>4. Trifecta<select value={data.pillar} onChange={e=>set("pillar",e.target.value)}><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
-        <Field label={local(b("5. ما التفسير البديل؟", "5. Most plausible alternative?"), lang)} value={data.alternative} onChange={x=>set("alternative",x)}/>
-        <Field label={local(b("6. ما الدليل الإضافي المطلوب؟", "6. What additional evidence is needed?"), lang)} value={data.missing} onChange={x=>set("missing",x)}/>
-        <label>{local(b("7. أين يوجد السبب القابل للتغيير؟", "7. Where is the modifiable cause?"), lang)}<select value={data.source} onChange={e=>set("source",e.target.value)}><option value="performer">{local(b("المؤدي", "Performer"), lang)}</option><option value="brief">Brief</option><option value="criterion">{local(b("المعيار", "Criterion"), lang)}</option><option value="coaching">{local(b("التدريب", "Coaching"), lang)}</option><option value="station">{local(b("تصميم المحطة", "Station design"), lang)}</option><option value="load">{local(b("تصعيد الحمل", "Load progression"), lang)}</option></select></label>
-        <Field label={local(b("8. ماذا سيتغير في المحاولة التالية؟", "8. What changes next?"), lang)} value={data.change} onChange={x=>set("change",x)} area/>
+      <form className="builder-card aar-form" onSubmit={e=>e.preventDefault()}>
+        <fieldset className="aar-stage-section"><legend><span>01</span>{local(b("الأداء المتوقع والسياق", "Expected performance & context"), lang)}</legend>
+          <Field label={local(b("1. ماذا كان مطلوبًا وماذا حدث؟", "1. What was expected and what happened?"), lang)} value={data.happened} onChange={x=>set("happened",x)} area/>
+        </fieldset>
+        <fieldset className="aar-stage-section"><legend><span>02</span>{local(b("الأداء الملاحظ", "Observed performance"), lang)}</legend>
+          <Field label={local(b("2. ما الدليل الملاحظ؟", "2. What is the observable evidence?"), lang)} value={data.evidence} onChange={x=>set("evidence",x)} area/>
+        </fieldset>
+        <fieldset className="aar-stage-section"><legend><span>03</span>{local(b("التحليل وضبط التشخيص", "Analysis & diagnostic restraint"), lang)}</legend>
+          <div className="field-row"><label>3. <bdi>Learning Domain</bdi><select value={data.domain} onChange={e=>set("domain",e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><label>4. <bdi>Trifecta</bdi><select value={data.pillar} onChange={e=>set("pillar",e.target.value)}><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
+          <Field label={local(b("5. ما التفسير البديل؟", "5. Most plausible alternative?"), lang)} value={data.alternative} onChange={x=>set("alternative",x)}/>
+          <Field label={local(b("6. ما الدليل الإضافي المطلوب؟", "6. What additional evidence is needed?"), lang)} value={data.missing} onChange={x=>set("missing",x)}/>
+        </fieldset>
+        <fieldset className="aar-stage-section"><legend><span>04</span>{local(b("الإجراء والملكية", "Action & ownership"), lang)}</legend>
+          <label>{local(b("7. أين يوجد السبب القابل للتغيير؟", "7. Where is the modifiable cause?"), lang)}<select value={data.source} onChange={e=>set("source",e.target.value)}><option value="performer">{local(b("المؤدي", "Performer"), lang)}</option><option value="brief">Brief</option><option value="criterion">{local(b("المعيار", "Criterion"), lang)}</option><option value="coaching">{local(b("التدريب", "Coaching"), lang)}</option><option value="station">{local(b("تصميم المحطة", "Station design"), lang)}</option><option value="load">{local(b("تصعيد الحمل", "Load progression"), lang)}</option></select></label>
+          <Field label={local(b("8. ماذا سيتغير في المحاولة التالية؟", "8. What changes next?"), lang)} value={data.change} onChange={x=>set("change",x)} area/>
+        </fieldset>
       </form>
       <aside className="output-card aar-output">
         <div className="card-top"><Badge>AAR output</Badge><SourceMark lang={lang} applied/></div>
@@ -1009,10 +990,10 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
         <button aria-pressed={mode==="learner"} onClick={()=>{setMode("learner");setMenu(false);}}>{labels[lang].learner}</button>
         <button aria-pressed={mode==="instructor"} onClick={()=>{setMode("instructor");setMenu(false);}}>{labels[lang].instructor}</button>
       </div>
-      <nav>{routeGroups.map(group => <div className="nav-group" key={group.label.en}>
-        <div className="side-label">{local(group.label,lang)}</div>
+      <nav>{routeGroups.map(group => <details className="nav-group" key={group.label.en} open={group.items.some(([slug]) => slug === section)}>
+        <summary className="side-label"><span>{local(group.label,lang)}</span><bdi aria-hidden="true">⌄</bdi></summary>
         {group.items.map(([slug,title])=><a key={slug} href={slug === "overview" ? "/" : `/${slug}`} className={section===slug?"active":""} aria-current={section===slug?"page":undefined} onClick={(event)=>{event.preventDefault();go(slug);}}><span className="nav-indicator" aria-hidden="true"/>{local(title,lang)}</a>)}
-      </div>)}</nav>
+      </details>)}</nav>
       <div className="side-status"><div><span>{progress}%</span><small>{labels[lang].progress}</small></div><div className="side-bar"><span style={{transform:`scaleY(${progress / 100})`}}/></div></div>
     </aside>
     <main id="main-content" tabIndex={-1}><div className="page-stage" key={section}>{render()}</div></main>

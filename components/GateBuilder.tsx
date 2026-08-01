@@ -413,7 +413,8 @@ export function GateBuilder({
             {hasCritical && (
               <StatusBanner
                 type="critical"
-                message={local(b("خرق أمان حرج مسجل: القرار الفعلي No-Go وغير قابل للتعويض بأي درجات.", "Critical safety failure logged: decision is strictly forced to No-Go."), lang)}
+                title={local(b("فشل أمان حرج ملاحظ · CRITICAL SAFETY FAILURE OBSERVED", "CRITICAL SAFETY FAILURE OBSERVED"), lang)}
+                message={local(b("تم إيقاف التقدم · PROGRESSION INTERRUPTED — قرار إلزامي No-Go · MANDATORY NO-GO", "PROGRESSION INTERRUPTED — MANDATORY NO-GO"), lang)}
               />
             )}
 
@@ -426,7 +427,7 @@ export function GateBuilder({
               mode={mode}
               decisionLabels={labels.decisions}
               statusMessages={{
-                automaticNoGo: local(b("Critical Failure مسجل: القرار الفعلي No-Go.", "Critical Failure recorded: effective decision is No-Go."), lang),
+                automaticNoGo: local(b("تم إيقاف التقدم. القرار الإلزامي No-Go.", "Progression interrupted. Mandatory No-Go."), lang),
                 criticalExplanation: local(b("خرق أمان حرج غير قابل للتعويض بأي درجات أداء أخرى.", "Critical safety failure is non-compensable by any other performance score."), lang),
                 ready: local(b("الدليل مكتمل لاتخاذ قرار.", "Evidence is complete for a decision."), lang),
                 incomplete: local(b("استكمل دليل كل Drill وحدد مرساة أداء قبل Go.", "Complete evidence and select an anchor for every Drill before Go."), lang),
