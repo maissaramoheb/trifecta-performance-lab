@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 3,
+  "activeLevelId": "lvl_missing",
+  "activeStationId": "st_orphan",
+  "activeDrillId": "dr_orphan",
+  "activeGateId": "gt_broken",
+  "levels": [{ "id": "lvl_01", "stationIds": ["st_missing"] }],
+  "stations": [{ "id": "st_orphan", "levelId": "lvl_missing", "drillIds": ["dr_missing"], "gateId": "gt_missing" }],
+  "drills": [{ "id": "dr_orphan", "stationId": "st_missing" }],
+  "gates": [{ "id": "gt_broken", "fromStationId": "st_missing", "nextStationId": "st_missing", "decision": "go", "observedCriticalFailures": [] }]
+}

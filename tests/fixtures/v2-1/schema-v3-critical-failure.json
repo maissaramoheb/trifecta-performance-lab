@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 3,
+  "activeLevelId": "lvl_01",
+  "activeStationId": "st_01",
+  "activeDrillId": "dr_01",
+  "activeGateId": "gt_01",
+  "levels": [{ "id": "lvl_01", "stationIds": ["st_01", "st_02"] }],
+  "stations": [
+    { "id": "st_01", "levelId": "lvl_01", "drillIds": ["dr_01", "dr_02"], "gateId": "gt_01" },
+    { "id": "st_02", "levelId": "lvl_01", "drillIds": [], "gateId": "" }
+  ],
+  "drills": [
+    { "id": "dr_01", "stationId": "st_01", "rating": 3, "observedCriticalFailures": [{ "id": "cf_01", "observedAt": "2026-08-01T00:00:00.000Z", "evidence": "Observable critical safety-condition breach" }] },
+    { "id": "dr_02", "stationId": "st_01", "rating": 3, "observedCriticalFailures": [] }
+  ],
+  "gates": [{ "id": "gt_01", "fromStationId": "st_01", "nextStationId": "st_02", "decision": "no-go", "observedCriticalFailures": ["cf_01"] }]
+}
