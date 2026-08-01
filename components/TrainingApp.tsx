@@ -3,11 +3,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import CurriculumWorkspace from "./CurriculumWorkspace";
+import CurriculumBuilderSuite from "./CurriculumBuilderSuite";
 import {
   createInitialCurriculumProgress,
+  createInitialCurriculumSuiteStore,
+  loadAndMigrateStore,
   migrateCurriculumProgress,
   type CurriculumProgress,
 } from "../lib/curriculum";
+import type { CurriculumSuiteStore } from "../lib/curriculum-builder-types";
 import {
   affectiveLevels,
   b,
@@ -22,14 +26,11 @@ import {
   type Lang,
   type Level,
 } from "../lib/content";
-import { PageHeader } from "./ui/PageHeader";
-import { StatusBanner } from "./ui/StatusBanner";
-import { EvidenceBadge } from "./ui/EvidenceBadge";
-import { WorkspaceShell } from "./ui/WorkspaceShell";
 
 type Mode = "learner" | "instructor";
+
 type SavedState = {
-  schemaVersion?: 2;
+  schemaVersion?: 3;
   lang: Lang;
   mode: Mode;
   completedCases: number[];
@@ -37,6 +38,7 @@ type SavedState = {
   objective?: ObjectiveState;
   station?: StationState;
   curriculum?: CurriculumProgress;
+  curriculumSuite?: CurriculumSuiteStore;
 };
 
 type ObjectiveState = {
@@ -87,12 +89,16 @@ function local<T extends Bi>(value: T | string, lang: Lang): string {
   return value[lang];
 }
 
-function Badge({ children, tone = "default" }: { children: React.ReactNode; tone?: "default" | "safe" | "danger" | "source" | "evidence" | "assumption" }) {
-  return <EvidenceBadge type={tone}>{children}</EvidenceBadge>;
+function Badge({ children, tone = "default" }: { children: React.ReactNode; tone?: "default" | "safe" | "danger" | "source" }) {
+  return <span className={`badge badge-${tone}`}>{children}</span>;
 }
 
 function SectionHead({ eyebrow, title, intro }: { eyebrow: string; title: string; intro: string }) {
-  return <PageHeader eyebrow={eyebrow} title={title} intro={intro} />;
+  return <header className="section-head">
+    <MiniLabel>{eyebrow}</MiniLabel>
+    <h1>{title}</h1>
+    <p>{intro}</p>
+  </header>;
 }
 
 function SourceMark({ lang, applied = false }: { lang: Lang; applied?: boolean }) {
@@ -136,66 +142,188 @@ function LevelCards({ levels, lang, affective = false }: { levels: Level[]; lang
 }
 
 function TrifectaInstrument({ lang }: { lang: Lang }) {
-  const [active, setActive] = useState<"physical" | "technical" | "cognitive">("technical");
+  const [active, setActive] = useState<"integrated" | "physical" | "technical" | "cognitive">("integrated");
+  const [motionStage, setMotionStage] = useState<number>(() =>
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 5 : 0,
+  );
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMotionStage(5);
+      return;
+    }
+
+    const t1 = setTimeout(() => setMotionStage(1), 160);
+    const t2 = setTimeout(() => setMotionStage(2), 480);
+    const t3 = setTimeout(() => setMotionStage(3), 800);
+    const t4 = setTimeout(() => setMotionStage(4), 1120);
+    const t5 = setTimeout(() => setMotionStage(5), 1440);
+
+    return () => {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5);
+    };
+  }, []);
+
+  const triggerReplay = () => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setMotionStage(5);
+      return;
+    }
+    setMotionStage(0);
+    setTimeout(() => setMotionStage(1), 160);
+    setTimeout(() => setMotionStage(2), 480);
+    setTimeout(() => setMotionStage(3), 800);
+    setTimeout(() => setMotionStage(4), 1120);
+    setTimeout(() => setMotionStage(5), 1440);
+  };
+
   const pillars = {
+    integrated: {
+      code: "ALL",
+      name: b("الأداء الفعلي المكتمل", "Integrated Actual Performance"),
+      prompt: b("تدفق وتوافق المسارات الثلاثة: البدنية والفنية والذهنية يشكّل الناتج الفعلي الملاحظ.", "The convergence of Physical, Technical, and Cognitive streams produces observable actual performance."),
+      detail: b("قصور أي مسار يؤثر على جودة الأداء الملاحظ؛ خرق الأمان يفرض No-Go مستقلًا.", "A weakness in any stream alters performance fidelity; Critical Safety Failure forces an independent No-Go."),
+    },
     physical: {
       code: "P",
-      name: b("بدني", "Physical"),
-      prompt: b("هل الجسم يدعم المهمة ويحافظ على الأداء؟", "Can the body support the task and retain performance?"),
+      name: b("مسار الأداء البدني", "Physical Performance Stream"),
+      prompt: b("هل يدعم الجاهزية والتوازن والاستعادة الحركية تحت الحمل؟", "Does biological readiness, balance, and movement recovery support task load?"),
+      detail: b("يشمل التحكم الحركي، الثبات الهيكلي، والقدرة على التكرار دون تدهور بدني.", "Includes motor control, structural stability, and repetition capacity without physical degradation."),
     },
     technical: {
       code: "T",
-      name: b("فني", "Technical"),
-      prompt: b("هل الناتج صحيح وآمن وثابت وقابل للتكرار؟", "Is the output correct, safe, stable, and repeatable?"),
+      name: b("مسار الأداء الفني", "Technical Performance Stream"),
+      prompt: b("هل الناتج صحيح وآمن وتكتيكي وثابت وقابل للتكرار؟", "Is the execution standard correct, safe, stable, and repeatable?"),
+      detail: b("يطابق الدليل الفني المعمد ويضمن السلامة التشغيلية المباشرة.", "Matches authoritative technical standards and ensures direct operational safety."),
     },
     cognitive: {
       code: "C",
-      name: b("ذهني", "Cognitive"),
-      prompt: b("هل لاحظ وتذكّر وقرّر وحوّل القرار إلى فعل؟", "Did the performer notice, remember, decide, and turn the decision into action?"),
+      name: b("مسار الأداء الذهني / العصبي", "Cognitive / Neurophysiological Stream"),
+      prompt: b("هل لاحظ المتدرب وتذكّر وقرّر وسيطر على الضغط الذهني؟", "Did the performer notice cues, recall rules, decide, and manage cognitive load?"),
+      detail: b("يشمل الوعي بالموقف، سرعة معالجة المعلومات، والانضباط الانفعالي تحت التقييم.", "Includes situational awareness, information processing speed, and emotional control."),
     },
   };
+
   const current = pillars[active];
-  const keys = Object.keys(pillars) as Array<keyof typeof pillars>;
-  return <aside className="trifecta-instrument" data-active={active} aria-label={local(b("معمار الأداء الثلاثي", "Trifecta performance architecture"), lang)}>
-    <div className="instrument-head">
-      <div><span>PERFORMANCE / 03</span><strong>{local(b("ثلاثة أبعاد مترابطة", "Three interdependent dimensions"), lang)}</strong></div>
-      <SourceMark lang={lang}/>
-    </div>
-    <div className="performance-architecture">
-      <div className="architecture-canvas" aria-hidden="true">
-        <svg viewBox="0 0 600 430" role="presentation">
-          <path className="architecture-outline" d="M300 34 548 390H52Z"/>
-          <path className="architecture-axis" d="M300 236 300 34M300 236 52 390M300 236 548 390"/>
-          <path className="architecture-facet facet-technical" d="M300 34 300 236 52 390Z"/>
-          <path className="architecture-facet facet-cognitive" d="M300 34 548 390 300 236Z"/>
-          <path className="architecture-facet facet-physical" d="M52 390 300 236 548 390Z"/>
-          <circle className="architecture-core-ring" cx="300" cy="236" r="54"/>
-          <circle className="architecture-core" cx="300" cy="236" r="38"/>
-          <path className="architecture-output" d="M300 274V322"/>
-        </svg>
-        <div className="architecture-core-label"><span>{local(b("الأداء", "Actual"), lang)}</span><strong>{local(b("الفعلي", "performance"), lang)}</strong></div>
+  const dimensionKeys: Array<"physical" | "technical" | "cognitive"> = ["physical", "technical", "cognitive"];
+
+  return (
+    <aside
+      className={`trifecta-instrument card-role-feature stage-${motionStage}`}
+      data-active-lens={active}
+      aria-label={local(b("نموذج المسارات الثلاثية المتفاعلة", "Interacting Performance Streams Architecture"), lang)}
+    >
+      <div className="instrument-head">
+        <div>
+          <span>PERFORMANCE OPERATIONS STUDIO</span>
+          <strong>{local(b("نموذج المسارات الثلاثية المتفاعلة", "Three Interacting Performance Streams"), lang)}</strong>
+        </div>
+        <button
+          type="button"
+          className="replay-btn"
+          onClick={triggerReplay}
+          aria-label={local(b("إعادة عرض الحركة", "Replay model animation"), lang)}
+        >
+          {local(b("إعادة العرض ↻", "Replay motion ↻"), lang)}
+        </button>
       </div>
-      <div className="architecture-controls architecture-controls-desktop">
-        {keys.map(key => <button
-          key={key}
-          className={`architecture-node architecture-node-${key}`}
-          aria-pressed={active === key}
-          aria-controls="trifecta-readout"
-          onClick={() => setActive(key)}
-        ><bdi>{pillars[key].code}</bdi><span><strong>{local(pillars[key].name, lang)}</strong><small>{local(pillars[key].prompt, lang)}</small></span></button>)}
+
+      <div className="performance-architecture">
+        <div className="pyramid-stage">
+          <div className="architecture-canvas" aria-hidden="true">
+          <svg className="trifecta-pyramid-svg" viewBox="0 0 720 520" role="presentation">
+            <defs>
+              <linearGradient id="face-physical" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#20C7B7" stopOpacity="0.88" />
+                <stop offset="100%" stopColor="#0B5E59" stopOpacity="0.92" />
+              </linearGradient>
+              <linearGradient id="face-technical" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#3AA7D8" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#173D58" stopOpacity="0.96" />
+              </linearGradient>
+              <linearGradient id="face-cognitive" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#D5A04A" stopOpacity="0.88" />
+                <stop offset="100%" stopColor="#6A3C24" stopOpacity="0.94" />
+              </linearGradient>
+              <radialGradient id="integrated-core" cx="50%" cy="40%" r="62%">
+                <stop offset="0%" stopColor="#FFFFFF" />
+                <stop offset="55%" stopColor="#D7F8F3" />
+                <stop offset="100%" stopColor="#20C7B7" />
+              </radialGradient>
+              <filter id="core-glow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="8" result="blur" />
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <pattern id="tactical-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+                <path d="M36 0H0V36" fill="none" stroke="#334756" strokeWidth="1" opacity="0.28" />
+              </pattern>
+            </defs>
+            <rect x="52" y="40" width="616" height="430" rx="22" fill="url(#tactical-grid)" opacity="0.55" />
+            <path className={`pyramid-outline ${motionStage >= 1 ? "visible" : ""}`} d="M360 62 116 360 360 458 604 360Z" />
+            <polygon className={`pyramid-face face-cognitive ${motionStage >= 4 ? "visible" : ""}`} points="360,62 116,360 360,326 604,360" fill="url(#face-cognitive)" />
+            <polygon className={`pyramid-face face-physical ${motionStage >= 2 ? "visible" : ""}`} points="116,360 360,326 360,458" fill="url(#face-physical)" />
+            <polygon className={`pyramid-face face-technical ${motionStage >= 3 ? "visible" : ""}`} points="360,326 604,360 360,458" fill="url(#face-technical)" />
+            <path className={`pyramid-edge edge-left ${motionStage >= 4 ? "visible" : ""}`} d="M360 62 116 360 360 458" />
+            <path className={`pyramid-edge edge-right ${motionStage >= 4 ? "visible" : ""}`} d="M360 62 604 360 360 458" />
+            <path className={`pyramid-edge edge-base ${motionStage >= 4 ? "visible" : ""}`} d="M116 360 604 360" />
+            <path className={`pyramid-edge edge-centre ${motionStage >= 4 ? "visible" : ""}`} d="M360 62 360 458" />
+            <path className={`edge-sweep ${motionStage >= 5 ? "visible" : ""}`} d="M360 62 604 360 360 458 116 360Z" />
+            <g className={`integrated-core ${motionStage >= 5 ? "visible" : ""}`} filter="url(#core-glow)">
+              <circle cx="360" cy="326" r="34" fill="#071018" stroke="#F2F6F8" strokeWidth="2" />
+              <circle cx="360" cy="326" r="17" fill="url(#integrated-core)" />
+              <path d="M351 326h18M360 317v18" stroke="#071018" strokeWidth="2" />
+            </g>
+          </svg>
+          </div>
+          <div className="architecture-controls" role="tablist" aria-label={local(b("اختيار بُعد الأداء", "Select performance dimension"), lang)}>
+            {dimensionKeys.map((key) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={active === key}
+              className={`architecture-node pyramid-label label-${key} node-${key} ${active === key ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
+              onClick={() => setActive(key)}
+            >
+              <bdi>{pillars[key].code}</bdi>
+              <span>
+                <strong><bdi>{local(pillars[key].name, lang)}</bdi></strong>
+                <small>{local(b("حدد البُعد لقراءة الدليل", "Focus this evidence stream"), lang)}</small>
+              </span>
+            </button>
+          ))}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={active === "integrated"}
+              className={`architecture-node pyramid-label label-integrated node-integrated ${active === "integrated" ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
+              onClick={() => setActive("integrated")}
+            >
+              <bdi>ALL</bdi>
+              <span>
+                <strong>{local(b("الأداء الفعلي الملاحظ", "Observable Actual Performance"), lang)}</strong>
+                <small>{local(b("نقطة التقاء الأبعاد الثلاثة", "Three-dimension convergence"), lang)}</small>
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="architecture-controls architecture-controls-mobile" role="group" aria-label={local(b("أبعاد الأداء", "Performance dimensions"), lang)}>
-        {keys.map(key => <button key={key} aria-pressed={active === key} onClick={() => setActive(key)}>
-          <bdi>{pillars[key].code}</bdi><span><strong>{local(pillars[key].name, lang)}</strong><small>{local(pillars[key].prompt, lang)}</small></span><i aria-hidden="true">{active === key ? "—" : "+"}</i>
-        </button>)}
+
+      {/* Single Readout Panel */}
+      <div className="instrument-readout" id="trifecta-readout" aria-live="polite">
+        <div className="readout-tag">
+          <span>{local(b("عدسة التشخيص النشطة", "ACTIVE DIAGNOSTIC STREAM"), lang)}</span>
+          <bdi className="code-badge">{current.code}</bdi>
+        </div>
+        <div className="readout-body">
+          <strong><bdi>{local(current.name, lang)}</bdi></strong>
+          <p><bdi>{local(current.prompt, lang)}</bdi></p>
+          <small><bdi>{local(current.detail, lang)}</bdi></small>
+        </div>
       </div>
-    </div>
-    <div className="instrument-readout" id="trifecta-readout" aria-live="polite">
-      <span>{local(b("العدسة النشطة", "ACTIVE LENS"), lang)} · <bdi>{current.code}</bdi></span>
-      <div><strong>{local(current.name, lang)}</strong><p>{local(current.prompt, lang)}</p></div>
-      <small>{local(b("الأبعاد متساوية في الأهمية؛ الاختيار يغيّر عدسة القراءة، لا ترتيبها.", "The dimensions are equally important; selection changes the diagnostic lens, not its rank."), lang)}</small>
-    </div>
-  </aside>;
+    </aside>
+  );
 }
 
 function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
@@ -216,11 +344,15 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
       <div className="hero-copy">
         <Badge tone="source">{local(b("نظام تطوير المدربين", "Trainer development system"), lang)}</Badge>
         <h1>{local(b("اقرأ الأداء كاملًا.", "Read the whole performance."), lang)}</h1>
-        <p className="hero-lead">{local(b("Learning Domains بتحدد إحنا عايزين نبني إيه داخل المتدرب. والـTrifecta بتساعدنا نفهم الأداء الفعلي نجح أو فشل ليه.", "Learning Domains define what we want to build in the learner. The Trifecta helps explain why actual performance succeeded or failed."), lang)}</p>
-        <p className="hero-audience">{local(b("للمدربين، قادة الفرق، مصممي المناهج، ومقيمي المحطات اللي محتاجين قرارًا يستند إلى دليل—مش نتيجة واحدة.", "For trainers, team leaders, curriculum designers, and station assessors who need an evidence-based decision—not a single result."), lang)}</p>
+        <p className="hero-lead">{lang === "ar" ? <><bdi dir="ltr">Learning Domains</bdi> بتحدد إحنا عايزين نبني إيه داخل المتدرب. و<bdi dir="ltr">Trifecta</bdi> بتساعدنا نفهم الأداء الفعلي نجح أو فشل ليه.</> : "Learning Domains define what we want to build in the learner. The Trifecta helps explain why actual performance succeeded or failed."}</p>
         <div className="hero-actions">
           <button className="primary" onClick={() => go("curriculum")}>{local(b("افتح مسار المنهج", "Open the curriculum pathway"), lang)}</button>
           <button className="secondary" onClick={() => go("cases")}>{local(b("افتح معمل الحالات", "Open the case lab"), lang)}</button>
+        </div>
+        <div className="hero-status-strip" aria-label={local(b("حالة النظام", "System status"), lang)}>
+          <div><span aria-hidden="true">●</span><strong>{local(b("محلي وآمن", "Local-first"), lang)}</strong><small>{local(b("البيانات على جهازك", "Data stays on device"), lang)}</small></div>
+          <div><span aria-hidden="true">◇</span><strong>{local(b("جاهز بدون اتصال", "Offline ready"), lang)}</strong><small>{local(b("المحتوى الأساسي متاح", "Core content available"), lang)}</small></div>
+          <div><span aria-hidden="true">▣</span><strong>{local(b("قرار مبني على دليل", "Evidence gated"), lang)}</strong><small>{local(b("لا انتقال بلا إثبات", "No progression without proof"), lang)}</small></div>
         </div>
       </div>
       <TrifectaInstrument lang={lang}/>
@@ -230,7 +362,7 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
       <div className="curriculum-preview-copy">
         <MiniLabel>{local(b("الهيكل المعتمد", "Authoritative structure"), lang)}</MiniLabel>
         <h2>{local(b("التعلم بيتبني في طبقات. والانتقال محتاج دليل.", "Learning is built in layers. Progression requires evidence."), lang)}</h2>
-        <p>{local(b("كل Curriculum فيه Levels، وكل Level فيه Stations، وكل Station فيها Drills. بين كل محطتين Gate يقرر Go أو No-Go أو Need More Data أو Retest.", "Each Curriculum contains Levels, each Level contains Stations, and each Station contains Drills. A Gate between stations decides Go, No-Go, Need More Data, or Retest."), lang)}</p>
+        <p>{lang === "ar" ? <>كل <bdi dir="ltr">Curriculum</bdi> فيه <bdi dir="ltr">Levels</bdi>، وكل <bdi dir="ltr">Level</bdi> فيه <bdi dir="ltr">Stations</bdi>، وكل <bdi dir="ltr">Station</bdi> فيها <bdi dir="ltr">Drills</bdi>. بين كل محطتين <bdi dir="ltr">Gate</bdi> يقرر <bdi dir="ltr">Go</bdi> أو <bdi dir="ltr">No-Go</bdi> أو <bdi dir="ltr">Need More Data</bdi> أو <bdi dir="ltr">Retest</bdi>.</> : "Each Curriculum contains Levels, each Level contains Stations, and each Station contains Drills. A Gate between stations decides Go, No-Go, Need More Data, or Retest."}</p>
         <button className="secondary" onClick={() => go("curriculum")}>{local(b("استكشف المسار التفاعلي", "Explore the interactive pathway"), lang)}</button>
       </div>
       <div className="curriculum-anatomy" aria-hidden="true">
@@ -270,7 +402,7 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
       {comparisons.map((row, i) => <div className="compare-row" key={i}><div>{local(row[0], lang)}</div><div>{local(row[1], lang)}</div></div>)}
     </section>
 
-    <section className="example-grid" aria-label={local(b("إشارات تحتاج تشخيصًا", "Signals requiring diagnosis"), lang)}>
+    <section className="example-grid">
       {examples.map((x, i) => <button key={i} onClick={() => go("cases")} className="example-card">
         <span>0{i + 1}</span><p>{local(x, lang)}</p><strong>↗</strong>
       </button>)}
@@ -449,7 +581,6 @@ function Comparison({ lang }: { lang: Lang }) {
 
 function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) => void }) {
   const [index, setIndex] = useState(0);
-  const [phase, setPhase] = useState<0 | 1>(0);
   const [facts, setFacts] = useState<string[]>([]);
   const [domain, setDomain] = useState("");
   const [pillar, setPillar] = useState("");
@@ -460,7 +591,7 @@ function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) =>
   const [decision, setDecision] = useState("");
   const [show, setShow] = useState(false);
   const item = cases[index];
-  const reset = (next: number) => { setIndex(next); setPhase(0); setFacts([]); setDomain(""); setPillar(""); setPrimary(""); setSecondary(""); setMissing(""); setIntervention(""); setDecision(""); setShow(false); };
+  const reset = (next: number) => { setIndex(next); setFacts([]); setDomain(""); setPillar(""); setPrimary(""); setSecondary(""); setMissing(""); setIntervention(""); setDecision(""); setShow(false); };
   const toggleFact = (x: string) => setFacts(v => v.includes(x) ? v.filter(y => y !== x) : [...v, x]);
   const restraint = decision === "Need More Data" || missing.trim().length > 5;
   const score = [facts.length > 0, domain.length > 0, pillar.length > 0, primary.length > 4, secondary.length > 4, missing.length > 4, intervention.length > 4, decision.length > 0, restraint].filter(Boolean).length;
@@ -473,21 +604,10 @@ function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) =>
     </div>
     <article className="lab-card">
       <div className="case-title"><span>{String(item.id).padStart(2, "0")}</span><div><h2>{local(item.title, lang)}</h2><p>{local(item.scenario, lang)}</p></div></div>
-      <div className="reasoning-legend" aria-label={local(b("حدود الاستدلال", "Reasoning boundaries"), lang)}>
-        <div data-kind="evidence"><strong>{local(b("دليل", "Evidence"), lang)}</strong><span>{local(b("شوهد أو سُجل", "Seen or recorded"), lang)}</span></div>
-        <div data-kind="assumption"><strong>{local(b("افتراض", "Assumption"), lang)}</strong><span>{local(b("غير مثبت", "Not demonstrated"), lang)}</span></div>
-        <div data-kind="interpretation"><strong>{local(b("تفسير", "Interpretation"), lang)}</strong><span>{local(b("سبب محتمل", "Plausible cause"), lang)}</span></div>
-        <div data-kind="uncertainty"><strong>{local(b("عدم يقين", "Uncertainty"), lang)}</strong><span>{local(b("دليل ناقص", "Missing evidence"), lang)}</span></div>
-      </div>
-      <div className="case-phase case-phase-evidence">
-        <fieldset><legend>1 · {local(b("افصل الدليل عن الافتراض", "Separate evidence from assumption"), lang)}</legend>
+      <div className="lab-grid">
+        <fieldset><legend>1 · {local(b("اختر الحقائق، لا الافتراضات", "Select facts, not assumptions"), lang)}</legend>
           {[...item.facts, ...item.assumptions].map((x, i) => <label className="check-row" key={i}><input type="checkbox" checked={facts.includes(local(x, lang))} onChange={() => toggleFact(local(x, lang))}/><span>{local(x, lang)}</span></label>)}
         </fieldset>
-        {phase === 0 && <div className="case-continue"><span>{facts.length ? local(b(`اخترت ${facts.length} بندًا. راجع: هل كل بند ملاحظ فعلًا؟`, `${facts.length} selected. Check: is every item truly observable?`), lang) : local(b("ابدأ بما يمكن لمقيم آخر رؤيته أو تسجيله.", "Start with what another assessor could see or record."), lang)}</span><button className="primary" disabled={!facts.length} onClick={() => setPhase(1)}>{local(b("استمر إلى التشخيص", "Continue to diagnosis"), lang)}</button></div>}
-      </div>
-      {phase === 1 && <div className="case-analysis" aria-live="polite">
-        <div className="case-analysis-head"><div><MiniLabel>{local(b("التفسير وعدم اليقين", "Interpretation & uncertainty"), lang)}</MiniLabel><h3>{local(b("ابنِ تشخيصًا يمكن للدليل تحمّله", "Build only the diagnosis the evidence can support"), lang)}</h3></div><button className="secondary" onClick={() => setPhase(0)}>{local(b("راجع الدليل", "Review evidence"), lang)}</button></div>
-        <div className="lab-grid">
         <fieldset><legend>2 · Learning Domain + Trifecta</legend>
           <div className="field-row"><label>{local(b("المجال", "Domain"), lang)}<select value={domain} onChange={e => setDomain(e.target.value)}><option value="">{labels[lang].select}</option><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label>
           <label>{local(b("العمود", "Pillar"), lang)}<select value={pillar} onChange={e => setPillar(e.target.value)}><option value="">{labels[lang].select}</option><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
@@ -500,18 +620,16 @@ function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) =>
           <label>{local(b("ما الدليل الناقص؟", "What evidence is missing?"), lang)}<textarea value={missing} onChange={e => setMissing(e.target.value)}/></label>
           <label>{local(b("التدخل المقترح", "Recommended intervention"), lang)}<textarea value={intervention} onChange={e => setIntervention(e.target.value)}/></label>
         </fieldset>
-        </div>
-        <fieldset className="decision-field"><legend>5 · {local(b("قرار التقييم", "Assessment decision"), lang)}</legend>
+      </div>
+      <fieldset className="decision-field"><legend>5 · {local(b("قرار التقييم", "Assessment decision"), lang)}</legend>
         {["Go","No-Go","Need More Data"].map(x => <label key={x}><input type="radio" name="decision" value={x} checked={decision === x} onChange={e => setDecision(e.target.value)}/><span>{x}</span></label>)}
-        </fieldset>
-        <div className="lab-actions"><div className="diagnostic-score"><span>{score}/9</span>{local(b("اكتمال منطقك", "reasoning completeness"), lang)}</div><button className="primary" onClick={() => { setShow(true); onComplete(item.id); }}>{labels[lang].reveal}</button></div>
-      </div>}
+      </fieldset>
+      <div className="lab-actions"><div className="diagnostic-score"><span>{score}/9</span>{local(b("اكتمال منطقك", "reasoning completeness"), lang)}</div><button className="primary" onClick={() => { setShow(true); onComplete(item.id); }}>{labels[lang].reveal}</button></div>
       {show && <div className="model-answer" aria-live="polite">
         <div className="card-top"><Badge tone={item.decision === "No-Go" ? "danger" : "safe"}>{item.decision}</Badge><SourceMark lang={lang}/></div>
         <h3>{local(b("إجابة مبنية على الدليل", "Evidence-based model answer"), lang)}</h3>
         <div className="model-grid">
-          <p><MiniLabel><Badge tone="evidence">{labels[lang].evidence}</Badge></MiniLabel>{item.facts.map((x, i) => <span key={i}>• {local(x, lang)} </span>)}</p>
-          <p><MiniLabel><Badge tone="assumption">{labels[lang].assumption}</Badge></MiniLabel>{item.assumptions.map((x, i) => <span key={i}>• {local(x, lang)} </span>)}</p>
+          <p><MiniLabel>{labels[lang].facts}</MiniLabel>{item.facts.map((x, i) => <span key={i}>• {local(x, lang)} </span>)}</p>
           <p><MiniLabel>Learning Domain / Trifecta</MiniLabel>{item.domain} / {item.pillar}</p>
           <p><MiniLabel>{local(b("أساسي / ثانوي", "Primary / secondary"), lang)}</MiniLabel>{local(item.primary, lang)} · {local(item.secondary, lang)}</p>
           <p><MiniLabel>{local(b("بيانات ناقصة", "Missing evidence"), lang)}</MiniLabel>{local(item.missing, lang)}</p>
@@ -541,117 +659,37 @@ function ObjectiveBuilder({ lang, value, onChange }: { lang: Lang; value: Object
     return out;
   }, [value, lang]);
   const ready = value.behaviour && value.condition && value.criterion;
-  const activeStep = !value.requirement || !value.gap ? 0
-    : !value.behaviour ? 1
-    : !value.condition || !value.criterion ? 2
-    : 3;
   return <>
     <SectionHead eyebrow={local(b("أداة المدرب", "Instructor tool"), lang)} title={local(b("بناء هدف قابل للملاحظة", "Objective builder"), lang)} intro={local(b("من متطلب الأداء والفجوة إلى هدف SMART ودليل نجاح واضح.", "Move from performance requirement and gap to a SMART objective with clear evidence."), lang)}/>
-    <WorkspaceShell
-      label={local(b("مراحل بناء الهدف", "Objective-building stages"), lang)}
-      steps={[
-        local(b("المتطلب والفجوة", "Requirement & gap"), lang),
-        local(b("المجال والسلوك", "Domain & behaviour"), lang),
-        local(b("الشرط والمعيار", "Condition & standard"), lang),
-        local(b("الدليل والمراجعة", "Evidence & review"), lang),
-      ]}
-      activeStep={activeStep}
-      summary={<><strong>{ready ? local(b("جاهز للمراجعة", "Ready to review"), lang) : local(b("مسودة قيد البناء", "Draft in progress"), lang)}</strong><span>{warnings.length ? `${warnings.length} ${labels[lang].warnings}` : labels[lang].save}</span></>}
-      form={
-        <form className="builder-card" onSubmit={e => e.preventDefault()}>
-          <div className="field-row"><Field label={local(b("متطلب الأداء", "Performance requirement"), lang)} value={value.requirement} onChange={x => set("requirement", x)}/><Field label={local(b("فجوة الأداء", "Performance gap"), lang)} value={value.gap} onChange={x => set("gap", x)}/></div>
-          <div className="field-row"><label>Learning Domain<select value={value.domain} onChange={e => set("domain", e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><label>{local(b("المستوى", "Level"), lang)}<select value={value.level} onChange={e => set("level", e.target.value)}><option>Remember</option><option>Understand</option><option>Apply</option><option>Analyze</option><option>Evaluate</option><option>Create / Improve</option><option>Precision</option><option>Stable / Naturalized</option><option>Internalizing</option></select></label></div>
-          <Field label={local(b("السلوك الملاحظ", "Observable behaviour"), lang)} value={value.behaviour} onChange={x => set("behaviour", x)} placeholder={local(b("مثال: يطبق قرار الإيقاف", "Example: applies the stop decision"), lang)}/>
-          <div className="field-row"><Field label={local(b("الشرط", "Condition"), lang)} value={value.condition} onChange={x => set("condition", x)}/><Field label={local(b("الحد الأدنى للمعيار", "Minimum standard"), lang)} value={value.criterion} onChange={x => set("criterion", x)}/></div>
-          <div className="field-row"><Field label="Critical Failure" value={value.critical} onChange={x => set("critical", x)}/><Field label={local(b("الدليل المطلوب", "Evidence required"), lang)} value={value.evidence} onChange={x => set("evidence", x)}/></div>
-          <details className="translation-fields">
-            <summary>{local(b("المقابل الإنجليزي للإخراج الثنائي", "English equivalents for bilingual output"), lang)}</summary>
-            <Field label="Observable behaviour — English" value={value.behaviourEn || ""} onChange={x => set("behaviourEn", x)}/>
-            <div className="field-row"><Field label="Condition — English" value={value.conditionEn || ""} onChange={x => set("conditionEn", x)}/><Field label="Minimum standard — English" value={value.criterionEn || ""} onChange={x => set("criterionEn", x)}/></div>
-            <div className="field-row"><Field label="Critical Failure — English" value={value.criticalEn || ""} onChange={x => set("criticalEn", x)}/><Field label="Evidence — English" value={value.evidenceEn || ""} onChange={x => set("evidenceEn", x)}/></div>
-          </details>
-        </form>
-      }
-      preview={
-        <aside className="output-card">
-          <div className="card-top"><Badge tone={warnings.length ? "danger" : "safe"}>{warnings.length ? `${warnings.length} ${labels[lang].warnings}` : local(b("جاهز", "Ready"), lang)}</Badge><span>{labels[lang].save}</span></div>
-          <h2>SMART Objective</h2>
-          {warnings.length > 0 && <ul className="warning-list">{warnings.map((x, i) => <li key={i}>{x}</li>)}</ul>}
-          {ready ? <div className="bilingual-output">
-            <div lang="ar" dir="rtl"><MiniLabel>العربية</MiniLabel><p>في {value.condition}، {value.behaviour}، بحد أدنى {value.criterion}{value.critical ? `، ودون ${value.critical}` : ""}. الدليل: {value.evidence || "Checklist وملاحظة مباشرة"}.</p></div>
-            <div lang="en" dir="ltr"><MiniLabel>English</MiniLabel><p>Under the condition “{value.conditionEn || value.condition}”, the learner will “{value.behaviourEn || value.behaviour}” to a minimum standard of “{value.criterionEn || value.criterion}”{value.critical ? `, with no “${value.criticalEn || value.critical}”` : ""}. Evidence: {value.evidenceEn || value.evidence || "checklist and direct observation"}.</p></div>
-          </div> : <p className="empty">{labels[lang].empty}</p>}
-          <SourceMark lang={lang} applied/>
-        </aside>
-      }
-    />
+    <div className="builder-layout">
+      <form className="builder-card" onSubmit={e => e.preventDefault()}>
+        <div className="field-row"><Field label={local(b("متطلب الأداء", "Performance requirement"), lang)} value={value.requirement} onChange={x => set("requirement", x)}/><Field label={local(b("فجوة الأداء", "Performance gap"), lang)} value={value.gap} onChange={x => set("gap", x)}/></div>
+        <div className="field-row"><label>Learning Domain<select value={value.domain} onChange={e => set("domain", e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><label>{local(b("المستوى", "Level"), lang)}<select value={value.level} onChange={e => set("level", e.target.value)}><option>Remember</option><option>Understand</option><option>Apply</option><option>Analyze</option><option>Evaluate</option><option>Create / Improve</option><option>Precision</option><option>Stable / Naturalized</option><option>Internalizing</option></select></label></div>
+        <Field label={local(b("السلوك الملاحظ", "Observable behaviour"), lang)} value={value.behaviour} onChange={x => set("behaviour", x)} placeholder={local(b("مثال: يطبق قرار الإيقاف", "Example: applies the stop decision"), lang)}/>
+        <div className="field-row"><Field label={local(b("الشرط", "Condition"), lang)} value={value.condition} onChange={x => set("condition", x)}/><Field label={local(b("الحد الأدنى للمعيار", "Minimum standard"), lang)} value={value.criterion} onChange={x => set("criterion", x)}/></div>
+        <div className="field-row"><Field label="Critical Failure" value={value.critical} onChange={x => set("critical", x)}/><Field label={local(b("الدليل المطلوب", "Evidence required"), lang)} value={value.evidence} onChange={x => set("evidence", x)}/></div>
+        <details className="translation-fields">
+          <summary>{local(b("المقابل الإنجليزي للإخراج الثنائي", "English equivalents for bilingual output"), lang)}</summary>
+          <Field label="Observable behaviour — English" value={value.behaviourEn || ""} onChange={x => set("behaviourEn", x)}/>
+          <div className="field-row"><Field label="Condition — English" value={value.conditionEn || ""} onChange={x => set("conditionEn", x)}/><Field label="Minimum standard — English" value={value.criterionEn || ""} onChange={x => set("criterionEn", x)}/></div>
+          <div className="field-row"><Field label="Critical Failure — English" value={value.criticalEn || ""} onChange={x => set("criticalEn", x)}/><Field label="Evidence — English" value={value.evidenceEn || ""} onChange={x => set("evidenceEn", x)}/></div>
+        </details>
+      </form>
+      <aside className="output-card">
+        <div className="card-top"><Badge tone={warnings.length ? "danger" : "safe"}>{warnings.length ? `${warnings.length} ${labels[lang].warnings}` : "Ready"}</Badge><span>{labels[lang].save}</span></div>
+        <h2>SMART Objective</h2>
+        {warnings.length > 0 && <ul className="warning-list">{warnings.map((x, i) => <li key={i}>{x}</li>)}</ul>}
+        {ready ? <div className="bilingual-output">
+          <div lang="ar" dir="rtl"><MiniLabel>العربية</MiniLabel><p>في {value.condition}، {value.behaviour}، بحد أدنى {value.criterion}{value.critical ? `، ودون ${value.critical}` : ""}. الدليل: {value.evidence || "Checklist وملاحظة مباشرة"}.</p></div>
+          <div lang="en" dir="ltr"><MiniLabel>English</MiniLabel><p>Under the condition “{value.conditionEn || value.condition}”, the learner will “{value.behaviourEn || value.behaviour}” to a minimum standard of “{value.criterionEn || value.criterion}”{value.critical ? `, with no “${value.criticalEn || value.critical}”` : ""}. Evidence: {value.evidenceEn || value.evidence || "checklist and direct observation"}.</p></div>
+        </div> : <p className="empty">{labels[lang].empty}</p>}
+        <SourceMark lang={lang} applied/>
+      </aside>
+    </div>
   </>;
 }
 
-function StationBuilder({ lang, value, onChange }: { lang: Lang; value: StationState; onChange: (x: StationState) => void }) {
-  const set = (key: keyof StationState, v: string | boolean) => onChange({ ...value, [key]: v });
-  const variableCount = value.variables.split(/[,،\n]/).filter(Boolean).length;
-  const warnings = [
-    !value.baseline && b("لا يوجد Baseline.", "No baseline is defined."),
-    variableCount > 2 && b("متغيرات كثيرة مضافة معًا؛ لن تعرف أول نقطة انهيار.", "Too many variables are added together; the first breakdown will be unclear."),
-    value.behaviour.split(/[,،\n]/).filter(Boolean).length > 3 && b("المحطة تقيس أداءات كثيرة غير مترابطة.", "The station may measure several unrelated performances."),
-    value.cognitive && value.checklist.split(/\n/).length < 2 && b("الـBrief قد يختبر الذاكرة بدل المهارة المقصودة.", "The brief may test memory rather than the intended skill."),
-    value.primary === "Cognitive" && !/(قرار|تذكر|cue|زمن|خطأ|decision|recall|time|error)/i.test(value.data) && b("البيانات المجمعة لا تدعم التشخيص الذهني المعلن.", "Collected data do not support the stated cognitive diagnosis."),
-    !value.safetyGate && value.critical && b("لا يجوز أن تعوض الدرجة Critical Safety Failure.", "A score cannot compensate for a Critical Safety Failure."),
-  ].filter(Boolean) as Bi[];
-  const activeStep = !value.name || !value.requirement ? 0
-    : !value.baseline ? 1
-    : !value.behaviour || !value.checklist ? 2
-    : 3;
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), ...value }, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "station-card.json"; a.click(); URL.revokeObjectURL(url);
-  };
-  return <>
-    <SectionHead eyebrow="Station Card" title={local(b("صمّم محطة تقيس ما تقصده", "Design a station that measures what you intend"), lang)} intro={local(b("اعزل المتغيرات، ابدأ من Baseline، واربط كل تشخيص بدليل تجمعه فعلًا.", "Isolate variables, start from baseline, and link each diagnosis to data you actually collect."), lang)}/>
-    <WorkspaceShell
-      label={local(b("مراحل تصميم المحطة", "Station-design stages"), lang)}
-      steps={[
-        local(b("المتطلب", "Requirement"), lang),
-        local(b("Baseline والحمل", "Baseline & load"), lang),
-        local(b("الدليل والمعيار", "Evidence & standard"), lang),
-        local(b("Gate وRetest", "Gate & retest"), lang),
-      ]}
-      activeStep={activeStep}
-      summary={<><strong>{value.name || local(b("محطة غير مسماة", "Untitled station"), lang)}</strong><span>{warnings.length ? `${warnings.length} ${labels[lang].warnings}` : local(b("المنطق الأساسي مكتمل", "Core logic complete"), lang)}</span></>}
-      form={
-        <form className="builder-card dense" onSubmit={e => e.preventDefault()}>
-          <div className="field-row"><Field label={local(b("اسم المحطة", "Station name"), lang)} value={value.name} onChange={x => set("name", x)}/><Field label={local(b("متطلب الأداء", "Performance requirement"), lang)} value={value.requirement} onChange={x => set("requirement", x)}/></div>
-          <div className="field-row thirds"><label>Learning Domain<select value={value.domain} onChange={e => set("domain", e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><Field label={local(b("المستوى", "Level"), lang)} value={value.level} onChange={x => set("level", x)}/><label>Trifecta<select value={value.primary} onChange={e => set("primary", e.target.value)}><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
-          <div className="field-row"><Field label="Baseline" value={value.baseline} onChange={x => set("baseline", x)}/><Field label={local(b("المتغيرات المضافة (افصل بفاصلة)", "Variables added (comma-separated)"), lang)} value={value.variables} onChange={x => set("variables", x)}/></div>
-          <div className="field-row thirds"><Field label={local(b("ضغط الوقت", "Time pressure"), lang)} value={value.time} onChange={x => set("time", x)}/><Field label="Cognitive Load" value={value.cognitive} onChange={x => set("cognitive", x)}/><Field label={local(b("الحمل البدني", "Physical load"), lang)} value={value.physical} onChange={x => set("physical", x)}/></div>
-          <Field label={local(b("السلوك الملاحظ", "Observable behaviour"), lang)} value={value.behaviour} onChange={x => set("behaviour", x)} area/>
-          <div className="field-row"><Field label="Checklist" value={value.checklist} onChange={x => set("checklist", x)} area/><Field label="Critical Failures" value={value.critical} onChange={x => set("critical", x)} area/></div>
-          <div className="field-row"><Field label="Go / No-Go" value={value.standard} onChange={x => set("standard", x)}/><Field label={local(b("البيانات التي ستجمعها", "Data to collect"), lang)} value={value.data} onChange={x => set("data", x)}/></div>
-          <div className="field-row"><Field label="AAR questions" value={value.aar} onChange={x => set("aar", x)} area/><Field label={local(b("المعالجة", "Remediation"), lang)} value={value.remediation} onChange={x => set("remediation", x)} area/></div>
-          <Field label="Retest rule" value={value.retest} onChange={x => set("retest", x)}/>
-          <label className="gate-toggle"><input type="checkbox" checked={value.safetyGate} onChange={e => set("safetyGate", e.target.checked)}/><span><strong>Critical Safety Gate</strong>{local(b("الفشل الحرج ينتج No-Go دائمًا.", "Critical failure always produces No-Go."), lang)}</span></label>
-        </form>
-      }
-      preview={
-        <aside className="station-preview">
-          <div className="card-top"><Badge>{variableCount} {local(b("متغيرات", "variables"), lang)}</Badge><SourceMark lang={lang} applied/></div>
-          <h2>{value.name || local(b("بطاقة المحطة", "Station Card"), lang)}</h2>
-          {warnings.length ? <div><MiniLabel>{labels[lang].warnings}</MiniLabel><ul className="warning-list">{warnings.map((x, i) => <li key={i}>{local(x, lang)}</li>)}</ul></div> : <StatusBanner message={local(b("المنطق الأساسي مكتمل.", "Core logic is complete."), lang)} type="success" />}
-          <dl className="station-dl">
-            <div><dt>{local(b("المتطلب", "Requirement"), lang)}</dt><dd>{value.requirement || "—"}</dd></div>
-            <div><dt>Baseline</dt><dd>{value.baseline || "—"}</dd></div>
-            <div><dt>{local(b("الأطر", "Frameworks"), lang)}</dt><dd>{value.domain} → {value.primary}</dd></div>
-            <div><dt>Go / No-Go</dt><dd>{value.standard || "—"}</dd></div>
-            <div><dt>Retest</dt><dd>{value.retest || "—"}</dd></div>
-          </dl>
-          <div className="gate-result"><span>{value.critical ? "CRITICAL" : "GATE"}</span><strong>{value.safetyGate ? local(b("غير قابل للتعويض", "NON-COMPENSABLE"), lang) : local(b("منطق غير آمن", "UNSAFE LOGIC"), lang)}</strong></div>
-          <div className="button-row"><button className="secondary" onClick={() => window.print()}>{labels[lang].print}</button><button className="secondary" onClick={exportJson}>{labels[lang].download}</button></div>
-        </aside>
-      }
-    />
-  </>;
-}
+
 
 type Assessor = { observation: string; checklist: string; domain: string; pillar: string; family: string; critical: boolean; decision: string; evidence: string; confidence: number; missing: string };
 const blankAssessor = (): Assessor => ({ observation: "", checklist: "", domain: "Psychomotor", pillar: "Technical", family: "None", critical: false, decision: "Need More Data", evidence: "", confidence: 50, missing: "" });
@@ -714,7 +752,7 @@ function PerformanceProfile({ lang }: { lang: Lang }) {
 }
 
 function AAR({ lang }: { lang: Lang }) {
-  const [data, setData] = useState({ expected:"", happened:"", evidence:"", domain:"Cognitive", pillar:"Cognitive", alternative:"", missing:"", source:"performer", change:"", owner:"" });
+  const [data, setData] = useState({ happened:"", evidence:"", domain:"Cognitive", pillar:"Cognitive", alternative:"", missing:"", source:"performer", change:"" });
   const set = (k:string,v:string) => setData(x => ({...x,[k]:v}));
   const recs: Record<string, Bi> = {
     performer:b("ابدأ بتدخل أصغر يطابق الفجوة: شرح وتحقق للمعرفة، Demonstration وGuided Practice للمهارة، أو Load Progression وReset للثبات.","Use the smallest intervention that fits the gap: explanation/check for knowledge, demonstration/guided practice for skill, or load progression/reset for stability."),
@@ -724,39 +762,47 @@ function AAR({ lang }: { lang: Lang }) {
     station:b("ارجع للـBaseline، اعزل المتغيرات، وأضف عاملًا واحدًا حتى يظهر أول انهيار قابل للتفسير.","Return to baseline, isolate variables, and add one factor until the first interpretable breakdown appears."),
     load:b("أوقف التصعيد، حدّد Reset وRetest، ثم زد الوقت أو الحمل أو التعقيد تدريجيًا—عامل واحد في كل مرة.","Stop escalation, define reset and retest, then progress time, load, or complexity one factor at a time."),
   };
-  const activeStep = !data.expected ? 0 : !data.happened || !data.evidence ? 1 : !data.alternative || !data.missing ? 2 : 3;
-  const ready = Boolean(data.expected && data.happened && data.evidence && data.change && data.owner);
   return <>
     <SectionHead eyebrow="After Action Review" title={local(b("حوّل التشخيص إلى فعل", "Turn diagnosis into action"), lang)} intro={local(b("AAR جيد لا يسأل فقط «من أخطأ؟»؛ يراجع المؤدي والـBrief والمعيار والتدريب وتصميم المحطة.", "A good AAR does not only ask “who failed?”; it reviews performer, brief, criterion, coaching, station design, and load progression."), lang)}/>
-    <WorkspaceShell
-      className="aar-workspace"
-      label={local(b("مراحل المراجعة بعد العمل", "AAR stages"), lang)}
-      steps={[local(b("الأداء المتوقع", "Expected performance"), lang), local(b("الأداء الملاحظ", "Observed performance"), lang), local(b("التحليل", "Analysis"), lang), local(b("الفعل والملكية", "Action & ownership"), lang)]}
-      activeStep={activeStep}
-      summary={<><strong>{ready ? local(b("جاهز للتنفيذ", "Ready for action"), lang) : local(b("مراجعة قيد البناء", "Review in progress"), lang)}</strong><span>{local(b("الدليل قبل التفسير", "Evidence before interpretation"), lang)}</span></>}
-      form={<form className="builder-card aar-form" onSubmit={e=>e.preventDefault()}>
-        <section className="aar-stage-section" data-stage="1"><MiniLabel>{local(b("1 · الأداء المتوقع", "1 · Expected performance"), lang)}</MiniLabel><Field label={local(b("ما الأداء أو المعيار الذي كان متوقعًا؟", "What performance or standard was expected?"), lang)} value={data.expected} onChange={x=>set("expected",x)} area/></section>
-        <section className="aar-stage-section" data-stage="2"><MiniLabel>{local(b("2 · الأداء الملاحظ", "2 · Observed performance"), lang)}</MiniLabel><Field label={local(b("ماذا حدث؟", "What happened?"), lang)} value={data.happened} onChange={x=>set("happened",x)} area/><Field label={local(b("ما الدليل الملاحظ؟", "What is the observable evidence?"), lang)} value={data.evidence} onChange={x=>set("evidence",x)} area/></section>
-        <section className="aar-stage-section" data-stage="3"><MiniLabel>{local(b("3 · التحليل", "3 · Analysis"), lang)}</MiniLabel><div className="field-row"><label>Learning Domain<select value={data.domain} onChange={e=>set("domain",e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><label>Trifecta<select value={data.pillar} onChange={e=>set("pillar",e.target.value)}><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div><Field label={local(b("ما التفسير البديل؟", "Most plausible alternative?"), lang)} value={data.alternative} onChange={x=>set("alternative",x)}/><Field label={local(b("ما الدليل الإضافي المطلوب؟", "What additional evidence is needed?"), lang)} value={data.missing} onChange={x=>set("missing",x)}/><label>{local(b("أين يوجد السبب القابل للتغيير؟", "Where is the modifiable cause?"), lang)}<select value={data.source} onChange={e=>set("source",e.target.value)}><option value="performer">{local(b("المؤدي", "Performer"), lang)}</option><option value="brief">Brief</option><option value="criterion">{local(b("المعيار", "Criterion"), lang)}</option><option value="coaching">{local(b("التدريب", "Coaching"), lang)}</option><option value="station">{local(b("تصميم المحطة", "Station design"), lang)}</option><option value="load">{local(b("تصعيد الحمل", "Load progression"), lang)}</option></select></label></section>
-        <section className="aar-stage-section" data-stage="4"><MiniLabel>{local(b("4 · الفعل والملكية", "4 · Action & ownership"), lang)}</MiniLabel><Field label={local(b("ماذا سيتغير في المحاولة التالية؟", "What changes next?"), lang)} value={data.change} onChange={x=>set("change",x)} area/><Field label={local(b("من المالك؟ ومتى تتم المراجعة؟", "Who owns the action, and when is it reviewed?"), lang)} value={data.owner} onChange={x=>set("owner",x)}/></section>
-      </form>}
-      preview={
+    <nav className="aar-stage-rail" aria-label={local(b("مراحل المراجعة بعد الفعل", "After Action Review stages"), lang)}>
+      {[
+        b("الأداء المتوقع", "Expected performance"),
+        b("الأداء الملاحظ", "Observed performance"),
+        b("التحليل", "Analysis"),
+        b("الإجراء والملكية", "Action & ownership"),
+      ].map((stage, index) => <div key={stage.en}><span>{String(index + 1).padStart(2, "0")}</span><strong>{local(stage, lang)}</strong></div>)}
+    </nav>
+    <div className="builder-layout">
+      <form className="builder-card aar-form" onSubmit={e=>e.preventDefault()}>
+        <fieldset className="aar-stage-section"><legend><span>01</span>{local(b("الأداء المتوقع والسياق", "Expected performance & context"), lang)}</legend>
+          <Field label={local(b("1. ماذا كان مطلوبًا وماذا حدث؟", "1. What was expected and what happened?"), lang)} value={data.happened} onChange={x=>set("happened",x)} area/>
+        </fieldset>
+        <fieldset className="aar-stage-section"><legend><span>02</span>{local(b("الأداء الملاحظ", "Observed performance"), lang)}</legend>
+          <Field label={local(b("2. ما الدليل الملاحظ؟", "2. What is the observable evidence?"), lang)} value={data.evidence} onChange={x=>set("evidence",x)} area/>
+        </fieldset>
+        <fieldset className="aar-stage-section"><legend><span>03</span>{local(b("التحليل وضبط التشخيص", "Analysis & diagnostic restraint"), lang)}</legend>
+          <div className="field-row"><label>3. <bdi>Learning Domain</bdi><select value={data.domain} onChange={e=>set("domain",e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><label>4. <bdi>Trifecta</bdi><select value={data.pillar} onChange={e=>set("pillar",e.target.value)}><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
+          <Field label={local(b("5. ما التفسير البديل؟", "5. Most plausible alternative?"), lang)} value={data.alternative} onChange={x=>set("alternative",x)}/>
+          <Field label={local(b("6. ما الدليل الإضافي المطلوب؟", "6. What additional evidence is needed?"), lang)} value={data.missing} onChange={x=>set("missing",x)}/>
+        </fieldset>
+        <fieldset className="aar-stage-section"><legend><span>04</span>{local(b("الإجراء والملكية", "Action & ownership"), lang)}</legend>
+          <label>{local(b("7. أين يوجد السبب القابل للتغيير؟", "7. Where is the modifiable cause?"), lang)}<select value={data.source} onChange={e=>set("source",e.target.value)}><option value="performer">{local(b("المؤدي", "Performer"), lang)}</option><option value="brief">Brief</option><option value="criterion">{local(b("المعيار", "Criterion"), lang)}</option><option value="coaching">{local(b("التدريب", "Coaching"), lang)}</option><option value="station">{local(b("تصميم المحطة", "Station design"), lang)}</option><option value="load">{local(b("تصعيد الحمل", "Load progression"), lang)}</option></select></label>
+          <Field label={local(b("8. ماذا سيتغير في المحاولة التالية؟", "8. What changes next?"), lang)} value={data.change} onChange={x=>set("change",x)} area/>
+        </fieldset>
+      </form>
       <aside className="output-card aar-output">
         <div className="card-top"><Badge>AAR output</Badge><SourceMark lang={lang} applied/></div>
         <h2>{local(b("التدخل المقترح", "Recommended intervention"), lang)}</h2>
         <p className="recommendation-text">{local(recs[data.source],lang)}</p>
         <dl className="station-dl">
           <div><dt>Evidence</dt><dd>{data.evidence || "—"}</dd></div>
-          <div><dt>Expected</dt><dd>{data.expected || "—"}</dd></div>
           <div><dt>Domain / Pillar</dt><dd>{data.domain} / {data.pillar}</dd></div>
           <div><dt>Alternative</dt><dd>{data.alternative || "—"}</dd></div>
           <div><dt>Next change</dt><dd>{data.change || "—"}</dd></div>
-          <div><dt>Owner / review</dt><dd>{data.owner || "—"}</dd></div>
         </dl>
         <button className="secondary" onClick={()=>window.print()}>{labels[lang].print}</button>
       </aside>
-      }
-    />
+    </div>
   </>;
 }
 
@@ -796,16 +842,19 @@ function About({ lang }: { lang: Lang }) {
   </>;
 }
 
+
+
 export default function TrainingApp({ initialSection = "overview" }: { initialSection?: string }) {
   const [lang, setLang] = useState<Lang>("ar");
   const [mode, setMode] = useState<Mode>("learner");
   const [section, setSection] = useState(initialSection);
   const [menu, setMenu] = useState(false);
   const [completedCases, setCompletedCases] = useState<number[]>([]);
-  const [quizAnswers, setQuizAnswers] = useState<Record<number,number>>({});
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [objective, setObjective] = useState(initialObjective);
   const [station, setStation] = useState(initialStation);
   const [curriculum, setCurriculum] = useState<CurriculumProgress>(createInitialCurriculumProgress);
+  const [curriculumSuite, setCurriculumSuite] = useState<CurriculumSuiteStore>(createInitialCurriculumSuiteStore);
   const [hydrated, setHydrated] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
@@ -817,10 +866,16 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
         const raw = localStorage.getItem("performance-lab-state");
         if (raw) {
           const x = JSON.parse(raw) as SavedState;
-          setLang(x.lang || "ar"); setMode(x.mode || "learner"); setCompletedCases(x.completedCases || []);
-          setQuizAnswers(x.quizAnswers || {}); if (x.objective) setObjective(x.objective); if (x.station) setStation(x.station);
+          setLang(x.lang || "ar");
+          setMode(x.mode || "learner");
+          setCompletedCases(x.completedCases || []);
+          setQuizAnswers(x.quizAnswers || {});
+          if (x.objective) setObjective(x.objective);
+          if (x.station) setStation(x.station);
           if (x.curriculum) setCurriculum(migrateCurriculumProgress(x.curriculum));
         }
+        const { store } = loadAndMigrateStore();
+        setCurriculumSuite(store);
       } catch { /* retain safe defaults */ }
       setHydrated(true);
     });
@@ -830,92 +885,86 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
 
   useEffect(() => {
     if (!hydrated) return;
-    localStorage.setItem("performance-lab-state", JSON.stringify({ schemaVersion: 2, lang, mode, completedCases, quizAnswers, objective, station, curriculum } satisfies SavedState));
-    document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    localStorage.setItem(
+      "performance-lab-state",
+      JSON.stringify({
+        schemaVersion: 3,
+        lang,
+        mode,
+        completedCases,
+        quizAnswers,
+        objective,
+        station,
+        curriculum,
+        curriculumSuite,
+      } satisfies SavedState),
+    );
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
     document.documentElement.dataset.appReady = "true";
-  }, [lang, mode, completedCases, quizAnswers, objective, station, curriculum, hydrated]);
+  }, [lang, mode, completedCases, quizAnswers, objective, station, curriculum, curriculumSuite, hydrated]);
 
   useEffect(() => {
     const pop = () => setSection(location.pathname.split("/").filter(Boolean)[0] || "overview");
-    addEventListener("popstate", pop); return () => removeEventListener("popstate", pop);
+    addEventListener("popstate", pop);
+    return () => removeEventListener("popstate", pop);
   }, []);
 
-  useEffect(() => {
-    if (!menu) return;
-    const sidebar = sidebarRef.current;
-    if (!sidebar) return;
-    document.body.classList.add("nav-open");
-    const focusable = () => Array.from(
-      sidebar.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'),
-    ).filter((element) => !element.hasAttribute("hidden"));
-    const focusTimer = window.setTimeout(() => {
-      // Safari can omit links from keyboard focus unless Full Keyboard Access is
-      // enabled, so land on the first drawer button before the active route link.
-      (sidebar.querySelector<HTMLElement>("button:not([disabled])") ?? sidebar.querySelector<HTMLElement>('[aria-current="page"]') ?? focusable()[0])?.focus();
-    }, 220);
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        setMenu(false);
-        requestAnimationFrame(() => menuButtonRef.current?.focus());
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const items = focusable();
-      if (!items.length) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.classList.remove("nav-open");
-      clearTimeout(focusTimer);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [menu]);
-
   const go = (slug: string) => {
-    setSection(slug); setMenu(false); history.pushState({}, "", slug === "overview" ? "/" : `/${slug}`);
+    setSection(slug);
+    setMenu(false);
+    history.pushState({}, "", slug === "overview" ? "/" : `/${slug}`);
     window.scrollTo({ top: 0, behavior: "auto" });
     requestAnimationFrame(() => document.getElementById("main-content")?.focus());
   };
 
-  const instructorOnly = new Set(["objective-builder","station-builder","calibration","profile","aar"]);
+  const instructorOnly = new Set(["curriculum-builder", "objective-builder", "station-builder", "calibration", "profile", "aar"]);
   const visibleRoutes = routes.filter(([slug]) => mode === "instructor" || !instructorOnly.has(slug));
   const routeGroups = [
     { label: b("1. التوجيه والإطار", "1. Framework & Orientation"), slugs: ["overview", "domains", "trifecta", "comparison"] },
     { label: b("2. مسار المنهج", "2. Curriculum Pathway"), slugs: ["curriculum"] },
-    { label: b("3. مساحات البناء", "3. Builder Workspaces"), slugs: ["objective-builder", "station-builder"] },
+    { label: b("3. مساحات البناء", "3. Builder Workspaces"), slugs: ["curriculum-builder", "objective-builder", "station-builder"] },
     { label: b("4. معامل التشخيص", "4. Diagnostic Labs"), slugs: ["cases", "calibration", "profile"] },
     { label: b("5. المراجعة والمراجع", "5. Review & References"), slugs: ["aar", "checks", "references", "about"] },
-  ].map(group => ({ ...group, items: visibleRoutes.filter(([slug]) => group.slugs.includes(slug)) })).filter(group => group.items.length);
+  ].map((group) => ({ ...group, items: visibleRoutes.filter(([slug]) => group.slugs.includes(slug)) })).filter((group) => group.items.length);
+
   const activeRoute = routes.find(([slug]) => slug === section) ?? routes[0];
-  const activeGroup = routeGroups.find(group => group.items.some(([slug]) => slug === section));
+  const activeGroup = routeGroups.find((group) => group.items.some(([slug]) => slug === section));
   const progress = Math.round(((completedCases.length + Object.keys(quizAnswers).length) / (cases.length + knowledgeChecks.length)) * 100);
+
   const render = () => {
-    switch(section) {
-      case "curriculum": return <CurriculumWorkspace lang={lang} mode={mode} progress={curriculum} onChange={setCurriculum}/>;
-      case "domains": return <Domains lang={lang}/>;
-      case "trifecta": return <Trifecta lang={lang}/>;
-      case "comparison": return <Comparison lang={lang}/>;
-      case "cases": return <CaseLab lang={lang} onComplete={id=>setCompletedCases(x=>x.includes(id)?x:[...x,id])}/>;
-      case "objective-builder": return <ObjectiveBuilder lang={lang} value={objective} onChange={setObjective}/>;
-      case "station-builder": return <StationBuilder lang={lang} value={station} onChange={setStation}/>;
-      case "calibration": return <Calibration lang={lang}/>;
-      case "profile": return <PerformanceProfile lang={lang}/>;
-      case "aar": return <AAR lang={lang}/>;
-      case "checks": return <Checks lang={lang} answers={quizAnswers} setAnswer={(i,a)=>setQuizAnswers(x=>({...x,[i]:a}))}/>;
-      case "references": return <References lang={lang}/>;
-      case "about": return <About lang={lang}/>;
-      default: return <Overview lang={lang} go={go}/>;
+    switch (section) {
+      case "curriculum":
+        return <CurriculumWorkspace lang={lang} mode={mode} progress={curriculum} onChange={setCurriculum} />;
+      case "curriculum-builder":
+        return <CurriculumBuilderSuite lang={lang} mode={mode} store={curriculumSuite} onChangeStore={setCurriculumSuite} />;
+      case "domains":
+        return <Domains lang={lang} />;
+      case "trifecta":
+        return <Trifecta lang={lang} />;
+      case "comparison":
+        return <Comparison lang={lang} />;
+      case "cases":
+        return <CaseLab lang={lang} onComplete={(id) => setCompletedCases((x) => (x.includes(id) ? x : [...x, id]))} />;
+      case "objective-builder":
+        return <ObjectiveBuilder lang={lang} value={objective} onChange={setObjective} />;
+      case "station-builder":
+        // Compatibility route: maps seamlessly to Station tab inside CurriculumBuilderSuite
+        return <CurriculumBuilderSuite lang={lang} mode={mode} store={curriculumSuite} onChangeStore={setCurriculumSuite} initialTab="station" />;
+      case "calibration":
+        return <Calibration lang={lang} />;
+      case "profile":
+        return <PerformanceProfile lang={lang} />;
+      case "aar":
+        return <AAR lang={lang} />;
+      case "checks":
+        return <Checks lang={lang} answers={quizAnswers} setAnswer={(i, a) => setQuizAnswers((x) => ({ ...x, [i]: a }))} />;
+      case "references":
+        return <References lang={lang} />;
+      case "about":
+        return <About lang={lang} />;
+      default:
+        return <Overview lang={lang} go={go} />;
     }
   };
   return <div className="app-shell" data-mode={mode}>
@@ -932,37 +981,22 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
         <div className="progress-mini" title={`${labels[lang].progress} ${progress}%`} aria-label={`${labels[lang].progress} ${progress}%`}><span style={{transform:`scaleX(${progress / 100})`}}/></div>
         <div className="segmented compact"><button aria-pressed={mode==="learner"} onClick={()=>setMode("learner")}>{labels[lang].learner}</button><button aria-pressed={mode==="instructor"} onClick={()=>setMode("instructor")}>{labels[lang].instructor}</button></div>
         <button className="language" onClick={()=>setLang(x=>x==="ar"?"en":"ar")} aria-label={lang==="ar"?"Switch to English":"التبديل إلى العربية"}>{lang==="ar"?"EN":"ع"}</button>
-        <button
-          ref={menuButtonRef}
-          className="menu-button"
-          onClick={() => setMenu((current) => {
-            return !current;
-          })}
-          aria-expanded={menu}
-          aria-controls="main-nav"
-          aria-haspopup="dialog"
-        >{labels[lang].menu}</button>
+        <button ref={menuButtonRef} className="menu-button" onClick={()=>setMenu(x=>!x)} aria-expanded={menu} aria-controls="main-nav">{labels[lang].menu}</button>
       </nav>
     </header>
-    {menu && <button className="nav-scrim" aria-label={local(b("إغلاق القائمة", "Close menu"),lang)} onClick={()=>{setMenu(false); requestAnimationFrame(()=>menuButtonRef.current?.focus());}}/>}
-    <aside ref={sidebarRef} id="main-nav" className={`sidebar ${menu?"open":""}`} aria-label={local(b("التنقل الرئيسي", "Primary navigation"),lang)} role={menu ? "dialog" : undefined} aria-modal={menu ? "true" : undefined}>
+    {menu && <button className="nav-scrim" aria-label={local(b("إغلاق القائمة", "Close menu"),lang)} onClick={()=>setMenu(false)}/>}
+    <aside ref={sidebarRef} id="main-nav" className={`sidebar ${menu?"open":""}`} aria-label={local(b("التنقل الرئيسي", "Primary navigation"),lang)}>
       <div className="segmented mobile-mode" aria-label={local(b("اختيار الوضع", "Mode selection"),lang)}>
         <button aria-pressed={mode==="learner"} onClick={()=>{setMode("learner");setMenu(false);}}>{labels[lang].learner}</button>
         <button aria-pressed={mode==="instructor"} onClick={()=>{setMode("instructor");setMenu(false);}}>{labels[lang].instructor}</button>
       </div>
-      <nav>{routeGroups.map(group => <div className="nav-group" key={group.label.en}>
-        <div className="side-label">{local(group.label,lang)}</div>
+      <nav>{routeGroups.map(group => <details className="nav-group" key={group.label.en} open={group.items.some(([slug]) => slug === section)}>
+        <summary className="side-label"><span>{local(group.label,lang)}</span><bdi aria-hidden="true">⌄</bdi></summary>
         {group.items.map(([slug,title])=><a key={slug} href={slug === "overview" ? "/" : `/${slug}`} className={section===slug?"active":""} aria-current={section===slug?"page":undefined} onClick={(event)=>{event.preventDefault();go(slug);}}><span className="nav-indicator" aria-hidden="true"/>{local(title,lang)}</a>)}
-      </div>)}</nav>
+      </details>)}</nav>
       <div className="side-status"><div><span>{progress}%</span><small>{labels[lang].progress}</small></div><div className="side-bar"><span style={{transform:`scaleY(${progress / 100})`}}/></div></div>
     </aside>
-    <main id="main-content" tabIndex={-1} data-route={section}>
-      {mode === "instructor" && <StatusBanner
-        type="instructor"
-        message={local(b("وضع المدرب نشط · أدوات البناء والتشخيص والـGate مفعّلة", "Instructor mode active · Builder, diagnostic, and Gate tools enabled"), lang)}
-      />}
-      <div className="page-stage" key={section}>{render()}</div>
-    </main>
+    <main id="main-content" tabIndex={-1}><div className="page-stage" key={section}>{render()}</div></main>
     <footer><span>TRIFECTA PERFORMANCE LAB · 2026</span><span>{local(b("بياناتك تبقى على جهازك", "Your data stays on your device"),lang)}</span></footer>
   </div>;
 }

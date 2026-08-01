@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 3,
+  "activeLevelId": "lvl_foundation_01",
+  "activeStationId": "st_baseline_01",
+  "activeDrillId": "dr_evidence_01",
+  "activeGateId": "gt_baseline_01",
+  "levels": [{ "id": "lvl_foundation_01", "stationIds": ["st_baseline_01", "st_stability_01"] }],
+  "stations": [
+    { "id": "st_baseline_01", "levelId": "lvl_foundation_01", "drillIds": ["dr_evidence_01"], "gateId": "gt_baseline_01" },
+    { "id": "st_stability_01", "levelId": "lvl_foundation_01", "drillIds": [], "gateId": "" }
+  ],
+  "drills": [{ "id": "dr_evidence_01", "stationId": "st_baseline_01" }],
+  "gates": [{
+    "id": "gt_baseline_01",
+    "fromStationId": "st_baseline_01",
+    "nextStationId": "st_stability_01",
+    "criticalFailureCriteria": { "ar": "خرق شرط الأمان الحاسم", "en": "Critical safety-condition breach" },
+    "observedCriticalFailures": [],
+    "decision": "pending"
+  }]
+}

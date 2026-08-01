@@ -10,6 +10,7 @@ export const routes = [
   ["trifecta", b("Trifecta", "Trifecta")],
   ["comparison", b("مركز المقارنة", "Comparison centre")],
   ["cases", b("معمل الحالات", "Case diagnostic lab")],
+  ["curriculum-builder", b("جناح بناء المنهج", "Curriculum builder suite")],
   ["objective-builder", b("بناء الأهداف", "Objective builder")],
   ["station-builder", b("تصميم المحطة", "Station builder")],
   ["calibration", b("المعايرة", "Assessment calibration")],

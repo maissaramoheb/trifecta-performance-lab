@@ -10,7 +10,7 @@
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
     "build:vercel": "next build --webpack",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
-    "test": "npm run build && npm run build:vercel && node --test tests/rendered-html.test.mjs tests/vercel-migration-validation.test.mjs",
+    "test": "npm run build && npm run build:vercel && node --import jiti/register --test tests/v2-1-data-logic.test.ts tests/rendered-html.test.mjs tests/vercel-migration-validation.test.mjs",
     "test:e2e": "playwright test",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
