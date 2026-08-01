@@ -178,26 +178,26 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
     integrated: {
       code: "ALL",
       name: b("الأداء الفعلي المكتمل", "Integrated Actual Performance"),
-      prompt: b("التقاء الأبعاد الثلاثة: البدنية والفنية والذهنية يشكّل الأداء الحقيقي الملاحظ.", "The convergence of Physical, Technical, and Cognitive dimensions forms observable actual performance."),
-      detail: b("لا يمكن حصر الفشل في عامل واحد دون مراعاة التفاعل بين الأبعاد الثلاثة.", "Failure cannot be isolated to a single dimension without observing their mutual interaction."),
+      prompt: b("تدفق وتوافق المسارات الثلاثة: البدنية والفنية والذهنية يشكّل الناتج الفعلي الملاحظ.", "The convergence of Physical, Technical, and Cognitive streams produces observable actual performance."),
+      detail: b("قصور أي مسار يؤثر على جودة الأداء الملاحظ؛ خرق الأمان يفرض No-Go مستقلًا.", "A weakness in any stream alters performance fidelity; Critical Safety Failure forces an independent No-Go."),
     },
     physical: {
       code: "P",
-      name: b("المكون البدني", "Physical Dimension"),
-      prompt: b("هل الجسم يدعم المهمة ويحافظ على الأداء تحت الضغط؟", "Can the body support the task and retain performance under load?"),
-      detail: b("يشمل الثبات الحركي، التوازن، التحمل عبر التكرار، وسرعة الاستعادة للـBaseline.", "Includes movement stability, balance, endurance across repetitions, and baseline recovery speed."),
+      name: b("مسار الأداء البدني", "Physical Performance Stream"),
+      prompt: b("هل يدعم الجاهزية والتوازن والاستعادة الحركية تحت الحمل؟", "Does biological readiness, balance, and movement recovery support task load?"),
+      detail: b("يشمل التحكم الحركي، الثبات الهيكلي، والقدرة على التكرار دون تدهور بدني.", "Includes motor control, structural stability, and repetition capacity without physical degradation."),
     },
     technical: {
       code: "T",
-      name: b("المكون الفني", "Technical Dimension"),
-      prompt: b("هل الناتج الفني صحيح وآمن وثابت وقابل للتكرار؟", "Is the technical output correct, safe, stable, and repeatable?"),
-      detail: b("يطابق المعيار المعمد، يضمن الأمان المباشر، ويحافظ على الدقة عبر الظروف المتغيرة.", "Matches the standard, guarantees safety, and preserves accuracy across changing conditions."),
+      name: b("مسار الأداء الفني", "Technical Performance Stream"),
+      prompt: b("هل الناتج صحيح وآمن وتكتيكي وثابت وقابل للتكرار؟", "Is the execution standard correct, safe, stable, and repeatable?"),
+      detail: b("يطابق الدليل الفني المعمد ويضمن السلامة التشغيلية المباشرة.", "Matches authoritative technical standards and ensures direct operational safety."),
     },
     cognitive: {
       code: "C",
-      name: b("المكون الذهني", "Cognitive Dimension"),
-      prompt: b("هل لاحظ المتدرب وتذكّر القاعدة وقرّر وحوّل القرار إلى فعل؟", "Did the performer notice cues, recall rules, select decisions, and execute action?"),
-      detail: b("يشمل الوعي بالموقف، إدارة الحمل الذهني، والانضباط الانفعالي تحت التقييم.", "Includes situational awareness, cognitive load management, and emotional discipline."),
+      name: b("مسار الأداء الذهني / العصبي", "Cognitive / Neurophysiological Stream"),
+      prompt: b("هل لاحظ المتدرب وتذكّر وقرّر وسيطر على الضغط الذهني؟", "Did the performer notice cues, recall rules, decide, and manage cognitive load?"),
+      detail: b("يشمل الوعي بالموقف، سرعة معالجة المعلومات، والانضباط الانفعالي تحت التقييم.", "Includes situational awareness, information processing speed, and emotional control."),
     },
   };
 
@@ -208,12 +208,12 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
     <aside
       className={`trifecta-instrument card-role-feature stage-${motionStage}`}
       data-active-lens={active}
-      aria-label={local(b("معمار الأداء الثلاثي التفاعلي", "Interactive Trifecta performance architecture"), lang)}
+      aria-label={local(b("نموذج المسارات الثلاثية المتفاعلة", "Interacting Performance Streams Architecture"), lang)}
     >
       <div className="instrument-head">
         <div>
-          <span>TRIFECTA MODEL / V2.1</span>
-          <strong>{local(b("النموذج الثلاثي التكاملي", "Three-Plane Converging Model"), lang)}</strong>
+          <span>PERFORMANCE OPERATIONS STUDIO</span>
+          <strong>{local(b("نموذج المسارات الثلاثية المتفاعلة", "Three Interacting Performance Streams"), lang)}</strong>
         </div>
         <button
           type="button"
@@ -221,113 +221,101 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
           onClick={triggerReplay}
           aria-label={local(b("إعادة عرض الحركة", "Replay model animation"), lang)}
         >
-          {local(b("إعادة العرض ↻", "Replay model ↻"), lang)}
+          {local(b("إعادة العرض ↻", "Replay motion ↻"), lang)}
         </button>
       </div>
 
       <div className="performance-architecture">
         <div className="architecture-canvas" aria-hidden="true">
-          <svg viewBox="0 0 500 380" role="presentation">
+          <svg viewBox="0 0 540 320" role="presentation">
             <defs>
-              <linearGradient id="grad-physical" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#d6a35f" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#d6a35f" stopOpacity="0.08" />
+              <linearGradient id="stream-physical-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#0f766e" stopOpacity="0.85" />
+                <stop offset="100%" stopColor="#0d9488" stopOpacity="0.4" />
               </linearGradient>
-              <linearGradient id="grad-technical" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#8eaaa4" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#8eaaa4" stopOpacity="0.08" />
+              <linearGradient id="stream-technical-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#0284c7" stopOpacity="0.85" />
+                <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.4" />
               </linearGradient>
-              <linearGradient id="grad-cognitive" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#f0c077" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#f0c077" stopOpacity="0.08" />
+              <linearGradient id="stream-cognitive-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#9a3412" stopOpacity="0.85" />
+                <stop offset="100%" stopColor="#f97316" stopOpacity="0.4" />
               </linearGradient>
-              <radialGradient id="grad-core" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#f0c077" stopOpacity="0.9" />
-                <stop offset="60%" stopColor="#d6a35f" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#15191a" stopOpacity="0.1" />
-              </radialGradient>
             </defs>
 
-            {/* Outer Framework Triangle */}
-            <polygon
-              className={`architecture-outline ${motionStage >= 1 ? "visible" : ""}`}
-              points="250,30 60,310 440,310"
+            {/* Background Grid Guide Lines */}
+            <line x1="40" y1="50" x2="500" y2="50" stroke="#e2e8f0" strokeDasharray="3 3" />
+            <line x1="40" y1="160" x2="500" y2="160" stroke="#e2e8f0" strokeDasharray="3 3" />
+            <line x1="40" y1="270" x2="500" y2="270" stroke="#e2e8f0" strokeDasharray="3 3" />
+
+            {/* Synthesis Zone Box */}
+            <rect
+              className={`synthesis-field ${motionStage >= 2 ? "visible" : ""}`}
+              x="200" y="35" width="160" height="250" rx="12"
+              fill="#f8fafc" stroke="#cbd5e1" strokeDasharray="4 4"
+            />
+            <text x="280" y="24" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="700">
+              FIELD SYNTHESIS / مجال التفاعل
+            </text>
+
+            {/* Stream 1: Physical Path */}
+            <path
+              className={`stream-path stream-physical ${active === "physical" || active === "integrated" ? "active" : "dimmed"} ${motionStage >= 1 ? "visible" : ""}`}
+              d="M 40,60 C 160,60 220,130 280,150 C 340,170 380,160 450,160"
               fill="none"
-              stroke="var(--line)"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-            />
-
-            {/* Facet 1: Physical (Base) */}
-            <polygon
-              className={`architecture-facet facet-physical ${active === "physical" ? "active" : "inactive"} ${motionStage >= 2 ? "visible" : ""}`}
-              points="60,310 250,195 440,310"
-              fill="url(#grad-physical)"
-              stroke="#d6a35f"
-              strokeWidth={active === "physical" ? "3" : "1.5"}
-            />
-
-            {/* Facet 2: Technical (Top-Left) */}
-            <polygon
-              className={`architecture-facet facet-technical ${active === "technical" ? "active" : "inactive"} ${motionStage >= 3 ? "visible" : ""}`}
-              points="250,30 250,195 60,310"
-              fill="url(#grad-technical)"
-              stroke="#8eaaa4"
-              strokeWidth={active === "technical" ? "3" : "1.5"}
-            />
-
-            {/* Facet 3: Cognitive (Top-Right) */}
-            <polygon
-              className={`architecture-facet facet-cognitive ${active === "cognitive" ? "active" : "inactive"} ${motionStage >= 4 ? "visible" : ""}`}
-              points="250,30 440,310 250,195"
-              fill="url(#grad-cognitive)"
-              stroke="#f0c077"
-              strokeWidth={active === "cognitive" ? "3" : "1.5"}
-            />
-
-            {/* Convergence Hub & Connecting Vectors */}
-            <line
-              className={`architecture-axis ${motionStage >= 4 ? "visible" : ""}`}
-              x1="250" y1="30" x2="250" y2="195"
-              stroke="var(--amber-bright)" strokeWidth="1.5" strokeDasharray="3 3"
-            />
-            <line
-              className={`architecture-axis ${motionStage >= 4 ? "visible" : ""}`}
-              x1="60" y1="310" x2="250" y2="195"
-              stroke="var(--steel)" strokeWidth="1.5" strokeDasharray="3 3"
-            />
-            <line
-              className={`architecture-axis ${motionStage >= 4 ? "visible" : ""}`}
-              x1="440" y1="310" x2="250" y2="195"
-              stroke="var(--amber)" strokeWidth="1.5" strokeDasharray="3 3"
-            />
-
-            {/* Central Luminous Convergence Starburst (No solid black circle!) */}
-            <circle
-              className={`architecture-core-ring ${motionStage >= 4 ? "visible" : ""}`}
-              cx="250" cy="195" r="24"
-              fill="url(#grad-core)"
+              stroke={active === "physical" ? "#0f766e" : "url(#stream-physical-grad)"}
+              strokeWidth={active === "physical" ? "5" : "3.5"}
             />
             <circle
-              className={`architecture-core ${motionStage >= 5 ? "visible" : ""}`}
-              cx="250" cy="195" r="8"
-              fill="var(--amber-bright)"
+              className={`stream-node node-p ${motionStage >= 1 ? "visible" : ""}`}
+              cx="40" cy="60" r="10" fill="#0f766e"
             />
+            <text x="40" y="64" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="800">P</text>
 
-            {/* Connector Line to Output Badge */}
-            <line
-              className={`architecture-output ${motionStage >= 5 ? "visible" : ""}`}
-              x1="250" y1="219" x2="250" y2="340"
-              stroke="var(--amber)" strokeWidth="2"
+            {/* Stream 2: Technical Path */}
+            <path
+              className={`stream-path stream-technical ${active === "technical" || active === "integrated" ? "active" : "dimmed"} ${motionStage >= 2 ? "visible" : ""}`}
+              d="M 40,160 C 160,160 220,160 280,160 C 340,160 380,160 450,160"
+              fill="none"
+              stroke={active === "technical" ? "#0284c7" : "url(#stream-technical-grad)"}
+              strokeWidth={active === "technical" ? "5" : "3.5"}
             />
+            <circle
+              className={`stream-node node-t ${motionStage >= 2 ? "visible" : ""}`}
+              cx="40" cy="160" r="10" fill="#0284c7"
+            />
+            <text x="40" y="164" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="800">T</text>
+
+            {/* Stream 3: Cognitive Path */}
+            <path
+              className={`stream-path stream-cognitive ${active === "cognitive" || active === "integrated" ? "active" : "dimmed"} ${motionStage >= 3 ? "visible" : ""}`}
+              d="M 40,260 C 160,260 220,190 280,170 C 340,150 380,160 450,160"
+              fill="none"
+              stroke={active === "cognitive" ? "#9a3412" : "url(#stream-cognitive-grad)"}
+              strokeWidth={active === "cognitive" ? "5" : "3.5"}
+            />
+            <circle
+              className={`stream-node node-c ${motionStage >= 3 ? "visible" : ""}`}
+              cx="40" cy="260" r="10" fill="#9a3412"
+            />
+            <text x="40" y="264" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="800">C</text>
+
+            {/* Actual Performance Result Output Hub */}
+            <g className={`output-hub ${motionStage >= 4 ? "visible" : ""}`}>
+              <circle cx="450" cy="160" r="22" fill="#0f172a" stroke="#0f766e" strokeWidth="2.5" />
+              <circle cx="450" cy="160" r="8" fill="#38bdf8" />
+              <text x="450" y="202" textAnchor="middle" fill="#0f172a" fontSize="12" fontWeight="800">
+                ACTUAL PERFORMANCE / الأداء الفعلي
+              </text>
+            </g>
           </svg>
         </div>
 
-        {/* Dimension Selector Tabs (Progressive Disclosure Controls) */}
+        {/* Stream Selector Controls */}
         <div
           className="architecture-controls"
           role="tablist"
-          aria-label={local(b("أبعاد الأداء والتأثير المتكامل", "Performance dimensions and integrated outcome"), lang)}
+          aria-label={local(b("اختيار مسار التقييم والتشخيص", "Select Stream Lens"), lang)}
         >
           <button
             type="button"
@@ -338,8 +326,8 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
           >
             <bdi>ALL</bdi>
             <span>
-              <strong><bdi>{local(b("الأداء الفعلي", "Integrated Performance"), lang)}</bdi></strong>
-              <small>{local(b("نقطة التوافق التكاملي", "Convergence point"), lang)}</small>
+              <strong><bdi>{local(b("تأثير المسارات المكتملة", "Integrated Streams Outcome"), lang)}</bdi></strong>
+              <small>{local(b("التقاء المسارات الثلاثة", "Stream convergence"), lang)}</small>
             </span>
           </button>
 
@@ -362,10 +350,10 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
         </div>
       </div>
 
-      {/* Single Readout Panel (One dimension explanation at a time) */}
+      {/* Single Readout Panel */}
       <div className="instrument-readout" id="trifecta-readout" aria-live="polite">
         <div className="readout-tag">
-          <span>{local(b("العدسة التشخيصية", "DIAGNOSTIC LENS"), lang)}</span>
+          <span>{local(b("عدسة التشخيص النشطة", "ACTIVE DIAGNOSTIC STREAM"), lang)}</span>
           <bdi className="code-badge">{current.code}</bdi>
         </div>
         <div className="readout-body">
