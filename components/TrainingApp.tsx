@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-html-link-for-pages -- this local-first SPA owns section history and safely degrades to server routes */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CurriculumWorkspace from "./CurriculumWorkspace";
 import CurriculumBuilderSuite from "./CurriculumBuilderSuite";
 import {
@@ -95,7 +95,7 @@ function Badge({ children, tone = "default" }: { children: React.ReactNode; tone
 
 function SectionHead({ eyebrow, title, intro }: { eyebrow: string; title: string; intro: string }) {
   return <header className="section-head">
-    <div className="eyebrow">{eyebrow}</div>
+    <MiniLabel>{eyebrow}</MiniLabel>
     <h1>{title}</h1>
     <p>{intro}</p>
   </header>;
@@ -142,69 +142,65 @@ function LevelCards({ levels, lang, affective = false }: { levels: Level[]; lang
 }
 
 function TrifectaInstrument({ lang }: { lang: Lang }) {
-  const [active, setActive] = useState<"physical" | "technical" | "cognitive">("technical");
+  const [active, setActive] = useState<"integrated" | "physical" | "technical" | "cognitive">("integrated");
   const [motionStage, setMotionStage] = useState<number>(() =>
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 5 : 0,
   );
 
-  // Single-run entrance animation sequence (runs ONCE on mount, no continuous looping)
   useEffect(() => {
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
 
-    const t1 = setTimeout(() => setMotionStage(1), 80);
-    const t2 = setTimeout(() => setMotionStage(2), 260);
-    const t3 = setTimeout(() => setMotionStage(3), 440);
-    const t4 = setTimeout(() => setMotionStage(4), 620);
-    const t5 = setTimeout(() => setMotionStage(5), 800);
+    const t1 = setTimeout(() => setMotionStage(1), 120);
+    const t2 = setTimeout(() => setMotionStage(2), 360);
+    const t3 = setTimeout(() => setMotionStage(3), 600);
+    const t4 = setTimeout(() => setMotionStage(4), 840);
+    const t5 = setTimeout(() => setMotionStage(5), 1080);
 
     return () => {
       clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5);
     };
   }, []);
 
+  const triggerReplay = () => {
+    setMotionStage(0);
+    setTimeout(() => setMotionStage(1), 120);
+    setTimeout(() => setMotionStage(2), 360);
+    setTimeout(() => setMotionStage(3), 600);
+    setTimeout(() => setMotionStage(4), 840);
+    setTimeout(() => setMotionStage(5), 1080);
+  };
+
   const pillars = {
+    integrated: {
+      code: "ALL",
+      name: b("الأداء الفعلي المكتمل", "Integrated Actual Performance"),
+      prompt: b("التقاء الأبعاد الثلاثة: البدنية والفنية والذهنية يشكّل الأداء الحقيقي الملاحظ.", "The convergence of Physical, Technical, and Cognitive dimensions forms observable actual performance."),
+      detail: b("لا يمكن حصر الفشل في عامل واحد دون مراعاة التفاعل بين الأبعاد الثلاثة.", "Failure cannot be isolated to a single dimension without observing their mutual interaction."),
+    },
     physical: {
       code: "P",
-      name: b("بدني", "Physical"),
-      prompt: b("هل الجسم يدعم المهمة ويحافظ على الأداء؟", "Can the body support the task and retain performance?"),
+      name: b("المكون البدني", "Physical Dimension"),
+      prompt: b("هل الجسم يدعم المهمة ويحافظ على الأداء تحت الضغط؟", "Can the body support the task and retain performance under load?"),
+      detail: b("يشمل الثبات الحركي، التوازن، التحمل عبر التكرار، وسرعة الاستعادة للـBaseline.", "Includes movement stability, balance, endurance across repetitions, and baseline recovery speed."),
     },
     technical: {
       code: "T",
-      name: b("فني", "Technical"),
-      prompt: b("هل الناتج صحيح وآمن وثابت وقابل للتكرار؟", "Is the output correct, safe, stable, and repeatable?"),
+      name: b("المكون الفني", "Technical Dimension"),
+      prompt: b("هل الناتج الفني صحيح وآمن وثابت وقابل للتكرار؟", "Is the technical output correct, safe, stable, and repeatable?"),
+      detail: b("يطابق المعيار المعمد، يضمن الأمان المباشر، ويحافظ على الدقة عبر الظروف المتغيرة.", "Matches the standard, guarantees safety, and preserves accuracy across changing conditions."),
     },
     cognitive: {
       code: "C",
-      name: b("ذهني", "Cognitive"),
-      prompt: b("هل لاحظ وتذكّر وقرّر وحوّل القرار إلى فعل؟", "Did the performer notice, remember, decide, and turn the decision into action?"),
+      name: b("المكون الذهني", "Cognitive Dimension"),
+      prompt: b("هل لاحظ المتدرب وتذكّر القاعدة وقرّر وحوّل القرار إلى فعل؟", "Did the performer notice cues, recall rules, select decisions, and execute action?"),
+      detail: b("يشمل الوعي بالموقف، إدارة الحمل الذهني، والانضباط الانفعالي تحت التقييم.", "Includes situational awareness, cognitive load management, and emotional discipline."),
     },
   };
 
-  const keys = Object.keys(pillars) as Array<keyof typeof pillars>;
   const current = pillars[active];
-
-  const handleKeyDown = (e: React.KeyboardEvent, currentKey: "physical" | "technical" | "cognitive") => {
-    const currentIndex = keys.indexOf(currentKey);
-    let nextIndex = currentIndex;
-    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-      e.preventDefault();
-      nextIndex = (currentIndex + 1) % keys.length;
-    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-      e.preventDefault();
-      nextIndex = (currentIndex - 1 + keys.length) % keys.length;
-    } else if (e.key === "Home") {
-      e.preventDefault();
-      nextIndex = 0;
-    } else if (e.key === "End") {
-      e.preventDefault();
-      nextIndex = keys.length - 1;
-    }
-    if (nextIndex !== currentIndex) {
-      setActive(keys[nextIndex]);
-    }
-  };
+  const dimensionKeys: Array<"physical" | "technical" | "cognitive"> = ["physical", "technical", "cognitive"];
 
   return (
     <aside
@@ -214,78 +210,167 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
     >
       <div className="instrument-head">
         <div>
-          <span>PERFORMANCE / 03</span>
-          <strong>{local(b("ثلاثة أبعاد مترابطة", "Three interdependent dimensions"), lang)}</strong>
+          <span>TRIFECTA MODEL / V2.1</span>
+          <strong>{local(b("النموذج الثلاثي التكاملي", "Three-Plane Converging Model"), lang)}</strong>
         </div>
-        <SourceMark lang={lang} />
+        <button
+          type="button"
+          className="replay-btn"
+          onClick={triggerReplay}
+          aria-label={local(b("إعادة عرض الحركة", "Replay model animation"), lang)}
+        >
+          {local(b("إعادة العرض ↻", "Replay model ↻"), lang)}
+        </button>
       </div>
 
       <div className="performance-architecture">
         <div className="architecture-canvas" aria-hidden="true">
-          <svg viewBox="0 0 600 430" role="presentation">
-            <path className={`architecture-outline ${motionStage >= 1 ? "visible" : ""}`} d="M300 34 548 390H52Z" />
-            <path className={`architecture-axis ${motionStage >= 2 ? "visible" : ""}`} d="M300 236 300 34M300 236 52 390M300 236 548 390" />
-            <path className={`architecture-facet facet-technical ${active === "technical" ? "active" : "inactive"} ${motionStage >= 2 ? "visible" : ""}`} d="M300 34 300 236 52 390Z" />
-            <path className={`architecture-facet facet-cognitive ${active === "cognitive" ? "active" : "inactive"} ${motionStage >= 2 ? "visible" : ""}`} d="M300 34 548 390 300 236Z" />
-            <path className={`architecture-facet facet-physical ${active === "physical" ? "active" : "inactive"} ${motionStage >= 2 ? "visible" : ""}`} d="M52 390 300 236 548 390Z" />
-            <circle className={`architecture-core-ring ${motionStage >= 3 ? "visible" : ""}`} cx="300" cy="236" r="54" />
-            <circle className={`architecture-core ${motionStage >= 4 ? "visible" : ""}`} cx="300" cy="236" r="38" />
-            <path className={`architecture-output ${motionStage >= 4 ? "visible" : ""}`} d="M300 274V322" />
+          <svg viewBox="0 0 500 380" role="presentation">
+            <defs>
+              <linearGradient id="grad-physical" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#d6a35f" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#d6a35f" stopOpacity="0.08" />
+              </linearGradient>
+              <linearGradient id="grad-technical" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#8eaaa4" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#8eaaa4" stopOpacity="0.08" />
+              </linearGradient>
+              <linearGradient id="grad-cognitive" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f0c077" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#f0c077" stopOpacity="0.08" />
+              </linearGradient>
+              <radialGradient id="grad-core" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#f0c077" stopOpacity="0.9" />
+                <stop offset="60%" stopColor="#d6a35f" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#15191a" stopOpacity="0.1" />
+              </radialGradient>
+            </defs>
+
+            {/* Outer Framework Triangle */}
+            <polygon
+              className={`architecture-outline ${motionStage >= 1 ? "visible" : ""}`}
+              points="250,30 60,310 440,310"
+              fill="none"
+              stroke="var(--line)"
+              strokeWidth="2"
+              strokeDasharray="4 4"
+            />
+
+            {/* Facet 1: Physical (Base) */}
+            <polygon
+              className={`architecture-facet facet-physical ${active === "physical" ? "active" : "inactive"} ${motionStage >= 2 ? "visible" : ""}`}
+              points="60,310 250,195 440,310"
+              fill="url(#grad-physical)"
+              stroke="#d6a35f"
+              strokeWidth={active === "physical" ? "3" : "1.5"}
+            />
+
+            {/* Facet 2: Technical (Top-Left) */}
+            <polygon
+              className={`architecture-facet facet-technical ${active === "technical" ? "active" : "inactive"} ${motionStage >= 3 ? "visible" : ""}`}
+              points="250,30 250,195 60,310"
+              fill="url(#grad-technical)"
+              stroke="#8eaaa4"
+              strokeWidth={active === "technical" ? "3" : "1.5"}
+            />
+
+            {/* Facet 3: Cognitive (Top-Right) */}
+            <polygon
+              className={`architecture-facet facet-cognitive ${active === "cognitive" ? "active" : "inactive"} ${motionStage >= 4 ? "visible" : ""}`}
+              points="250,30 440,310 250,195"
+              fill="url(#grad-cognitive)"
+              stroke="#f0c077"
+              strokeWidth={active === "cognitive" ? "3" : "1.5"}
+            />
+
+            {/* Convergence Hub & Connecting Vectors */}
+            <line
+              className={`architecture-axis ${motionStage >= 4 ? "visible" : ""}`}
+              x1="250" y1="30" x2="250" y2="195"
+              stroke="var(--amber-bright)" strokeWidth="1.5" strokeDasharray="3 3"
+            />
+            <line
+              className={`architecture-axis ${motionStage >= 4 ? "visible" : ""}`}
+              x1="60" y1="310" x2="250" y2="195"
+              stroke="var(--steel)" strokeWidth="1.5" strokeDasharray="3 3"
+            />
+            <line
+              className={`architecture-axis ${motionStage >= 4 ? "visible" : ""}`}
+              x1="440" y1="310" x2="250" y2="195"
+              stroke="var(--amber)" strokeWidth="1.5" strokeDasharray="3 3"
+            />
+
+            {/* Central Luminous Convergence Starburst (No solid black circle!) */}
+            <circle
+              className={`architecture-core-ring ${motionStage >= 4 ? "visible" : ""}`}
+              cx="250" cy="195" r="24"
+              fill="url(#grad-core)"
+            />
+            <circle
+              className={`architecture-core ${motionStage >= 5 ? "visible" : ""}`}
+              cx="250" cy="195" r="8"
+              fill="var(--amber-bright)"
+            />
+
+            {/* Connector Line to Output Badge */}
+            <line
+              className={`architecture-output ${motionStage >= 5 ? "visible" : ""}`}
+              x1="250" y1="219" x2="250" y2="340"
+              stroke="var(--amber)" strokeWidth="2"
+            />
           </svg>
-          <div className={`architecture-core-label ${motionStage >= 4 ? "visible" : ""}`}>
-            <span>{local(b("الأداء", "Actual"), lang)}</span>
-            <strong>{local(b("الفعلي", "performance"), lang)}</strong>
-          </div>
         </div>
 
-        <div className="architecture-controls architecture-controls-desktop" role="tablist" aria-label={local(b("أبعاد الأداء", "Performance dimensions"), lang)}>
-          {keys.map((key) => (
-            <button
-              key={key}
-              role="tab"
-              tabIndex={active === key ? 0 : -1}
-              className={`architecture-node architecture-node-${key} ${active === key ? "active-node" : "dimmed-node"} ${motionStage >= 3 ? "visible" : ""}`}
-              aria-selected={active === key}
-              aria-controls="trifecta-readout"
-              onClick={() => setActive(key)}
-              onKeyDown={(e) => handleKeyDown(e, key)}
-            >
-              <bdi>{pillars[key].code}</bdi>
-              <span>
-                <strong>{local(pillars[key].name, lang)}</strong>
-                <small>{local(pillars[key].prompt, lang)}</small>
-              </span>
-            </button>
-          ))}
-        </div>
+        {/* Dimension Selector Tabs (Progressive Disclosure Controls) */}
+        <div
+          className="architecture-controls"
+          role="tablist"
+          aria-label={local(b("أبعاد الأداء والتأثير المتكامل", "Performance dimensions and integrated outcome"), lang)}
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={active === "integrated"}
+            className={`architecture-node node-integrated ${active === "integrated" ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
+            onClick={() => setActive("integrated")}
+          >
+            <bdi>ALL</bdi>
+            <span>
+              <strong><bdi>{local(b("الأداء الفعلي", "Integrated Performance"), lang)}</bdi></strong>
+              <small>{local(b("نقطة التوافق التكاملي", "Convergence point"), lang)}</small>
+            </span>
+          </button>
 
-        <div className="architecture-controls architecture-controls-mobile" role="group" aria-label={local(b("أبعاد الأداء — الجوال", "Performance dimensions — Mobile"), lang)}>
-          {keys.map((key) => (
+          {dimensionKeys.map((key) => (
             <button
               key={key}
               type="button"
-              aria-pressed={active === key}
-              className={active === key ? "active" : ""}
+              role="tab"
+              aria-selected={active === key}
+              className={`architecture-node node-${key} ${active === key ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
               onClick={() => setActive(key)}
             >
               <bdi>{pillars[key].code}</bdi>
               <span>
-                <strong>{local(pillars[key].name, lang)}</strong>
-                <small>{local(pillars[key].prompt, lang)}</small>
+                <strong><bdi>{local(pillars[key].name, lang)}</bdi></strong>
+                <small><bdi>{local(pillars[key].prompt, lang)}</bdi></small>
               </span>
-              <i aria-hidden="true">{active === key ? "—" : "+"}</i>
             </button>
           ))}
         </div>
       </div>
 
+      {/* Single Readout Panel (One dimension explanation at a time) */}
       <div className="instrument-readout" id="trifecta-readout" aria-live="polite">
-        <span>{local(b("العدسة النشطة", "ACTIVE LENS"), lang)} · <bdi>{current.code}</bdi></span>
-        <div>
-          <strong>{local(current.name, lang)}</strong>
-          <p>{local(current.prompt, lang)}</p>
+        <div className="readout-tag">
+          <span>{local(b("العدسة التشخيصية", "DIAGNOSTIC LENS"), lang)}</span>
+          <bdi className="code-badge">{current.code}</bdi>
         </div>
-        <small>{local(b("الأبعاد متساوية في الأهمية؛ الاختيار يغيّر عدسة القراءة، لا ترتيبها.", "The dimensions are equally important; selection changes the diagnostic lens, not its rank."), lang)}</small>
+        <div className="readout-body">
+          <strong><bdi>{local(current.name, lang)}</bdi></strong>
+          <p><bdi>{local(current.prompt, lang)}</bdi></p>
+          <small><bdi>{local(current.detail, lang)}</bdi></small>
+        </div>
       </div>
     </aside>
   );

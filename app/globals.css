@@ -880,6 +880,24 @@ input[type="range"] { accent-color: var(--amber); }
    V2.1 Motion & Curriculum Builder Suite Styles
    ========================================== */
 
+/* Replay Motion Control Button */
+.replay-btn {
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  color: var(--amber-bright);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.replay-btn:hover {
+  background: var(--amber-soft);
+  border-color: var(--amber);
+}
+
 /* Flagship Single-Run Pyramid Entrance & Highlight Animation */
 .trifecta-instrument.stage-0 .architecture-outline,
 .trifecta-instrument.stage-0 .architecture-axis,
@@ -887,10 +905,9 @@ input[type="range"] { accent-color: var(--amber); }
 .trifecta-instrument.stage-0 .architecture-core-ring,
 .trifecta-instrument.stage-0 .architecture-core,
 .trifecta-instrument.stage-0 .architecture-output,
-.trifecta-instrument.stage-0 .architecture-core-label,
 .trifecta-instrument.stage-0 .architecture-node {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(12px) scale(0.96);
 }
 
 .architecture-outline,
@@ -899,9 +916,8 @@ input[type="range"] { accent-color: var(--amber); }
 .architecture-core-ring,
 .architecture-core,
 .architecture-output,
-.architecture-core-label,
 .architecture-node {
-  transition: opacity 0.38s ease, transform 0.38s ease, fill 0.28s ease, stroke 0.28s ease;
+  transition: opacity 0.42s ease, transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), fill 0.3s ease, stroke 0.3s ease;
 }
 
 .architecture-outline.visible,
@@ -910,29 +926,128 @@ input[type="range"] { accent-color: var(--amber); }
 .architecture-core-ring.visible,
 .architecture-core.visible,
 .architecture-output.visible,
-.architecture-core-label.visible,
 .architecture-node.visible {
   opacity: 1;
   transform: none;
 }
 
-.architecture-facet.active {
-  fill: rgba(214, 163, 95, 0.28);
+.architecture-facet.facet-physical.active {
+  fill: rgba(214, 163, 95, 0.42);
   stroke: var(--amber-bright);
+  stroke-width: 3px;
+}
+
+.architecture-facet.facet-technical.active {
+  fill: rgba(142, 170, 164, 0.42);
+  stroke: #a0c4bd;
+  stroke-width: 3px;
+}
+
+.architecture-facet.facet-cognitive.active {
+  fill: rgba(240, 192, 119, 0.42);
+  stroke: #f7d49b;
+  stroke-width: 3px;
 }
 
 .architecture-facet.inactive {
-  opacity: 0.35;
+  opacity: 0.45;
+}
+
+.architecture-node {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: start;
+  width: 100%;
+}
+
+.architecture-node bdi {
+  color: var(--amber-bright);
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-family: ui-monospace, monospace;
 }
 
 .architecture-node.dimmed-node {
-  opacity: 0.45;
+  opacity: 0.6;
 }
 
 .architecture-node.active-node {
   opacity: 1;
   border-color: var(--amber-bright);
-  box-shadow: 0 0 16px rgba(214, 163, 95, 0.25);
+  background: var(--amber-soft);
+  box-shadow: 0 0 16px rgba(214, 163, 95, 0.22);
+}
+
+.architecture-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 600px) {
+  .architecture-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+.instrument-readout {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.readout-tag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.readout-tag span {
+  color: var(--faint);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.code-badge {
+  background: var(--panel-2);
+  border: 1px solid var(--amber-soft);
+  color: var(--amber-bright);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: ui-monospace, monospace;
+}
+
+.readout-body strong {
+  color: var(--amber-bright);
+  font-size: 1.15rem;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.readout-body p {
+  color: var(--text);
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+.readout-body small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  display: block;
 }
 
 /* Curriculum Builder Suite Container */
