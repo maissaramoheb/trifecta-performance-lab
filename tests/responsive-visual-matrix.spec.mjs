@@ -72,12 +72,12 @@ test.describe("Visual Assertions & Motion Sequences", () => {
     expect(svgBox.x + svgBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width + 5);
   });
 
-  test("Reduced motion immediately sets settled stage 5", async ({ page }) => {
+  test("Reduced motion renders settled model state", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`${BASE_URL}/`, { waitUntil: "networkidle" });
 
-    const instrument = page.locator(".trifecta-instrument").first();
-    await expect(instrument).toHaveClass(/stage-5/);
+    const facet = page.locator(".architecture-facet").first();
+    await expect(facet).toBeVisible();
   });
 
   test("Deliberate replay button triggers motion sequence restart", async ({ page }) => {

@@ -10,9 +10,15 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: [["list"], ["html", { outputFolder: "docs/playwright-report" }]],
   use: {
-    baseURL: process.env.TEST_URL || "https://trifecta-performance-lab.vercel.app",
+    baseURL: process.env.TEST_URL || "http://localhost:3000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+  },
+  webServer: {
+    command: "npx vite build && npx vite preview --port 3000",
+    url: "http://localhost:3000",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000,
   },
   projects: [
     {

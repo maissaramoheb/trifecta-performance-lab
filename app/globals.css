@@ -1055,6 +1055,8 @@ input[type="range"] { accent-color: var(--amber); }
   display: flex;
   flex-direction: column;
   gap: 24px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .suite-header {
@@ -1159,9 +1161,10 @@ input[type="range"] { accent-color: var(--amber); }
 /* Suite Body Layout */
 .suite-body-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
+  max-width: 100%;
 }
 
 .suite-sidebar {

@@ -149,6 +149,8 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMotionStage(5);
       return;
     }
 
