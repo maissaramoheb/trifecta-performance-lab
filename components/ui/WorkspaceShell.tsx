@@ -24,6 +24,10 @@ export function WorkspaceShell({
   return (
     <section aria-label={label} className={`workspace-shell ${className}`}>
       <div className="workspace-rail">
+        <div className="workspace-rail-label">
+          <span aria-hidden="true" />
+          <strong>{label}</strong>
+        </div>
         <ol aria-label={label}>
           {steps.map((step, index) => {
             const state = index < activeStep ? "complete" : index === activeStep ? "current" : "upcoming";

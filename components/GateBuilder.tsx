@@ -138,7 +138,7 @@ export function GateBuilder({
   }[lang];
 
   return (
-    <div className="gate-builder-screen">
+    <div className="gate-builder-screen" data-critical-state={hasCritical ? "observed" : "clear"} data-effective-decision={effectiveDecision}>
       <PageHeader className="gate-page-header" eyebrow={labels.eyebrow} title={labels.title} intro={labels.intro} />
 
       <WorkspaceShell
@@ -363,20 +363,31 @@ export function GateBuilder({
               <div className="gate-section-heading">
                 <span aria-hidden="true">06</span>
                 <div>
-                  <strong id="gate-attempt-history-title">{local(b("سجل محاولات الـGate", "Gate attempt history"), lang)}</strong>
+                  <strong id="gate-attempt-history-title">{local(b("سجل محاولات الـGate", "Gate attempt history"), lang)} <bdi className="history-count" dir="ltr">{currentGate.attempts.length}</bdi></strong>
                   <small>{local(b("المحاولات السابقة تظل محفوظة ولا يستبدلها الـRetest.", "Retest never replaces an earlier attempt."), lang)}</small>
                 </div>
               </div>
               {currentGate.attempts.length ? (
                 <ol>
                   {currentGate.attempts.map((attempt) => (
-                    <li key={attempt.id}>
+                    <li key={attempt.id} data-attempt-decision={attempt.decision}>
                       <div>
                         <strong>{local(b("محاولة", "Attempt"), lang)} <bdi dir="ltr">#{attempt.attemptNumber}</bdi></strong>
                         <time dateTime={attempt.timestamp}>{new Date(attempt.timestamp).toLocaleString(lang === "ar" ? "ar-EG" : "en-GB")}</time>
                       </div>
                       <bdi className={`attempt-decision decision-${attempt.decision}`} dir="ltr">{labels.decisions[attempt.decision]}</bdi>
-                      <p>{attempt.evidenceSnapshot || local(b("لم يُسجل دليل لهذه المحاولة.", "No evidence was recorded for this attempt."), lang)}</p>
+                      <div className="attempt-evidence">
+                        <span>{local(b("لقطة الدليل", "Evidence snapshot"), lang)}</span>
+                        <p>{attempt.evidenceSnapshot || local(b("لم يُسجل دليل لهذه المحاولة.", "No evidence was recorded for this attempt."), lang)}</p>
+                      </div>
+                      <details className="attempt-details">
+                        <summary>{local(b("راجع المبرر والمعالجة", "Review rationale and remediation"), lang)}</summary>
+                        <dl>
+                          <div><dt>{local(b("الفشل الحرج الملاحظ", "Observed Critical Failures"), lang)}</dt><dd><bdi dir="ltr">{attempt.observedCriticalFailures.length}</bdi></dd></div>
+                          <div><dt>{local(b("المبرر", "Rationale"), lang)}</dt><dd>{local(attempt.rationale, lang)}</dd></div>
+                          <div><dt>{local(b("المعالجة", "Remediation"), lang)}</dt><dd>{local(attempt.remediation, lang)}</dd></div>
+                        </dl>
+                      </details>
                     </li>
                   ))}
                 </ol>
@@ -398,6 +409,7 @@ export function GateBuilder({
         }
         preview={
           <aside className="output-card gate-decision-card">
+            <div className="decision-station-line" aria-hidden="true"><span /><i /><span /></div>
             <div className="card-top">
               <EvidenceBadge type={effectiveDecision === "no-go" ? "danger" : effectiveDecision === "go" ? "safe" : "default"}>
                 {labels.decisions[effectiveDecision]}

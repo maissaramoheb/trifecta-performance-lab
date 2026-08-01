@@ -143,6 +143,7 @@ function LevelCards({ levels, lang, affective = false }: { levels: Level[]; lang
 
 function TrifectaInstrument({ lang }: { lang: Lang }) {
   const [active, setActive] = useState<"integrated" | "physical" | "technical" | "cognitive">("integrated");
+  const motionTimers = useRef<number[]>([]);
   const [motionStage, setMotionStage] = useState<number>(() =>
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 5 : 0,
   );
@@ -154,14 +155,17 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
       return;
     }
 
-    const t1 = setTimeout(() => setMotionStage(1), 160);
-    const t2 = setTimeout(() => setMotionStage(2), 480);
-    const t3 = setTimeout(() => setMotionStage(3), 800);
-    const t4 = setTimeout(() => setMotionStage(4), 1120);
-    const t5 = setTimeout(() => setMotionStage(5), 1440);
+    motionTimers.current = [
+      window.setTimeout(() => setMotionStage(1), 120),
+      window.setTimeout(() => setMotionStage(2), 380),
+      window.setTimeout(() => setMotionStage(3), 640),
+      window.setTimeout(() => setMotionStage(4), 900),
+      window.setTimeout(() => setMotionStage(5), 1180),
+    ];
 
     return () => {
-      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5);
+      motionTimers.current.forEach(window.clearTimeout);
+      motionTimers.current = [];
     };
   }, []);
 
@@ -170,12 +174,15 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
       setMotionStage(5);
       return;
     }
+    motionTimers.current.forEach(window.clearTimeout);
     setMotionStage(0);
-    setTimeout(() => setMotionStage(1), 160);
-    setTimeout(() => setMotionStage(2), 480);
-    setTimeout(() => setMotionStage(3), 800);
-    setTimeout(() => setMotionStage(4), 1120);
-    setTimeout(() => setMotionStage(5), 1440);
+    motionTimers.current = [
+      window.setTimeout(() => setMotionStage(1), 120),
+      window.setTimeout(() => setMotionStage(2), 380),
+      window.setTimeout(() => setMotionStage(3), 640),
+      window.setTimeout(() => setMotionStage(4), 900),
+      window.setTimeout(() => setMotionStage(5), 1180),
+    ];
   };
 
   const pillars = {
@@ -188,7 +195,7 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
     physical: {
       code: "P",
       name: b("مسار الأداء البدني", "Physical Performance Stream"),
-      prompt: b("هل يدعم الجاهزية والتوازن والاستعادة الحركية تحت الحمل؟", "Does biological readiness, balance, and movement recovery support task load?"),
+      prompt: b("هل الجسم يدعم المهمة: الجاهزية والتوازن والاستعادة الحركية تحت الحمل؟", "Does the body support the task: readiness, balance, and movement recovery under load?"),
       detail: b("يشمل التحكم الحركي، الثبات الهيكلي، والقدرة على التكرار دون تدهور بدني.", "Includes motor control, structural stability, and repetition capacity without physical degradation."),
     },
     technical: {
@@ -211,13 +218,17 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
   return (
     <aside
       className={`trifecta-instrument card-role-feature stage-${motionStage}`}
+      data-active={active}
       data-active-lens={active}
+      data-motion-stage={motionStage}
+      data-testid="trifecta-instrument"
       aria-label={local(b("نموذج المسارات الثلاثية المتفاعلة", "Interacting Performance Streams Architecture"), lang)}
     >
       <div className="instrument-head">
         <div>
           <span>PERFORMANCE OPERATIONS STUDIO</span>
           <strong>{local(b("نموذج المسارات الثلاثية المتفاعلة", "Three Interacting Performance Streams"), lang)}</strong>
+          <small>{local(b("ثلاثة أبعاد مترابطة", "Three interdependent dimensions"), lang)}</small>
         </div>
         <button
           type="button"
@@ -232,7 +243,7 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
       <div className="performance-architecture">
         <div className="pyramid-stage">
           <div className="architecture-canvas" aria-hidden="true">
-          <svg className="trifecta-pyramid-svg" viewBox="0 0 720 520" role="presentation">
+          <svg className="trifecta-pyramid-svg" viewBox="0 0 720 540" role="presentation">
             <defs>
               <linearGradient id="face-physical" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#20C7B7" stopOpacity="0.88" />
@@ -246,6 +257,18 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
                 <stop offset="0%" stopColor="#D5A04A" stopOpacity="0.88" />
                 <stop offset="100%" stopColor="#6A3C24" stopOpacity="0.94" />
               </linearGradient>
+              <linearGradient id="face-physical-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#8FF4EA" stopOpacity="0.72" />
+                <stop offset="100%" stopColor="#20C7B7" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="face-technical-rim" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#9AD8F5" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#3AA7D8" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="face-cognitive-rim" x1="50%" y1="0%" x2="50%" y2="100%">
+                <stop offset="0%" stopColor="#F3D39C" stopOpacity="0.78" />
+                <stop offset="100%" stopColor="#D5A04A" stopOpacity="0" />
+              </linearGradient>
               <radialGradient id="integrated-core" cx="50%" cy="40%" r="62%">
                 <stop offset="0%" stopColor="#FFFFFF" />
                 <stop offset="55%" stopColor="#D7F8F3" />
@@ -258,32 +281,50 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
               <pattern id="tactical-grid" width="36" height="36" patternUnits="userSpaceOnUse">
                 <path d="M36 0H0V36" fill="none" stroke="#334756" strokeWidth="1" opacity="0.28" />
               </pattern>
+              <filter id="pyramid-shadow" x="-30%" y="-50%" width="160%" height="220%">
+                <feGaussianBlur stdDeviation="14" />
+              </filter>
             </defs>
-            <rect x="52" y="40" width="616" height="430" rx="22" fill="url(#tactical-grid)" opacity="0.55" />
-            <path className={`pyramid-outline ${motionStage >= 1 ? "visible" : ""}`} d="M360 62 116 360 360 458 604 360Z" />
-            <polygon className={`pyramid-face face-cognitive ${motionStage >= 4 ? "visible" : ""}`} points="360,62 116,360 360,326 604,360" fill="url(#face-cognitive)" />
-            <polygon className={`pyramid-face face-physical ${motionStage >= 2 ? "visible" : ""}`} points="116,360 360,326 360,458" fill="url(#face-physical)" />
-            <polygon className={`pyramid-face face-technical ${motionStage >= 3 ? "visible" : ""}`} points="360,326 604,360 360,458" fill="url(#face-technical)" />
-            <path className={`pyramid-edge edge-left ${motionStage >= 4 ? "visible" : ""}`} d="M360 62 116 360 360 458" />
-            <path className={`pyramid-edge edge-right ${motionStage >= 4 ? "visible" : ""}`} d="M360 62 604 360 360 458" />
-            <path className={`pyramid-edge edge-base ${motionStage >= 4 ? "visible" : ""}`} d="M116 360 604 360" />
-            <path className={`pyramid-edge edge-centre ${motionStage >= 4 ? "visible" : ""}`} d="M360 62 360 458" />
-            <path className={`edge-sweep ${motionStage >= 5 ? "visible" : ""}`} d="M360 62 604 360 360 458 116 360Z" />
+            <rect x="44" y="36" width="632" height="456" rx="24" fill="url(#tactical-grid)" opacity="0.48" />
+            <ellipse className={`pyramid-shadow ${motionStage >= 1 ? "visible" : ""}`} cx="360" cy="444" rx="218" ry="42" fill="#000" opacity="0.62" filter="url(#pyramid-shadow)" />
+            <path className={`pyramid-outline ${motionStage >= 1 ? "visible" : ""}`} d="M360 58 108 360 360 472 612 360Z" />
+            <g className="pyramid-body">
+              <polygon className={`pyramid-face architecture-facet face-cognitive ${motionStage >= 4 ? "visible" : ""}`} points="360,58 108,360 360,318 612,360" fill="url(#face-cognitive)" />
+              <polygon className={`face-rim rim-cognitive ${motionStage >= 4 ? "visible" : ""}`} points="360,58 350,318 370,318" fill="url(#face-cognitive-rim)" />
+              <polygon className={`pyramid-face architecture-facet face-physical ${motionStage >= 2 ? "visible" : ""}`} points="108,360 360,318 360,472" fill="url(#face-physical)" />
+              <polygon className={`face-rim rim-physical ${motionStage >= 2 ? "visible" : ""}`} points="108,360 360,318 360,334" fill="url(#face-physical-rim)" />
+              <polygon className={`pyramid-face architecture-facet face-technical ${motionStage >= 3 ? "visible" : ""}`} points="360,318 612,360 360,472" fill="url(#face-technical)" />
+              <polygon className={`face-rim rim-technical ${motionStage >= 3 ? "visible" : ""}`} points="360,318 612,360 360,334" fill="url(#face-technical-rim)" />
+              <path className={`pyramid-datum ${motionStage >= 4 ? "visible" : ""}`} d="M184 334 360 304 536 334" />
+              <path className={`pyramid-datum ${motionStage >= 4 ? "visible" : ""}`} d="M244 286 360 266 476 286" />
+            </g>
+            <path className={`pyramid-edge edge-left ${motionStage >= 4 ? "visible" : ""}`} d="M360 58 108 360 360 472" />
+            <path className={`pyramid-edge edge-right ${motionStage >= 4 ? "visible" : ""}`} d="M360 58 612 360 360 472" />
+            <path className={`pyramid-edge edge-base ${motionStage >= 4 ? "visible" : ""}`} d="M108 360 612 360" />
+            <path className={`pyramid-edge edge-centre ${motionStage >= 4 ? "visible" : ""}`} d="M360 58 360 472" />
+            <path className={`edge-sweep ${motionStage >= 5 ? "visible" : ""}`} d="M360 58 612 360 360 472 108 360Z" />
             <g className={`integrated-core ${motionStage >= 5 ? "visible" : ""}`} filter="url(#core-glow)">
-              <circle cx="360" cy="326" r="34" fill="#071018" stroke="#F2F6F8" strokeWidth="2" />
-              <circle cx="360" cy="326" r="17" fill="url(#integrated-core)" />
-              <path d="M351 326h18M360 317v18" stroke="#071018" strokeWidth="2" />
+              <circle className="core-orbit core-orbit-outer" cx="360" cy="318" r="48" fill="none" stroke="#20C7B7" strokeWidth="1" strokeDasharray="4 8" />
+              <circle className="core-orbit" cx="360" cy="318" r="35" fill="#071018" stroke="#F2F6F8" strokeWidth="2" />
+              <circle cx="360" cy="318" r="17" fill="url(#integrated-core)" />
+              <path d="M351 318h18M360 309v18" stroke="#071018" strokeWidth="2" />
+            </g>
+            <g className={`integrated-output-mark ${motionStage >= 5 ? "visible" : ""}`}>
+              <path d="M360 366v45" />
+              <path d="M352 404l8 8 8-8" />
+              <text x="360" y="434" textAnchor="middle">ACTUAL PERFORMANCE</text>
             </g>
           </svg>
           </div>
-          <div className="architecture-controls" role="tablist" aria-label={local(b("اختيار بُعد الأداء", "Select performance dimension"), lang)}>
+          <div className="architecture-controls architecture-controls-desktop" role="tablist" aria-label={local(b("اختيار بُعد الأداء", "Select performance dimension"), lang)}>
             {dimensionKeys.map((key) => (
             <button
               key={key}
               type="button"
               role="tab"
               aria-selected={active === key}
-              className={`architecture-node pyramid-label label-${key} node-${key} ${active === key ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
+              aria-pressed={active === key}
+              className={`architecture-node architecture-node-${key} pyramid-label label-${key} node-${key} ${active === key ? "active-node" : active === "integrated" ? "supporting-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
               onClick={() => setActive(key)}
             >
               <bdi>{pillars[key].code}</bdi>
@@ -297,7 +338,8 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
               type="button"
               role="tab"
               aria-selected={active === "integrated"}
-              className={`architecture-node pyramid-label label-integrated node-integrated ${active === "integrated" ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
+              aria-pressed={active === "integrated"}
+              className={`architecture-node architecture-node-integrated pyramid-label label-integrated node-integrated ${active === "integrated" ? "active-node" : "dimmed-node"} ${motionStage >= 5 ? "visible" : ""}`}
               onClick={() => setActive("integrated")}
             >
               <bdi>ALL</bdi>
@@ -306,6 +348,29 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
                 <small>{local(b("نقطة التقاء الأبعاد الثلاثة", "Three-dimension convergence"), lang)}</small>
               </span>
             </button>
+          </div>
+          <div className="architecture-controls-mobile" role="tablist" aria-label={local(b("اختيار بُعد الأداء", "Select performance dimension"), lang)}>
+            <svg className="mobile-pyramid-overview" viewBox="0 0 180 112" aria-hidden="true">
+              <polygon points="90,8 16,78 90,64" fill="#D5A04A" />
+              <polygon points="90,8 164,78 90,64" fill="#9C6B36" />
+              <polygon points="16,78 90,64 90,106" fill="#168F85" />
+              <polygon points="90,64 164,78 90,106" fill="#2E8DB7" />
+              <path d="M90 8 16 78 90 106 164 78Z M90 8V106 M16 78 90 64 164 78" fill="none" stroke="#CFE7E4" strokeWidth="1.5" />
+            </svg>
+            {dimensionKeys.map((key) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={active === key}
+                aria-pressed={active === key}
+                className={`mobile-architecture-node architecture-node-${key} ${active === key ? "active-node" : ""}`}
+                onClick={() => setActive(key)}
+              >
+                <bdi>{pillars[key].code}</bdi>
+                <span><strong>{local(pillars[key].name, lang)}</strong><small>{local(pillars[key].prompt, lang)}</small></span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -342,12 +407,20 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
   return <div>
     <section className="hero">
       <div className="hero-copy">
-        <Badge tone="source">{local(b("نظام تطوير المدربين", "Trainer development system"), lang)}</Badge>
+        <div className="hero-orientation">
+          <Badge tone="source">{local(b("نظام تطوير المدربين", "Trainer development system"), lang)}</Badge>
+          <span>{local(b("مختبر تشخيص أداء قائم على الدليل", "Evidence-led performance diagnosis lab"), lang)}</span>
+        </div>
         <h1>{local(b("اقرأ الأداء كاملًا.", "Read the whole performance."), lang)}</h1>
         <p className="hero-lead">{lang === "ar" ? <><bdi dir="ltr">Learning Domains</bdi> بتحدد إحنا عايزين نبني إيه داخل المتدرب. و<bdi dir="ltr">Trifecta</bdi> بتساعدنا نفهم الأداء الفعلي نجح أو فشل ليه.</> : "Learning Domains define what we want to build in the learner. The Trifecta helps explain why actual performance succeeded or failed."}</p>
         <div className="hero-actions">
           <button className="primary" onClick={() => go("curriculum")}>{local(b("افتح مسار المنهج", "Open the curriculum pathway"), lang)}</button>
           <button className="secondary" onClick={() => go("cases")}>{local(b("افتح معمل الحالات", "Open the case lab"), lang)}</button>
+        </div>
+        <div className="hero-operational-chain" aria-label={local(b("سلسلة العمل التشغيلية", "Operational workflow"), lang)}>
+          {[b("Drills", "Drills"), b("الدليل", "Evidence"), b("التشخيص", "Diagnosis"), b("قرار الـGate", "Gate decision")].map((item, index) => (
+            <span key={item.en}><bdi>{local(item, lang)}</bdi>{index < 3 && <i aria-hidden="true">→</i>}</span>
+          ))}
         </div>
         <div className="hero-status-strip" aria-label={local(b("حالة النظام", "System status"), lang)}>
           <div><span aria-hidden="true">●</span><strong>{local(b("محلي وآمن", "Local-first"), lang)}</strong><small>{local(b("البيانات على جهازك", "Data stays on device"), lang)}</small></div>
@@ -581,6 +654,7 @@ function Comparison({ lang }: { lang: Lang }) {
 
 function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) => void }) {
   const [index, setIndex] = useState(0);
+  const [phase, setPhase] = useState<"evidence" | "analysis">("evidence");
   const [facts, setFacts] = useState<string[]>([]);
   const [domain, setDomain] = useState("");
   const [pillar, setPillar] = useState("");
@@ -591,7 +665,7 @@ function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) =>
   const [decision, setDecision] = useState("");
   const [show, setShow] = useState(false);
   const item = cases[index];
-  const reset = (next: number) => { setIndex(next); setFacts([]); setDomain(""); setPillar(""); setPrimary(""); setSecondary(""); setMissing(""); setIntervention(""); setDecision(""); setShow(false); };
+  const reset = (next: number) => { setIndex(next); setPhase("evidence"); setFacts([]); setDomain(""); setPillar(""); setPrimary(""); setSecondary(""); setMissing(""); setIntervention(""); setDecision(""); setShow(false); };
   const toggleFact = (x: string) => setFacts(v => v.includes(x) ? v.filter(y => y !== x) : [...v, x]);
   const restraint = decision === "Need More Data" || missing.trim().length > 5;
   const score = [facts.length > 0, domain.length > 0, pillar.length > 0, primary.length > 4, secondary.length > 4, missing.length > 4, intervention.length > 4, decision.length > 0, restraint].filter(Boolean).length;
@@ -604,11 +678,22 @@ function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) =>
     </div>
     <article className="lab-card">
       <div className="case-title"><span>{String(item.id).padStart(2, "0")}</span><div><h2>{local(item.title, lang)}</h2><p>{local(item.scenario, lang)}</p></div></div>
-      <div className="lab-grid">
+      <div className="reasoning-legend" aria-label={local(b("مفتاح الاستدلال", "Reasoning key"), lang)}>
+        <span><i aria-hidden="true" />{local(b("دليل", "Evidence"), lang)}</span>
+        <span><i aria-hidden="true" />{local(b("افتراض", "Assumption"), lang)}</span>
+        <span><i aria-hidden="true" />{local(b("تفسير", "Interpretation"), lang)}</span>
+        <span><i aria-hidden="true" />{local(b("عدم يقين", "Uncertainty"), lang)}</span>
+      </div>
+      <div className="case-phase-evidence">
         <fieldset><legend>1 · {local(b("اختر الحقائق، لا الافتراضات", "Select facts, not assumptions"), lang)}</legend>
           {[...item.facts, ...item.assumptions].map((x, i) => <label className="check-row" key={i}><input type="checkbox" checked={facts.includes(local(x, lang))} onChange={() => toggleFact(local(x, lang))}/><span>{local(x, lang)}</span></label>)}
         </fieldset>
-        <fieldset><legend>2 · Learning Domain + Trifecta</legend>
+        {phase === "evidence" && <button type="button" className="primary case-continue" onClick={() => setPhase("analysis")}>{local(b("استمر إلى التشخيص", "Continue to diagnosis"), lang)}</button>}
+      </div>
+      {phase === "analysis" && <div className="case-analysis">
+        <div className="case-analysis-head"><span>02</span><h3>{local(b("ابنِ تشخيصًا يمكن للدليل تحمّله", "Build a diagnosis the evidence can support"), lang)}</h3></div>
+        <div className="lab-grid">
+          <fieldset><legend>2 · Learning Domain + Trifecta</legend>
           <div className="field-row"><label>{local(b("المجال", "Domain"), lang)}<select value={domain} onChange={e => setDomain(e.target.value)}><option value="">{labels[lang].select}</option><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label>
           <label>{local(b("العمود", "Pillar"), lang)}<select value={pillar} onChange={e => setPillar(e.target.value)}><option value="">{labels[lang].select}</option><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
         </fieldset>
@@ -620,11 +705,12 @@ function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) =>
           <label>{local(b("ما الدليل الناقص؟", "What evidence is missing?"), lang)}<textarea value={missing} onChange={e => setMissing(e.target.value)}/></label>
           <label>{local(b("التدخل المقترح", "Recommended intervention"), lang)}<textarea value={intervention} onChange={e => setIntervention(e.target.value)}/></label>
         </fieldset>
-      </div>
-      <fieldset className="decision-field"><legend>5 · {local(b("قرار التقييم", "Assessment decision"), lang)}</legend>
-        {["Go","No-Go","Need More Data"].map(x => <label key={x}><input type="radio" name="decision" value={x} checked={decision === x} onChange={e => setDecision(e.target.value)}/><span>{x}</span></label>)}
-      </fieldset>
-      <div className="lab-actions"><div className="diagnostic-score"><span>{score}/9</span>{local(b("اكتمال منطقك", "reasoning completeness"), lang)}</div><button className="primary" onClick={() => { setShow(true); onComplete(item.id); }}>{labels[lang].reveal}</button></div>
+        </div>
+        <fieldset className="decision-field"><legend>5 · {local(b("قرار التقييم", "Assessment decision"), lang)}</legend>
+          {["Go","No-Go","Need More Data"].map(x => <label key={x}><input type="radio" name="decision" value={x} checked={decision === x} onChange={e => setDecision(e.target.value)}/><span>{x}</span></label>)}
+        </fieldset>
+        <div className="lab-actions"><div className="diagnostic-score"><span>{score}/9</span>{local(b("اكتمال منطقك", "reasoning completeness"), lang)}</div><button className="primary" onClick={() => { setShow(true); onComplete(item.id); }}>{labels[lang].reveal}</button></div>
+      </div>}
       {show && <div className="model-answer" aria-live="polite">
         <div className="card-top"><Badge tone={item.decision === "No-Go" ? "danger" : "safe"}>{item.decision}</Badge><SourceMark lang={lang}/></div>
         <h3>{local(b("إجابة مبنية على الدليل", "Evidence-based model answer"), lang)}</h3>
@@ -754,6 +840,7 @@ function PerformanceProfile({ lang }: { lang: Lang }) {
 function AAR({ lang }: { lang: Lang }) {
   const [data, setData] = useState({ happened:"", evidence:"", domain:"Cognitive", pillar:"Cognitive", alternative:"", missing:"", source:"performer", change:"" });
   const set = (k:string,v:string) => setData(x => ({...x,[k]:v}));
+  const activeStage = data.change.trim() ? 3 : data.evidence.trim() ? 2 : data.happened.trim() ? 1 : 0;
   const recs: Record<string, Bi> = {
     performer:b("ابدأ بتدخل أصغر يطابق الفجوة: شرح وتحقق للمعرفة، Demonstration وGuided Practice للمهارة، أو Load Progression وReset للثبات.","Use the smallest intervention that fits the gap: explanation/check for knowledge, demonstration/guided practice for skill, or load progression/reset for stability."),
     brief:b("اختصر الـBrief، افصل الشروط الحرجة، واختبر الاسترجاع قبل المحطة دون تحويل المهمة إلى اختبار ذاكرة.","Shorten the brief, separate critical conditions, and check recall before the station without turning the task into a memory test."),
@@ -762,20 +849,22 @@ function AAR({ lang }: { lang: Lang }) {
     station:b("ارجع للـBaseline، اعزل المتغيرات، وأضف عاملًا واحدًا حتى يظهر أول انهيار قابل للتفسير.","Return to baseline, isolate variables, and add one factor until the first interpretable breakdown appears."),
     load:b("أوقف التصعيد، حدّد Reset وRetest، ثم زد الوقت أو الحمل أو التعقيد تدريجيًا—عامل واحد في كل مرة.","Stop escalation, define reset and retest, then progress time, load, or complexity one factor at a time."),
   };
+  const stages = [
+    b("الأداء المتوقع", "Expected performance"),
+    b("الأداء الملاحظ", "Observed performance"),
+    b("التحليل", "Analysis"),
+    b("الإجراء والملكية", "Action & ownership"),
+  ];
   return <>
     <SectionHead eyebrow="After Action Review" title={local(b("حوّل التشخيص إلى فعل", "Turn diagnosis into action"), lang)} intro={local(b("AAR جيد لا يسأل فقط «من أخطأ؟»؛ يراجع المؤدي والـBrief والمعيار والتدريب وتصميم المحطة.", "A good AAR does not only ask “who failed?”; it reviews performer, brief, criterion, coaching, station design, and load progression."), lang)}/>
-    <nav className="aar-stage-rail" aria-label={local(b("مراحل المراجعة بعد الفعل", "After Action Review stages"), lang)}>
-      {[
-        b("الأداء المتوقع", "Expected performance"),
-        b("الأداء الملاحظ", "Observed performance"),
-        b("التحليل", "Analysis"),
-        b("الإجراء والملكية", "Action & ownership"),
-      ].map((stage, index) => <div key={stage.en}><span>{String(index + 1).padStart(2, "0")}</span><strong>{local(stage, lang)}</strong></div>)}
-    </nav>
-    <div className="builder-layout">
+    <div className="aar-workspace">
+      <nav className="workspace-rail aar-stage-rail" aria-label={local(b("مراحل المراجعة بعد الفعل", "After Action Review stages"), lang)}>
+        <ol>{stages.map((stage, index) => <li key={stage.en} data-state={index < activeStage ? "complete" : index === activeStage ? "current" : "upcoming"} aria-current={index === activeStage ? "step" : undefined}><span aria-hidden="true">{index < activeStage ? "✓" : String(index + 1).padStart(2, "0")}</span><strong>{local(stage, lang)}</strong></li>)}</ol>
+      </nav>
+      <div className="builder-layout">
       <form className="builder-card aar-form" onSubmit={e=>e.preventDefault()}>
         <fieldset className="aar-stage-section"><legend><span>01</span>{local(b("الأداء المتوقع والسياق", "Expected performance & context"), lang)}</legend>
-          <Field label={local(b("1. ماذا كان مطلوبًا وماذا حدث؟", "1. What was expected and what happened?"), lang)} value={data.happened} onChange={x=>set("happened",x)} area/>
+          <Field label={local(b("ما الأداء أو المعيار الذي كان متوقعًا؟", "What performance or standard was expected?"), lang)} value={data.happened} onChange={x=>set("happened",x)} area/>
         </fieldset>
         <fieldset className="aar-stage-section"><legend><span>02</span>{local(b("الأداء الملاحظ", "Observed performance"), lang)}</legend>
           <Field label={local(b("2. ما الدليل الملاحظ؟", "2. What is the observable evidence?"), lang)} value={data.evidence} onChange={x=>set("evidence",x)} area/>
@@ -802,6 +891,7 @@ function AAR({ lang }: { lang: Lang }) {
         </dl>
         <button className="secondary" onClick={()=>window.print()}>{labels[lang].print}</button>
       </aside>
+      </div>
     </div>
   </>;
 }
@@ -910,6 +1000,40 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
     return () => removeEventListener("popstate", pop);
   }, []);
 
+  useEffect(() => {
+    if (!menu) return;
+    const drawer = sidebarRef.current;
+    const focusable = () => Array.from(drawer?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], summary, select, input, textarea, [tabindex]:not([tabindex="-1"])') ?? []);
+    drawer?.focus({ preventScroll: true });
+    const focusFrame = requestAnimationFrame(() => drawer?.focus({ preventScroll: true }));
+    const focusTimer = window.setTimeout(() => (focusable()[0] ?? drawer)?.focus({ preventScroll: true }), 80);
+    const handleDrawerKeys = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenu(false);
+        requestAnimationFrame(() => menuButtonRef.current?.focus());
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleDrawerKeys);
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      window.clearTimeout(focusTimer);
+      document.removeEventListener("keydown", handleDrawerKeys);
+    };
+  }, [menu]);
+
   const go = (slug: string) => {
     setSection(slug);
     setMenu(false);
@@ -973,7 +1097,7 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
       {/* The shell owns client-side section state; this native link preserves open-in-new-tab and a safe no-JS destination. */}
       <a className="brand" href="/" onClick={(event) => { event.preventDefault(); go("overview"); }} aria-label={local(b("الرئيسية", "Home"),lang)}><span className="brand-mark">T³</span><span><strong>TRIFECTA</strong><small>PERFORMANCE LAB</small></span></a>
       <div className="top-context" aria-label={labels[lang].currentPage}>
-        <span>{activeGroup ? local(activeGroup.label, lang) : labels[lang].workspace}</span>
+        <span><i aria-hidden="true" />{activeGroup ? local(activeGroup.label, lang) : labels[lang].workspace}</span>
         <strong>{local(activeRoute[1], lang)}</strong>
       </div>
       <nav className="top-actions" aria-label={local(b("أدوات العرض", "View controls"),lang)}>
@@ -985,12 +1109,16 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
       </nav>
     </header>
     {menu && <button className="nav-scrim" aria-label={local(b("إغلاق القائمة", "Close menu"),lang)} onClick={()=>setMenu(false)}/>}
-    <aside ref={sidebarRef} id="main-nav" className={`sidebar ${menu?"open":""}`} aria-label={local(b("التنقل الرئيسي", "Primary navigation"),lang)}>
+    <aside ref={sidebarRef} id="main-nav" className={`sidebar ${menu?"open":""}`} tabIndex={-1} role={menu ? "dialog" : undefined} aria-modal={menu ? "true" : undefined} aria-label={local(b("التنقل الرئيسي", "Primary navigation"),lang)}>
       <div className="segmented mobile-mode" aria-label={local(b("اختيار الوضع", "Mode selection"),lang)}>
         <button aria-pressed={mode==="learner"} onClick={()=>{setMode("learner");setMenu(false);}}>{labels[lang].learner}</button>
         <button aria-pressed={mode==="instructor"} onClick={()=>{setMode("instructor");setMenu(false);}}>{labels[lang].instructor}</button>
       </div>
-      <nav>{routeGroups.map(group => <details className="nav-group" key={group.label.en} open={group.items.some(([slug]) => slug === section)}>
+      <div className="mobile-current-route" aria-label={labels[lang].currentPage}>
+        <small>{activeGroup ? local(activeGroup.label, lang) : labels[lang].workspace}</small>
+        <strong>{local(activeRoute[1], lang)}</strong>
+      </div>
+      <nav>{routeGroups.map(group => <details className="nav-group" data-current={group.items.some(([slug]) => slug === section) ? "true" : "false"} key={group.label.en} open={group.items.some(([slug]) => slug === section)}>
         <summary className="side-label"><span>{local(group.label,lang)}</span><bdi aria-hidden="true">⌄</bdi></summary>
         {group.items.map(([slug,title])=><a key={slug} href={slug === "overview" ? "/" : `/${slug}`} className={section===slug?"active":""} aria-current={section===slug?"page":undefined} onClick={(event)=>{event.preventDefault();go(slug);}}><span className="nav-indicator" aria-hidden="true"/>{local(title,lang)}</a>)}
       </details>)}</nav>

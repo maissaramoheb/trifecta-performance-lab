@@ -25,6 +25,17 @@ import { StatusBanner } from "./ui/StatusBanner";
 const local = (value: Bi | string, lang: Lang) =>
   typeof value === "string" ? value : value[lang];
 
+function SuiteActionIcon({ name }: { name: "export" | "import" | "tree" }) {
+  if (name === "tree") {
+    return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4v5M6 20v-4h12v4M6 16v-4h12v4M12 9H6v3m6-3h6v3" /></svg>;
+  }
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d={name === "export" ? "M12 4v11m0 0 4-4m-4 4-4-4M5 18v2h14v-2" : "M12 20V9m0 0 4 4m-4-4-4 4M5 6V4h14v2"} />
+    </svg>
+  );
+}
+
 type CurriculumBuilderSuiteProps = {
   lang: Lang;
   mode: "learner" | "instructor";
@@ -358,6 +369,10 @@ export default function CurriculumBuilderSuite({
 
   const t = {
     suiteTitle: local(b("جناح بناء المنهج الشامل · V2.1", "Unified Curriculum Builder Suite · V2.1"), lang),
+    suiteEyebrow: local(b("مساحة عمل المدرب · تصميم قائم على الدليل", "Instructor workspace · evidence-led design"), lang),
+    suiteIntro: local(b("ابنِ التسلسل المعتمد من المستوى إلى قرار الانتقال، مع بقاء كل دليل مرتبطًا بمكانه.", "Build the authoritative sequence from Level to progression decision while keeping every evidence record in context."), lang),
+    structureLabel: local(b("هيكل المنهج", "Curriculum structure"), lang),
+    recordsLabel: local(b("السجلات الحالية", "Current records"), lang),
     hierarchyToggle: local(b("شجرة الهيكل", "Hierarchy Tree"), lang),
     exportBtn: local(b("تصدير JSON", "Export JSON"), lang),
     importBtn: local(b("استيراد JSON", "Import JSON"), lang),
@@ -369,16 +384,20 @@ export default function CurriculumBuilderSuite({
   };
 
   return (
-    <div className="curriculum-builder-suite">
+    <div className="curriculum-builder-suite" data-active-builder={activeTab}>
       <header className="suite-header">
         <div className="suite-header-main">
-          <h1>{t.suiteTitle}</h1>
+          <div className="suite-header-copy">
+            <span className="suite-kicker">{t.suiteEyebrow}</span>
+            <h1>{t.suiteTitle}</h1>
+            <p>{t.suiteIntro}</p>
+          </div>
           <div className="suite-quick-actions">
             <button type="button" className="secondary" onClick={handleExportJSON}>
-              📥 {t.exportBtn}
+              <SuiteActionIcon name="export" /> {t.exportBtn}
             </button>
             <button type="button" className="secondary" onClick={() => fileInputRef.current?.click()}>
-              📤 {t.importBtn}
+              <SuiteActionIcon name="import" /> {t.importBtn}
             </button>
             <input
               ref={fileInputRef}
@@ -392,9 +411,19 @@ export default function CurriculumBuilderSuite({
               className="secondary mobile-tree-toggle"
               onClick={() => setShowTreeMobile(!showTreeMobile)}
             >
-              🌳 {t.hierarchyToggle}
+              <SuiteActionIcon name="tree" /> {t.hierarchyToggle}
             </button>
           </div>
+        </div>
+
+        <div className="suite-context-strip" aria-label={t.recordsLabel}>
+          <div><span>{t.structureLabel}</span><strong><bdi dir="ltr">Level → Station → Drill → Gate</bdi></strong></div>
+          <dl>
+            <div><dt>Levels</dt><dd>{store.levels.length}</dd></div>
+            <div><dt>Stations</dt><dd>{store.stations.length}</dd></div>
+            <div><dt>Drills</dt><dd>{store.drills.length}</dd></div>
+            <div><dt>Gates</dt><dd>{store.gates.length}</dd></div>
+          </dl>
         </div>
 
         {importStatus.message && (
@@ -429,8 +458,9 @@ export default function CurriculumBuilderSuite({
                 className={`suite-tab-btn ${isActive ? "active" : ""} ${tab.complete ? "complete" : ""}`}
                 onClick={() => setTab(tab.key)}
               >
-                <span>{tab.complete ? "✓" : "○"}</span>
-                <strong>{local(tab.label, lang)}</strong>
+                <span aria-hidden="true">{tab.complete ? "✓" : tabs.indexOf(tab) + 1}</span>
+                <strong>{local(tab.label, lang).replace(/^\d+\.\s*/, "")}</strong>
+                <small>{tab.complete ? local(b("مكتمل", "Complete"), lang) : isActive ? local(b("المساحة النشطة", "Active workspace"), lang) : local(b("قادم", "Upcoming"), lang)}</small>
               </button>
             );
           })}
