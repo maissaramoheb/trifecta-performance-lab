@@ -10,6 +10,7 @@ import {
   type GateDecision,
 } from "../lib/curriculum";
 import { b, type Bi, type Lang } from "../lib/content";
+import { GateDecisionPanel } from "./ui/GateDecisionPanel";
 
 type Mode = "learner" | "instructor";
 
@@ -54,6 +55,7 @@ const copy = {
     recorded: "مسجل",
     anchored: "مُقيّم",
     decision: "قرار",
+    decisionLegend: "قرار الـGate",
     expandDrill: "افتح تفاصيل الـDrill",
     anchors: ["غير مُثبت", "بدعم كبير", "عدم اتساق بسيط", "مستقل وثابت"],
     decisions: {
@@ -61,7 +63,7 @@ const copy = {
       go: "Go",
       "no-go": "No-Go",
       "need-more-data": "Need More Data",
-      retest: "Retest",
+      "retest": "Retest",
     },
   },
   en: {
@@ -102,6 +104,7 @@ const copy = {
     recorded: "Recorded",
     anchored: "Anchored",
     decision: "Decision",
+    decisionLegend: "Gate decision",
     expandDrill: "Open Drill details",
     anchors: ["Not demonstrated", "Major support", "Minor inconsistency", "Independent and consistent"],
     decisions: {
@@ -109,7 +112,7 @@ const copy = {
       go: "Go",
       "no-go": "No-Go",
       "need-more-data": "Need More Data",
-      retest: "Retest",
+      "retest": "Retest",
     },
   },
 } as const;
@@ -124,7 +127,7 @@ function getGateDecision(level: CurriculumLevel, station: CurriculumStation, pro
 function stationReady(station: CurriculumStation, progress: CurriculumProgress) {
   return station.drills.every((item) => {
     const record = progress.drills[item.id];
-    return Boolean(record?.evidence.trim()) && Boolean(record?.rating);
+    return Boolean(record?.evidence.trim()) && record?.rating !== null && record?.rating !== undefined;
   });
 }
 
@@ -159,7 +162,7 @@ export default function CurriculumWorkspace({
   const ready = stationReady(station, progress);
   const effectiveDecision = getGateDecision(level, station, progress);
   const evidenceCount = station.drills.filter((item) => progress.drills[item.id]?.evidence.trim()).length;
-  const anchoredCount = station.drills.filter((item) => Boolean(progress.drills[item.id]?.rating)).length;
+  const anchoredCount = station.drills.filter((item) => progress.drills[item.id]?.rating !== null && progress.drills[item.id]?.rating !== undefined).length;
 
   const totalUnits = trainerCurriculum.levels.reduce((sum, item) => (
     sum + item.stations.reduce((drillSum, current) => drillSum + current.drills.length, 0) + item.gates.length
@@ -168,7 +171,7 @@ export default function CurriculumWorkspace({
     sum
     + item.stations.reduce((drillSum, current) => drillSum + current.drills.filter((entry) => {
       const record = progress.drills[entry.id];
-      return Boolean(record?.evidence.trim()) && Boolean(record?.rating);
+      return Boolean(record?.evidence.trim()) && record?.rating !== null && record?.rating !== undefined;
     }).length, 0)
     + item.gates.filter((entry) => {
       const source = item.stations.find((station) => station.id === entry.fromStationId);
@@ -199,7 +202,7 @@ export default function CurriculumWorkspace({
   };
 
   const updateDrill = (id: string, patch: Partial<{ rating: DrillRating; evidence: string; criticalFailure: boolean }>) => {
-    const current = progress.drills[id] ?? { rating: 0 as DrillRating, evidence: "", criticalFailure: false };
+    const current = progress.drills[id] ?? { rating: null, evidence: "", criticalFailure: false };
     const nextGates = patch.criticalFailure && gate
       ? { ...progress.gates, [gate.id]: { ...(progress.gates[gate.id] ?? { evidence: "", remediation: "" }), decision: "no-go" as GateDecision } }
       : progress.gates;
@@ -246,7 +249,8 @@ export default function CurriculumWorkspace({
       })}
     </div>
 
-    <section className="curriculum-map" aria-label={local(trainerCurriculum.name, lang)}>
+    <div className="curriculum-map-shell">
+      <section className="curriculum-map" aria-label={local(trainerCurriculum.name, lang)}>
       <div className="curriculum-map-title">
         <div><span>{local(trainerCurriculum.name, lang)}</span><strong>{local(level.name, lang)}</strong></div>
         <p>{local(level.outcome, lang)}</p>
@@ -291,7 +295,9 @@ export default function CurriculumWorkspace({
           <bdi>G</bdi><strong>{t.decisions[effectiveDecision]}</strong><small>{t.decision}</small>
         </div>
       </div>
-    </section>
+      </section>
+      <div className="curriculum-continuation" role="note"><span>{lang === "ar" ? "اسحب لرؤية باقي المحطات" : "Scroll to see more stations"}</span><bdi>{level.stations.length} {lang === "ar" ? "محطات" : "stations"}</bdi><i aria-hidden="true">→</i></div>
+    </div>
 
     <div className="station-workspace">
       <section className="station-context">
@@ -314,8 +320,8 @@ export default function CurriculumWorkspace({
 
       <section className="drill-stack" aria-label={t.drill}>
         {station.drills.map((item, index) => {
-          const record = progress.drills[item.id] ?? { rating: 0 as DrillRating, evidence: "", criticalFailure: false };
-          const complete = Boolean(record.evidence.trim()) && Boolean(record.rating);
+          const record = progress.drills[item.id] ?? { rating: null, evidence: "", criticalFailure: false };
+          const complete = Boolean(record.evidence.trim()) && record.rating !== null;
           return <details className={`drill-row ${record.criticalFailure ? "critical" : complete ? "complete" : ""}`} key={item.id} open={expandedDrill === item.id}>
             <summary className="drill-head" aria-label={`${t.expandDrill}: ${local(item.name, lang)}`} onClick={(event) => { event.preventDefault(); setExpandedDrill(expandedDrill === item.id ? "" : item.id); }}>
               <span>D{index + 1}</span>
@@ -352,28 +358,32 @@ export default function CurriculumWorkspace({
       </section>
     </div>
 
-    {gate && gateRecord && <section className={`gate-panel decision-${effectiveDecision}`}>
-      <div className="gate-panel-head">
-        <div className="gate-emblem"><span>G</span><strong>{t.gate}</strong></div>
-        <div><h2>{t.gate} · {local(level.stations.find((item) => item.id === gate.toStationId)?.name ?? b("", ""), lang)}</h2><p>{local(gate.requirement, lang)}</p></div>
-        <div className="effective-decision"><span>{t.decisions[effectiveDecision]}</span><small>{hasCritical ? t.automaticNoGo : ready ? t.ready : t.incomplete}</small></div>
-      </div>
-      {mode === "instructor" ? <div className="gate-controls">
-        <fieldset>
-          <legend>{t.gate}</legend>
-          <div className="decision-options">
-            {(["go", "no-go", "need-more-data", "retest"] as GateDecision[]).map((decision) => <button
-              key={decision}
-              type="button"
-              aria-pressed={!hasCritical && gateRecord.decision === decision}
-              disabled={hasCritical || (decision === "go" && !ready)}
-              onClick={() => updateGate({ decision })}
-            >{t.decisions[decision]}</button>)}
-          </div>
-        </fieldset>
-        <label><span>{t.gateEvidence}</span><textarea dir="auto" value={gateRecord.evidence} onChange={(event) => updateGate({ evidence: event.target.value })}/></label>
-        <label><span>{t.remediation}</span><textarea dir="auto" value={gateRecord.remediation} onChange={(event) => updateGate({ remediation: event.target.value })}/></label>
-      </div> : <p className="mode-guidance">{t.instructorOnly}</p>}
-    </section>}
+    {gate && gateRecord && (
+      <GateDecisionPanel
+        title={`${t.gate} · ${local(level.stations.find((item) => item.id === gate.toStationId)?.name ?? b("", ""), lang)}`}
+        requirement={local(gate.requirement, lang)}
+        effectiveDecision={effectiveDecision}
+        hasCritical={hasCritical}
+        isReady={ready}
+        mode={mode}
+        decisionLabels={t.decisions}
+        statusMessages={{
+          automaticNoGo: t.automaticNoGo,
+          criticalExplanation: local(b("خرق أمان حرج غير قابل للتعويض بأي درجات أداء أخرى.", "Critical safety failure is non-compensable by any other performance score."), lang),
+          ready: t.ready,
+          incomplete: t.incomplete,
+          instructorOnly: t.instructorOnly,
+          gateEvidenceLabel: t.gateEvidence,
+          remediationLabel: t.remediation,
+          gateLabel: t.gate,
+          decisionLegend: t.decisionLegend,
+        }}
+        evidenceValue={gateRecord.evidence}
+        remediationValue={gateRecord.remediation}
+        onDecisionChange={(decision) => updateGate({ decision: decision as GateDecision })}
+        onEvidenceChange={(evidence) => updateGate({ evidence })}
+        onRemediationChange={(remediation) => updateGate({ remediation })}
+      />
+    )}
   </div>;
 }

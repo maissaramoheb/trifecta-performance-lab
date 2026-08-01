@@ -48,5 +48,5 @@ next-env.d.ts
 *.log
 /docs/playwright-report/
 /test-results/
-
+/artifacts/
 

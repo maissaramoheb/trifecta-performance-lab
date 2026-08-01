@@ -45,7 +45,7 @@ export type Curriculum = {
 };
 
 export type DrillRecord = {
-  rating: DrillRating;
+  rating: DrillRating | null;
   evidence: string;
   criticalFailure: boolean;
 };
@@ -57,7 +57,7 @@ export type GateRecord = {
 };
 
 export type CurriculumProgress = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   activeLevelId: string;
   activeStationId: string;
   drills: Record<string, DrillRecord>;
@@ -187,10 +187,45 @@ export const trainerCurriculum: Curriculum = {
 
 export function createInitialCurriculumProgress(): CurriculumProgress {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     activeLevelId: trainerCurriculum.levels[0].id,
     activeStationId: trainerCurriculum.levels[0].stations[0].id,
     drills: {},
     gates: {},
+  };
+}
+
+export function migrateCurriculumProgress(value: unknown): CurriculumProgress {
+  const initial = createInitialCurriculumProgress();
+  if (!value || typeof value !== "object") return initial;
+
+  const candidate = value as {
+    schemaVersion?: number;
+    activeLevelId?: unknown;
+    activeStationId?: unknown;
+    drills?: Record<string, Partial<DrillRecord>>;
+    gates?: CurriculumProgress["gates"];
+  };
+  const drills = Object.fromEntries(
+    Object.entries(candidate.drills ?? {}).map(([id, record]) => [
+      id,
+      {
+        evidence: typeof record.evidence === "string" ? record.evidence : "",
+        criticalFailure: Boolean(record.criticalFailure),
+        // Version 1 created rating 0 implicitly when evidence was entered. Treat it
+        // as unselected so a Gate never advances on ambiguous legacy data.
+        rating: candidate.schemaVersion === 1 && record.rating === 0
+          ? null
+          : ([0, 1, 2, 3].includes(Number(record.rating)) ? Number(record.rating) as DrillRating : null),
+      },
+    ]),
+  );
+
+  return {
+    schemaVersion: 2,
+    activeLevelId: typeof candidate.activeLevelId === "string" ? candidate.activeLevelId : initial.activeLevelId,
+    activeStationId: typeof candidate.activeStationId === "string" ? candidate.activeStationId : initial.activeStationId,
+    drills,
+    gates: candidate.gates && typeof candidate.gates === "object" ? candidate.gates : {},
   };
 }

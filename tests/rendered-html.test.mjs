@@ -53,8 +53,9 @@ test("critical safety and diagnostic-restraint rules are encoded", async () => {
 });
 
 test("curriculum hierarchy, evidence roll-up, and Gate safety are encoded", async () => {
-  const [workspace, curriculum, component] = await Promise.all([
+  const [workspace, gatePanel, curriculum, component] = await Promise.all([
     readFile(new URL("../components/CurriculumWorkspace.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/ui/GateDecisionPanel.tsx", import.meta.url), "utf8"),
     readFile(new URL("../lib/curriculum.ts", import.meta.url), "utf8"),
     readFile(new URL("../components/TrainingApp.tsx", import.meta.url), "utf8"),
   ]);
@@ -62,12 +63,14 @@ test("curriculum hierarchy, evidence roll-up, and Gate safety are encoded", asyn
   assert.match(curriculum, /CurriculumStation/);
   assert.match(curriculum, /CurriculumDrill/);
   assert.match(curriculum, /fromStationId/);
-  assert.match(workspace, /"need-more-data"/);
-  assert.match(workspace, /"retest"/);
+  assert.match(gatePanel, /"need-more-data"/);
+  assert.match(gatePanel, /"retest"/);
   assert.match(workspace, /if \(hasCritical\) return "no-go"/);
   assert.match(workspace, /decision: "no-go"/);
   assert.match(component, /schemaVersion:\s*2/);
-  assert.match(component, /x\.curriculum\?\.schemaVersion === 1/);
+  assert.match(component, /migrateCurriculumProgress\(x\.curriculum\)/);
+  assert.match(curriculum, /candidate\.schemaVersion === 1 && record\.rating === 0/);
+  assert.match(curriculum, /rating:\s*DrillRating \| null/);
 });
 
 test("source-driven cognitive phases and diagnostic intervention patterns are present", async () => {
