@@ -155,25 +155,45 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
     },
   };
   const current = pillars[active];
-  return <aside className="trifecta-instrument card-role-feature" aria-label={local(b("مؤشر أعمدة الأداء", "Performance pillar instrument"), lang)}>
+  const keys = Object.keys(pillars) as Array<keyof typeof pillars>;
+  return <aside className="trifecta-instrument" data-active={active} aria-label={local(b("معمار الأداء الثلاثي", "Trifecta performance architecture"), lang)}>
     <div className="instrument-head">
-      <span>PERFORMANCE / 03</span>
+      <div><span>PERFORMANCE / 03</span><strong>{local(b("ثلاثة أبعاد مترابطة", "Three interdependent dimensions"), lang)}</strong></div>
       <SourceMark lang={lang}/>
     </div>
-    <div className="tri-stage">
-      <div className="tri-core" aria-hidden="true"><span>TRI</span></div>
-      {(Object.keys(pillars) as Array<keyof typeof pillars>).map(key => <button
-        key={key}
-        className={`tri-node tri-node-${key}`}
-        aria-pressed={active === key}
-        onClick={() => setActive(key)}
-      ><bdi>{pillars[key].code}</bdi><span>{local(pillars[key].name, lang)}</span></button>)}
-      <div className="scan-line" aria-hidden="true"/>
+    <div className="performance-architecture">
+      <div className="architecture-canvas" aria-hidden="true">
+        <svg viewBox="0 0 600 430" role="presentation">
+          <path className="architecture-outline" d="M300 34 548 390H52Z"/>
+          <path className="architecture-axis" d="M300 236 300 34M300 236 52 390M300 236 548 390"/>
+          <path className="architecture-facet facet-technical" d="M300 34 300 236 52 390Z"/>
+          <path className="architecture-facet facet-cognitive" d="M300 34 548 390 300 236Z"/>
+          <path className="architecture-facet facet-physical" d="M52 390 300 236 548 390Z"/>
+          <circle className="architecture-core-ring" cx="300" cy="236" r="54"/>
+          <circle className="architecture-core" cx="300" cy="236" r="38"/>
+          <path className="architecture-output" d="M300 274V322"/>
+        </svg>
+        <div className="architecture-core-label"><span>{local(b("الأداء", "Actual"), lang)}</span><strong>{local(b("الفعلي", "performance"), lang)}</strong></div>
+      </div>
+      <div className="architecture-controls architecture-controls-desktop">
+        {keys.map(key => <button
+          key={key}
+          className={`architecture-node architecture-node-${key}`}
+          aria-pressed={active === key}
+          aria-controls="trifecta-readout"
+          onClick={() => setActive(key)}
+        ><bdi>{pillars[key].code}</bdi><span><strong>{local(pillars[key].name, lang)}</strong><small>{local(pillars[key].prompt, lang)}</small></span></button>)}
+      </div>
+      <div className="architecture-controls architecture-controls-mobile" role="group" aria-label={local(b("أبعاد الأداء", "Performance dimensions"), lang)}>
+        {keys.map(key => <button key={key} aria-pressed={active === key} onClick={() => setActive(key)}>
+          <bdi>{pillars[key].code}</bdi><span><strong>{local(pillars[key].name, lang)}</strong><small>{local(pillars[key].prompt, lang)}</small></span><i aria-hidden="true">{active === key ? "—" : "+"}</i>
+        </button>)}
+      </div>
     </div>
-    <div className="instrument-readout" aria-live="polite">
-      <span>ACTIVE LENS · <bdi>{current.code}</bdi></span>
-      <strong>{local(current.name, lang)}</strong>
-      <p>{local(current.prompt, lang)}</p>
+    <div className="instrument-readout" id="trifecta-readout" aria-live="polite">
+      <span>{local(b("العدسة النشطة", "ACTIVE LENS"), lang)} · <bdi>{current.code}</bdi></span>
+      <div><strong>{local(current.name, lang)}</strong><p>{local(current.prompt, lang)}</p></div>
+      <small>{local(b("الأبعاد متساوية في الأهمية؛ الاختيار يغيّر عدسة القراءة، لا ترتيبها.", "The dimensions are equally important; selection changes the diagnostic lens, not its rank."), lang)}</small>
     </div>
   </aside>;
 }
@@ -197,6 +217,7 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
         <Badge tone="source">{local(b("نظام تطوير المدربين", "Trainer development system"), lang)}</Badge>
         <h1>{local(b("اقرأ الأداء كاملًا.", "Read the whole performance."), lang)}</h1>
         <p className="hero-lead">{local(b("Learning Domains بتحدد إحنا عايزين نبني إيه داخل المتدرب. والـTrifecta بتساعدنا نفهم الأداء الفعلي نجح أو فشل ليه.", "Learning Domains define what we want to build in the learner. The Trifecta helps explain why actual performance succeeded or failed."), lang)}</p>
+        <p className="hero-audience">{local(b("للمدربين، قادة الفرق، مصممي المناهج، ومقيمي المحطات اللي محتاجين قرارًا يستند إلى دليل—مش نتيجة واحدة.", "For trainers, team leaders, curriculum designers, and station assessors who need an evidence-based decision—not a single result."), lang)}</p>
         <div className="hero-actions">
           <button className="primary" onClick={() => go("curriculum")}>{local(b("افتح مسار المنهج", "Open the curriculum pathway"), lang)}</button>
           <button className="secondary" onClick={() => go("cases")}>{local(b("افتح معمل الحالات", "Open the case lab"), lang)}</button>
@@ -249,7 +270,7 @@ function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
       {comparisons.map((row, i) => <div className="compare-row" key={i}><div>{local(row[0], lang)}</div><div>{local(row[1], lang)}</div></div>)}
     </section>
 
-    <section className="example-grid">
+    <section className="example-grid" aria-label={local(b("إشارات تحتاج تشخيصًا", "Signals requiring diagnosis"), lang)}>
       {examples.map((x, i) => <button key={i} onClick={() => go("cases")} className="example-card">
         <span>0{i + 1}</span><p>{local(x, lang)}</p><strong>↗</strong>
       </button>)}
@@ -428,6 +449,7 @@ function Comparison({ lang }: { lang: Lang }) {
 
 function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) => void }) {
   const [index, setIndex] = useState(0);
+  const [phase, setPhase] = useState<0 | 1>(0);
   const [facts, setFacts] = useState<string[]>([]);
   const [domain, setDomain] = useState("");
   const [pillar, setPillar] = useState("");
@@ -438,7 +460,7 @@ function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) =>
   const [decision, setDecision] = useState("");
   const [show, setShow] = useState(false);
   const item = cases[index];
-  const reset = (next: number) => { setIndex(next); setFacts([]); setDomain(""); setPillar(""); setPrimary(""); setSecondary(""); setMissing(""); setIntervention(""); setDecision(""); setShow(false); };
+  const reset = (next: number) => { setIndex(next); setPhase(0); setFacts([]); setDomain(""); setPillar(""); setPrimary(""); setSecondary(""); setMissing(""); setIntervention(""); setDecision(""); setShow(false); };
   const toggleFact = (x: string) => setFacts(v => v.includes(x) ? v.filter(y => y !== x) : [...v, x]);
   const restraint = decision === "Need More Data" || missing.trim().length > 5;
   const score = [facts.length > 0, domain.length > 0, pillar.length > 0, primary.length > 4, secondary.length > 4, missing.length > 4, intervention.length > 4, decision.length > 0, restraint].filter(Boolean).length;
@@ -451,10 +473,21 @@ function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) =>
     </div>
     <article className="lab-card">
       <div className="case-title"><span>{String(item.id).padStart(2, "0")}</span><div><h2>{local(item.title, lang)}</h2><p>{local(item.scenario, lang)}</p></div></div>
-      <div className="lab-grid">
-        <fieldset><legend>1 · {local(b("اختر الحقائق، لا الافتراضات", "Select facts, not assumptions"), lang)}</legend>
+      <div className="reasoning-legend" aria-label={local(b("حدود الاستدلال", "Reasoning boundaries"), lang)}>
+        <div data-kind="evidence"><strong>{local(b("دليل", "Evidence"), lang)}</strong><span>{local(b("شوهد أو سُجل", "Seen or recorded"), lang)}</span></div>
+        <div data-kind="assumption"><strong>{local(b("افتراض", "Assumption"), lang)}</strong><span>{local(b("غير مثبت", "Not demonstrated"), lang)}</span></div>
+        <div data-kind="interpretation"><strong>{local(b("تفسير", "Interpretation"), lang)}</strong><span>{local(b("سبب محتمل", "Plausible cause"), lang)}</span></div>
+        <div data-kind="uncertainty"><strong>{local(b("عدم يقين", "Uncertainty"), lang)}</strong><span>{local(b("دليل ناقص", "Missing evidence"), lang)}</span></div>
+      </div>
+      <div className="case-phase case-phase-evidence">
+        <fieldset><legend>1 · {local(b("افصل الدليل عن الافتراض", "Separate evidence from assumption"), lang)}</legend>
           {[...item.facts, ...item.assumptions].map((x, i) => <label className="check-row" key={i}><input type="checkbox" checked={facts.includes(local(x, lang))} onChange={() => toggleFact(local(x, lang))}/><span>{local(x, lang)}</span></label>)}
         </fieldset>
+        {phase === 0 && <div className="case-continue"><span>{facts.length ? local(b(`اخترت ${facts.length} بندًا. راجع: هل كل بند ملاحظ فعلًا؟`, `${facts.length} selected. Check: is every item truly observable?`), lang) : local(b("ابدأ بما يمكن لمقيم آخر رؤيته أو تسجيله.", "Start with what another assessor could see or record."), lang)}</span><button className="primary" disabled={!facts.length} onClick={() => setPhase(1)}>{local(b("استمر إلى التشخيص", "Continue to diagnosis"), lang)}</button></div>}
+      </div>
+      {phase === 1 && <div className="case-analysis" aria-live="polite">
+        <div className="case-analysis-head"><div><MiniLabel>{local(b("التفسير وعدم اليقين", "Interpretation & uncertainty"), lang)}</MiniLabel><h3>{local(b("ابنِ تشخيصًا يمكن للدليل تحمّله", "Build only the diagnosis the evidence can support"), lang)}</h3></div><button className="secondary" onClick={() => setPhase(0)}>{local(b("راجع الدليل", "Review evidence"), lang)}</button></div>
+        <div className="lab-grid">
         <fieldset><legend>2 · Learning Domain + Trifecta</legend>
           <div className="field-row"><label>{local(b("المجال", "Domain"), lang)}<select value={domain} onChange={e => setDomain(e.target.value)}><option value="">{labels[lang].select}</option><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label>
           <label>{local(b("العمود", "Pillar"), lang)}<select value={pillar} onChange={e => setPillar(e.target.value)}><option value="">{labels[lang].select}</option><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
@@ -467,11 +500,12 @@ function CaseLab({ lang, onComplete }: { lang: Lang; onComplete: (id: number) =>
           <label>{local(b("ما الدليل الناقص؟", "What evidence is missing?"), lang)}<textarea value={missing} onChange={e => setMissing(e.target.value)}/></label>
           <label>{local(b("التدخل المقترح", "Recommended intervention"), lang)}<textarea value={intervention} onChange={e => setIntervention(e.target.value)}/></label>
         </fieldset>
-      </div>
-      <fieldset className="decision-field"><legend>5 · {local(b("قرار التقييم", "Assessment decision"), lang)}</legend>
+        </div>
+        <fieldset className="decision-field"><legend>5 · {local(b("قرار التقييم", "Assessment decision"), lang)}</legend>
         {["Go","No-Go","Need More Data"].map(x => <label key={x}><input type="radio" name="decision" value={x} checked={decision === x} onChange={e => setDecision(e.target.value)}/><span>{x}</span></label>)}
-      </fieldset>
-      <div className="lab-actions"><div className="diagnostic-score"><span>{score}/9</span>{local(b("اكتمال منطقك", "reasoning completeness"), lang)}</div><button className="primary" onClick={() => { setShow(true); onComplete(item.id); }}>{labels[lang].reveal}</button></div>
+        </fieldset>
+        <div className="lab-actions"><div className="diagnostic-score"><span>{score}/9</span>{local(b("اكتمال منطقك", "reasoning completeness"), lang)}</div><button className="primary" onClick={() => { setShow(true); onComplete(item.id); }}>{labels[lang].reveal}</button></div>
+      </div>}
       {show && <div className="model-answer" aria-live="polite">
         <div className="card-top"><Badge tone={item.decision === "No-Go" ? "danger" : "safe"}>{item.decision}</Badge><SourceMark lang={lang}/></div>
         <h3>{local(b("إجابة مبنية على الدليل", "Evidence-based model answer"), lang)}</h3>
@@ -680,7 +714,7 @@ function PerformanceProfile({ lang }: { lang: Lang }) {
 }
 
 function AAR({ lang }: { lang: Lang }) {
-  const [data, setData] = useState({ happened:"", evidence:"", domain:"Cognitive", pillar:"Cognitive", alternative:"", missing:"", source:"performer", change:"" });
+  const [data, setData] = useState({ expected:"", happened:"", evidence:"", domain:"Cognitive", pillar:"Cognitive", alternative:"", missing:"", source:"performer", change:"", owner:"" });
   const set = (k:string,v:string) => setData(x => ({...x,[k]:v}));
   const recs: Record<string, Bi> = {
     performer:b("ابدأ بتدخل أصغر يطابق الفجوة: شرح وتحقق للمعرفة، Demonstration وGuided Practice للمهارة، أو Load Progression وReset للثبات.","Use the smallest intervention that fits the gap: explanation/check for knowledge, demonstration/guided practice for skill, or load progression/reset for stability."),
@@ -690,31 +724,39 @@ function AAR({ lang }: { lang: Lang }) {
     station:b("ارجع للـBaseline، اعزل المتغيرات، وأضف عاملًا واحدًا حتى يظهر أول انهيار قابل للتفسير.","Return to baseline, isolate variables, and add one factor until the first interpretable breakdown appears."),
     load:b("أوقف التصعيد، حدّد Reset وRetest، ثم زد الوقت أو الحمل أو التعقيد تدريجيًا—عامل واحد في كل مرة.","Stop escalation, define reset and retest, then progress time, load, or complexity one factor at a time."),
   };
+  const activeStep = !data.expected ? 0 : !data.happened || !data.evidence ? 1 : !data.alternative || !data.missing ? 2 : 3;
+  const ready = Boolean(data.expected && data.happened && data.evidence && data.change && data.owner);
   return <>
     <SectionHead eyebrow="After Action Review" title={local(b("حوّل التشخيص إلى فعل", "Turn diagnosis into action"), lang)} intro={local(b("AAR جيد لا يسأل فقط «من أخطأ؟»؛ يراجع المؤدي والـBrief والمعيار والتدريب وتصميم المحطة.", "A good AAR does not only ask “who failed?”; it reviews performer, brief, criterion, coaching, station design, and load progression."), lang)}/>
-    <div className="builder-layout">
-      <form className="builder-card" onSubmit={e=>e.preventDefault()}>
-        <Field label={local(b("1. ماذا حدث؟", "1. What happened?"), lang)} value={data.happened} onChange={x=>set("happened",x)} area/>
-        <Field label={local(b("2. ما الدليل الملاحظ؟", "2. What is the observable evidence?"), lang)} value={data.evidence} onChange={x=>set("evidence",x)} area/>
-        <div className="field-row"><label>3. Learning Domain<select value={data.domain} onChange={e=>set("domain",e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><label>4. Trifecta<select value={data.pillar} onChange={e=>set("pillar",e.target.value)}><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
-        <Field label={local(b("5. ما التفسير البديل؟", "5. Most plausible alternative?"), lang)} value={data.alternative} onChange={x=>set("alternative",x)}/>
-        <Field label={local(b("6. ما الدليل الإضافي المطلوب؟", "6. What additional evidence is needed?"), lang)} value={data.missing} onChange={x=>set("missing",x)}/>
-        <label>{local(b("7. أين يوجد السبب القابل للتغيير؟", "7. Where is the modifiable cause?"), lang)}<select value={data.source} onChange={e=>set("source",e.target.value)}><option value="performer">{local(b("المؤدي", "Performer"), lang)}</option><option value="brief">Brief</option><option value="criterion">{local(b("المعيار", "Criterion"), lang)}</option><option value="coaching">{local(b("التدريب", "Coaching"), lang)}</option><option value="station">{local(b("تصميم المحطة", "Station design"), lang)}</option><option value="load">{local(b("تصعيد الحمل", "Load progression"), lang)}</option></select></label>
-        <Field label={local(b("8. ماذا سيتغير في المحاولة التالية؟", "8. What changes next?"), lang)} value={data.change} onChange={x=>set("change",x)} area/>
-      </form>
+    <WorkspaceShell
+      className="aar-workspace"
+      label={local(b("مراحل المراجعة بعد العمل", "AAR stages"), lang)}
+      steps={[local(b("الأداء المتوقع", "Expected performance"), lang), local(b("الأداء الملاحظ", "Observed performance"), lang), local(b("التحليل", "Analysis"), lang), local(b("الفعل والملكية", "Action & ownership"), lang)]}
+      activeStep={activeStep}
+      summary={<><strong>{ready ? local(b("جاهز للتنفيذ", "Ready for action"), lang) : local(b("مراجعة قيد البناء", "Review in progress"), lang)}</strong><span>{local(b("الدليل قبل التفسير", "Evidence before interpretation"), lang)}</span></>}
+      form={<form className="builder-card aar-form" onSubmit={e=>e.preventDefault()}>
+        <section className="aar-stage-section" data-stage="1"><MiniLabel>{local(b("1 · الأداء المتوقع", "1 · Expected performance"), lang)}</MiniLabel><Field label={local(b("ما الأداء أو المعيار الذي كان متوقعًا؟", "What performance or standard was expected?"), lang)} value={data.expected} onChange={x=>set("expected",x)} area/></section>
+        <section className="aar-stage-section" data-stage="2"><MiniLabel>{local(b("2 · الأداء الملاحظ", "2 · Observed performance"), lang)}</MiniLabel><Field label={local(b("ماذا حدث؟", "What happened?"), lang)} value={data.happened} onChange={x=>set("happened",x)} area/><Field label={local(b("ما الدليل الملاحظ؟", "What is the observable evidence?"), lang)} value={data.evidence} onChange={x=>set("evidence",x)} area/></section>
+        <section className="aar-stage-section" data-stage="3"><MiniLabel>{local(b("3 · التحليل", "3 · Analysis"), lang)}</MiniLabel><div className="field-row"><label>Learning Domain<select value={data.domain} onChange={e=>set("domain",e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><label>Trifecta<select value={data.pillar} onChange={e=>set("pillar",e.target.value)}><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div><Field label={local(b("ما التفسير البديل؟", "Most plausible alternative?"), lang)} value={data.alternative} onChange={x=>set("alternative",x)}/><Field label={local(b("ما الدليل الإضافي المطلوب؟", "What additional evidence is needed?"), lang)} value={data.missing} onChange={x=>set("missing",x)}/><label>{local(b("أين يوجد السبب القابل للتغيير؟", "Where is the modifiable cause?"), lang)}<select value={data.source} onChange={e=>set("source",e.target.value)}><option value="performer">{local(b("المؤدي", "Performer"), lang)}</option><option value="brief">Brief</option><option value="criterion">{local(b("المعيار", "Criterion"), lang)}</option><option value="coaching">{local(b("التدريب", "Coaching"), lang)}</option><option value="station">{local(b("تصميم المحطة", "Station design"), lang)}</option><option value="load">{local(b("تصعيد الحمل", "Load progression"), lang)}</option></select></label></section>
+        <section className="aar-stage-section" data-stage="4"><MiniLabel>{local(b("4 · الفعل والملكية", "4 · Action & ownership"), lang)}</MiniLabel><Field label={local(b("ماذا سيتغير في المحاولة التالية؟", "What changes next?"), lang)} value={data.change} onChange={x=>set("change",x)} area/><Field label={local(b("من المالك؟ ومتى تتم المراجعة؟", "Who owns the action, and when is it reviewed?"), lang)} value={data.owner} onChange={x=>set("owner",x)}/></section>
+      </form>}
+      preview={
       <aside className="output-card aar-output">
         <div className="card-top"><Badge>AAR output</Badge><SourceMark lang={lang} applied/></div>
         <h2>{local(b("التدخل المقترح", "Recommended intervention"), lang)}</h2>
         <p className="recommendation-text">{local(recs[data.source],lang)}</p>
         <dl className="station-dl">
           <div><dt>Evidence</dt><dd>{data.evidence || "—"}</dd></div>
+          <div><dt>Expected</dt><dd>{data.expected || "—"}</dd></div>
           <div><dt>Domain / Pillar</dt><dd>{data.domain} / {data.pillar}</dd></div>
           <div><dt>Alternative</dt><dd>{data.alternative || "—"}</dd></div>
           <div><dt>Next change</dt><dd>{data.change || "—"}</dd></div>
+          <div><dt>Owner / review</dt><dd>{data.owner || "—"}</dd></div>
         </dl>
         <button className="secondary" onClick={()=>window.print()}>{labels[lang].print}</button>
       </aside>
-    </div>
+      }
+    />
   </>;
 }
 

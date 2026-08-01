@@ -249,7 +249,8 @@ export default function CurriculumWorkspace({
       })}
     </div>
 
-    <section className="curriculum-map" aria-label={local(trainerCurriculum.name, lang)}>
+    <div className="curriculum-map-shell">
+      <section className="curriculum-map" aria-label={local(trainerCurriculum.name, lang)}>
       <div className="curriculum-map-title">
         <div><span>{local(trainerCurriculum.name, lang)}</span><strong>{local(level.name, lang)}</strong></div>
         <p>{local(level.outcome, lang)}</p>
@@ -294,7 +295,9 @@ export default function CurriculumWorkspace({
           <bdi>G</bdi><strong>{t.decisions[effectiveDecision]}</strong><small>{t.decision}</small>
         </div>
       </div>
-    </section>
+      </section>
+      <div className="curriculum-continuation" role="note"><span>{lang === "ar" ? "اسحب لرؤية باقي المحطات" : "Scroll to see more stations"}</span><bdi>{level.stations.length} {lang === "ar" ? "محطات" : "stations"}</bdi><i aria-hidden="true">→</i></div>
+    </div>
 
     <div className="station-workspace">
       <section className="station-context">
