@@ -1,12 +1,17 @@
 "use client";
 /* eslint-disable @next/next/no-html-link-for-pages -- this local-first SPA owns section history and safely degrades to server routes */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CurriculumWorkspace from "./CurriculumWorkspace";
+import CurriculumBuilderSuite from "./CurriculumBuilderSuite";
 import {
   createInitialCurriculumProgress,
+  createInitialCurriculumSuiteStore,
+  migrateCurriculumProgress,
+  migrateCurriculumSuiteStore,
   type CurriculumProgress,
 } from "../lib/curriculum";
+import type { CurriculumSuiteStore } from "../lib/curriculum-builder-types";
 import {
   affectiveLevels,
   b,
@@ -23,8 +28,9 @@ import {
 } from "../lib/content";
 
 type Mode = "learner" | "instructor";
+
 type SavedState = {
-  schemaVersion?: 2;
+  schemaVersion?: 3;
   lang: Lang;
   mode: Mode;
   completedCases: number[];
@@ -32,6 +38,7 @@ type SavedState = {
   objective?: ObjectiveState;
   station?: StationState;
   curriculum?: CurriculumProgress;
+  curriculumSuite?: CurriculumSuiteStore;
 };
 
 type ObjectiveState = {
@@ -136,6 +143,27 @@ function LevelCards({ levels, lang, affective = false }: { levels: Level[]; lang
 
 function TrifectaInstrument({ lang }: { lang: Lang }) {
   const [active, setActive] = useState<"physical" | "technical" | "cognitive">("technical");
+  const [motionStage, setMotionStage] = useState<number>(() =>
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 5 : 0,
+  );
+
+  // Single-run entrance animation sequence (runs ONCE on mount, no continuous looping)
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const t1 = setTimeout(() => setMotionStage(1), 80);
+    const t2 = setTimeout(() => setMotionStage(2), 260);
+    const t3 = setTimeout(() => setMotionStage(3), 440);
+    const t4 = setTimeout(() => setMotionStage(4), 620);
+    const t5 = setTimeout(() => setMotionStage(5), 800);
+
+    return () => {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5);
+    };
+  }, []);
+
   const pillars = {
     physical: {
       code: "P",
@@ -153,28 +181,114 @@ function TrifectaInstrument({ lang }: { lang: Lang }) {
       prompt: b("هل لاحظ وتذكّر وقرّر وحوّل القرار إلى فعل؟", "Did the performer notice, remember, decide, and turn the decision into action?"),
     },
   };
+
+  const keys = Object.keys(pillars) as Array<keyof typeof pillars>;
   const current = pillars[active];
-  return <aside className="trifecta-instrument card-role-feature" aria-label={local(b("مؤشر أعمدة الأداء", "Performance pillar instrument"), lang)}>
-    <div className="instrument-head">
-      <span>PERFORMANCE / 03</span>
-      <SourceMark lang={lang}/>
-    </div>
-    <div className="tri-stage">
-      <div className="tri-core" aria-hidden="true"><span>TRI</span></div>
-      {(Object.keys(pillars) as Array<keyof typeof pillars>).map(key => <button
-        key={key}
-        className={`tri-node tri-node-${key}`}
-        aria-pressed={active === key}
-        onClick={() => setActive(key)}
-      ><bdi>{pillars[key].code}</bdi><span>{local(pillars[key].name, lang)}</span></button>)}
-      <div className="scan-line" aria-hidden="true"/>
-    </div>
-    <div className="instrument-readout" aria-live="polite">
-      <span>ACTIVE LENS · <bdi>{current.code}</bdi></span>
-      <strong>{local(current.name, lang)}</strong>
-      <p>{local(current.prompt, lang)}</p>
-    </div>
-  </aside>;
+
+  const handleKeyDown = (e: React.KeyboardEvent, currentKey: "physical" | "technical" | "cognitive") => {
+    const currentIndex = keys.indexOf(currentKey);
+    let nextIndex = currentIndex;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      nextIndex = (currentIndex + 1) % keys.length;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      nextIndex = (currentIndex - 1 + keys.length) % keys.length;
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      nextIndex = keys.length - 1;
+    }
+    if (nextIndex !== currentIndex) {
+      setActive(keys[nextIndex]);
+    }
+  };
+
+  return (
+    <aside
+      className={`trifecta-instrument card-role-feature stage-${motionStage}`}
+      data-active-lens={active}
+      aria-label={local(b("معمار الأداء الثلاثي التفاعلي", "Interactive Trifecta performance architecture"), lang)}
+    >
+      <div className="instrument-head">
+        <div>
+          <span>PERFORMANCE / 03</span>
+          <strong>{local(b("ثلاثة أبعاد مترابطة", "Three interdependent dimensions"), lang)}</strong>
+        </div>
+        <SourceMark lang={lang} />
+      </div>
+
+      <div className="performance-architecture">
+        <div className="architecture-canvas" aria-hidden="true">
+          <svg viewBox="0 0 600 430" role="presentation">
+            <path className={`architecture-outline ${motionStage >= 1 ? "visible" : ""}`} d="M300 34 548 390H52Z" />
+            <path className={`architecture-axis ${motionStage >= 2 ? "visible" : ""}`} d="M300 236 300 34M300 236 52 390M300 236 548 390" />
+            <path className={`architecture-facet facet-technical ${active === "technical" ? "active" : "inactive"} ${motionStage >= 2 ? "visible" : ""}`} d="M300 34 300 236 52 390Z" />
+            <path className={`architecture-facet facet-cognitive ${active === "cognitive" ? "active" : "inactive"} ${motionStage >= 2 ? "visible" : ""}`} d="M300 34 548 390 300 236Z" />
+            <path className={`architecture-facet facet-physical ${active === "physical" ? "active" : "inactive"} ${motionStage >= 2 ? "visible" : ""}`} d="M52 390 300 236 548 390Z" />
+            <circle className={`architecture-core-ring ${motionStage >= 3 ? "visible" : ""}`} cx="300" cy="236" r="54" />
+            <circle className={`architecture-core ${motionStage >= 4 ? "visible" : ""}`} cx="300" cy="236" r="38" />
+            <path className={`architecture-output ${motionStage >= 4 ? "visible" : ""}`} d="M300 274V322" />
+          </svg>
+          <div className={`architecture-core-label ${motionStage >= 4 ? "visible" : ""}`}>
+            <span>{local(b("الأداء", "Actual"), lang)}</span>
+            <strong>{local(b("الفعلي", "performance"), lang)}</strong>
+          </div>
+        </div>
+
+        <div className="architecture-controls architecture-controls-desktop" role="tablist" aria-label={local(b("أبعاد الأداء", "Performance dimensions"), lang)}>
+          {keys.map((key) => (
+            <button
+              key={key}
+              role="tab"
+              tabIndex={active === key ? 0 : -1}
+              className={`architecture-node architecture-node-${key} ${active === key ? "active-node" : "dimmed-node"} ${motionStage >= 3 ? "visible" : ""}`}
+              aria-selected={active === key}
+              aria-controls="trifecta-readout"
+              onClick={() => setActive(key)}
+              onKeyDown={(e) => handleKeyDown(e, key)}
+            >
+              <bdi>{pillars[key].code}</bdi>
+              <span>
+                <strong>{local(pillars[key].name, lang)}</strong>
+                <small>{local(pillars[key].prompt, lang)}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className="architecture-controls architecture-controls-mobile" role="group" aria-label={local(b("أبعاد الأداء — الجوال", "Performance dimensions — Mobile"), lang)}>
+          {keys.map((key) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={active === key}
+              className={active === key ? "active" : ""}
+              onClick={() => setActive(key)}
+            >
+              <bdi>{pillars[key].code}</bdi>
+              <span>
+                <strong>{local(pillars[key].name, lang)}</strong>
+                <small>{local(pillars[key].prompt, lang)}</small>
+              </span>
+              <i aria-hidden="true">{active === key ? "—" : "+"}</i>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="instrument-readout" id="trifecta-readout" aria-live="polite">
+        <span>{local(b("العدسة النشطة", "ACTIVE LENS"), lang)} · <bdi>{current.code}</bdi></span>
+        <div>
+          <strong>{local(current.name, lang)}</strong>
+          <p>{local(current.prompt, lang)}</p>
+        </div>
+        <small>{local(b("الأبعاد متساوية في الأهمية؛ الاختيار يغيّر عدسة القراءة، لا ترتيبها.", "The dimensions are equally important; selection changes the diagnostic lens, not its rank."), lang)}</small>
+      </div>
+    </aside>
+  );
 }
 
 function Overview({ lang, go }: { lang: Lang; go: (x: string) => void }) {
@@ -535,53 +649,7 @@ function ObjectiveBuilder({ lang, value, onChange }: { lang: Lang; value: Object
   </>;
 }
 
-function StationBuilder({ lang, value, onChange }: { lang: Lang; value: StationState; onChange: (x: StationState) => void }) {
-  const set = (key: keyof StationState, v: string | boolean) => onChange({ ...value, [key]: v });
-  const variableCount = value.variables.split(/[,،\n]/).filter(Boolean).length;
-  const warnings = [
-    !value.baseline && b("لا يوجد Baseline.", "No baseline is defined."),
-    variableCount > 2 && b("متغيرات كثيرة مضافة معًا؛ لن تعرف أول نقطة انهيار.", "Too many variables are added together; the first breakdown will be unclear."),
-    value.behaviour.split(/[,،\n]/).filter(Boolean).length > 3 && b("المحطة تقيس أداءات كثيرة غير مترابطة.", "The station may measure several unrelated performances."),
-    value.cognitive && value.checklist.split(/\n/).length < 2 && b("الـBrief قد يختبر الذاكرة بدل المهارة المقصودة.", "The brief may test memory rather than the intended skill."),
-    value.primary === "Cognitive" && !/(قرار|تذكر|cue|زمن|خطأ|decision|recall|time|error)/i.test(value.data) && b("البيانات المجمعة لا تدعم التشخيص الذهني المعلن.", "Collected data do not support the stated cognitive diagnosis."),
-    !value.safetyGate && value.critical && b("لا يجوز أن تعوض الدرجة Critical Safety Failure.", "A score cannot compensate for a Critical Safety Failure."),
-  ].filter(Boolean) as Bi[];
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), ...value }, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "station-card.json"; a.click(); URL.revokeObjectURL(url);
-  };
-  return <>
-    <SectionHead eyebrow="Station Card" title={local(b("صمّم محطة تقيس ما تقصده", "Design a station that measures what you intend"), lang)} intro={local(b("اعزل المتغيرات، ابدأ من Baseline، واربط كل تشخيص بدليل تجمعه فعلًا.", "Isolate variables, start from baseline, and link each diagnosis to data you actually collect."), lang)}/>
-    <div className="station-builder">
-      <form className="builder-card dense" onSubmit={e => e.preventDefault()}>
-        <div className="field-row"><Field label={local(b("اسم المحطة", "Station name"), lang)} value={value.name} onChange={x => set("name", x)}/><Field label={local(b("متطلب الأداء", "Performance requirement"), lang)} value={value.requirement} onChange={x => set("requirement", x)}/></div>
-        <div className="field-row thirds"><label>Learning Domain<select value={value.domain} onChange={e => set("domain", e.target.value)}><option>Cognitive</option><option>Psychomotor</option><option>Affective</option></select></label><Field label={local(b("المستوى", "Level"), lang)} value={value.level} onChange={x => set("level", x)}/><label>Trifecta<select value={value.primary} onChange={e => set("primary", e.target.value)}><option>Physical</option><option>Technical</option><option>Cognitive</option></select></label></div>
-        <div className="field-row"><Field label="Baseline" value={value.baseline} onChange={x => set("baseline", x)}/><Field label={local(b("المتغيرات المضافة (افصل بفاصلة)", "Variables added (comma-separated)"), lang)} value={value.variables} onChange={x => set("variables", x)}/></div>
-        <div className="field-row thirds"><Field label={local(b("ضغط الوقت", "Time pressure"), lang)} value={value.time} onChange={x => set("time", x)}/><Field label="Cognitive Load" value={value.cognitive} onChange={x => set("cognitive", x)}/><Field label={local(b("الحمل البدني", "Physical load"), lang)} value={value.physical} onChange={x => set("physical", x)}/></div>
-        <Field label={local(b("السلوك الملاحظ", "Observable behaviour"), lang)} value={value.behaviour} onChange={x => set("behaviour", x)} area/>
-        <div className="field-row"><Field label="Checklist" value={value.checklist} onChange={x => set("checklist", x)} area/><Field label="Critical Failures" value={value.critical} onChange={x => set("critical", x)} area/></div>
-        <div className="field-row"><Field label="Go / No-Go" value={value.standard} onChange={x => set("standard", x)}/><Field label={local(b("البيانات التي ستجمعها", "Data to collect"), lang)} value={value.data} onChange={x => set("data", x)}/></div>
-        <div className="field-row"><Field label="AAR questions" value={value.aar} onChange={x => set("aar", x)} area/><Field label={local(b("المعالجة", "Remediation"), lang)} value={value.remediation} onChange={x => set("remediation", x)} area/></div>
-        <Field label="Retest rule" value={value.retest} onChange={x => set("retest", x)}/>
-        <label className="gate-toggle"><input type="checkbox" checked={value.safetyGate} onChange={e => set("safetyGate", e.target.checked)}/><span><strong>Critical Safety Gate</strong>{local(b("الفشل الحرج ينتج No-Go دائمًا.", "Critical failure always produces No-Go."), lang)}</span></label>
-      </form>
-      <aside className="station-preview">
-        <div className="card-top"><Badge>{variableCount} variables</Badge><SourceMark lang={lang} applied/></div>
-        <h2>{value.name || "Station Card"}</h2>
-        {warnings.length ? <div><MiniLabel>{labels[lang].warnings}</MiniLabel><ul className="warning-list">{warnings.map((x, i) => <li key={i}>{local(x, lang)}</li>)}</ul></div> : <div className="status-ok">✓ {local(b("المنطق الأساسي مكتمل.", "Core logic is complete."), lang)}</div>}
-        <dl className="station-dl">
-          <div><dt>Requirement</dt><dd>{value.requirement || "—"}</dd></div>
-          <div><dt>Baseline</dt><dd>{value.baseline || "—"}</dd></div>
-          <div><dt>Domains</dt><dd>{value.domain} → {value.primary}</dd></div>
-          <div><dt>Go / No-Go</dt><dd>{value.standard || "—"}</dd></div>
-          <div><dt>Retest</dt><dd>{value.retest || "—"}</dd></div>
-        </dl>
-        <div className="gate-result"><span>{value.critical ? "CRITICAL" : "GATE"}</span><strong>{value.safetyGate ? "NON-COMPENSABLE" : "UNSAFE LOGIC"}</strong></div>
-        <div className="button-row"><button className="secondary" onClick={() => window.print()}>{labels[lang].print}</button><button className="secondary" onClick={exportJson}>{labels[lang].download}</button></div>
-      </aside>
-    </div>
-  </>;
-}
+
 
 type Assessor = { observation: string; checklist: string; domain: string; pillar: string; family: string; critical: boolean; decision: string; evidence: string; confidence: number; missing: string };
 const blankAssessor = (): Assessor => ({ observation: "", checklist: "", domain: "Psychomotor", pillar: "Technical", family: "None", critical: false, decision: "Need More Data", evidence: "", confidence: 50, missing: "" });
@@ -718,17 +786,22 @@ function About({ lang }: { lang: Lang }) {
   </>;
 }
 
+
+
 export default function TrainingApp({ initialSection = "overview" }: { initialSection?: string }) {
   const [lang, setLang] = useState<Lang>("ar");
   const [mode, setMode] = useState<Mode>("learner");
   const [section, setSection] = useState(initialSection);
   const [menu, setMenu] = useState(false);
   const [completedCases, setCompletedCases] = useState<number[]>([]);
-  const [quizAnswers, setQuizAnswers] = useState<Record<number,number>>({});
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [objective, setObjective] = useState(initialObjective);
   const [station, setStation] = useState(initialStation);
   const [curriculum, setCurriculum] = useState<CurriculumProgress>(createInitialCurriculumProgress);
+  const [curriculumSuite, setCurriculumSuite] = useState<CurriculumSuiteStore>(createInitialCurriculumSuiteStore);
   const [hydrated, setHydrated] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     window.dispatchEvent(new Event("trifecta:ready"));
@@ -736,10 +809,21 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
       try {
         const raw = localStorage.getItem("performance-lab-state");
         if (raw) {
+          // Create backup before migration
+          try {
+            localStorage.setItem("performance-lab-state-backup-v2", raw);
+          } catch {
+            // ignore backup failure
+          }
           const x = JSON.parse(raw) as SavedState;
-          setLang(x.lang || "ar"); setMode(x.mode || "learner"); setCompletedCases(x.completedCases || []);
-          setQuizAnswers(x.quizAnswers || {}); if (x.objective) setObjective(x.objective); if (x.station) setStation(x.station);
-          if (x.curriculum?.schemaVersion === 1) setCurriculum(x.curriculum);
+          setLang(x.lang || "ar");
+          setMode(x.mode || "learner");
+          setCompletedCases(x.completedCases || []);
+          setQuizAnswers(x.quizAnswers || {});
+          if (x.objective) setObjective(x.objective);
+          if (x.station) setStation(x.station);
+          if (x.curriculum) setCurriculum(migrateCurriculumProgress(x.curriculum));
+          setCurriculumSuite(migrateCurriculumSuiteStore(x.curriculumSuite || x.curriculum));
         }
       } catch { /* retain safe defaults */ }
       setHydrated(true);
@@ -750,48 +834,86 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
 
   useEffect(() => {
     if (!hydrated) return;
-    localStorage.setItem("performance-lab-state", JSON.stringify({ schemaVersion: 2, lang, mode, completedCases, quizAnswers, objective, station, curriculum } satisfies SavedState));
-    document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
-  }, [lang, mode, completedCases, quizAnswers, objective, station, curriculum, hydrated]);
+    localStorage.setItem(
+      "performance-lab-state",
+      JSON.stringify({
+        schemaVersion: 3,
+        lang,
+        mode,
+        completedCases,
+        quizAnswers,
+        objective,
+        station,
+        curriculum,
+        curriculumSuite,
+      } satisfies SavedState),
+    );
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.documentElement.dataset.appReady = "true";
+  }, [lang, mode, completedCases, quizAnswers, objective, station, curriculum, curriculumSuite, hydrated]);
 
   useEffect(() => {
     const pop = () => setSection(location.pathname.split("/").filter(Boolean)[0] || "overview");
-    addEventListener("popstate", pop); return () => removeEventListener("popstate", pop);
+    addEventListener("popstate", pop);
+    return () => removeEventListener("popstate", pop);
   }, []);
 
   const go = (slug: string) => {
-    setSection(slug); setMenu(false); history.pushState({}, "", slug === "overview" ? "/" : `/${slug}`);
+    setSection(slug);
+    setMenu(false);
+    history.pushState({}, "", slug === "overview" ? "/" : `/${slug}`);
     window.scrollTo({ top: 0, behavior: "auto" });
     requestAnimationFrame(() => document.getElementById("main-content")?.focus());
   };
 
-  const instructorOnly = new Set(["objective-builder","station-builder","calibration","profile","aar"]);
+  const instructorOnly = new Set(["curriculum-builder", "objective-builder", "station-builder", "calibration", "profile", "aar"]);
   const visibleRoutes = routes.filter(([slug]) => mode === "instructor" || !instructorOnly.has(slug));
   const routeGroups = [
-    { label: b("ابني الفهم", "Build understanding"), slugs: ["overview", "domains", "trifecta", "comparison"] },
-    { label: b("طبّق وقَيّم", "Apply and assess"), slugs: ["curriculum", "cases", "checks"] },
-    { label: b("أدوات المدرب", "Instructor tools"), slugs: ["objective-builder", "station-builder", "calibration", "profile", "aar"] },
-    { label: b("المصادر والحدود", "Sources and boundaries"), slugs: ["references", "about"] },
-  ].map(group => ({ ...group, items: visibleRoutes.filter(([slug]) => group.slugs.includes(slug)) })).filter(group => group.items.length);
+    { label: b("1. التوجيه والإطار", "1. Framework & Orientation"), slugs: ["overview", "domains", "trifecta", "comparison"] },
+    { label: b("2. مسار المنهج", "2. Curriculum Pathway"), slugs: ["curriculum"] },
+    { label: b("3. مساحات البناء", "3. Builder Workspaces"), slugs: ["curriculum-builder", "objective-builder", "station-builder"] },
+    { label: b("4. معامل التشخيص", "4. Diagnostic Labs"), slugs: ["cases", "calibration", "profile"] },
+    { label: b("5. المراجعة والمراجع", "5. Review & References"), slugs: ["aar", "checks", "references", "about"] },
+  ].map((group) => ({ ...group, items: visibleRoutes.filter(([slug]) => group.slugs.includes(slug)) })).filter((group) => group.items.length);
+
   const activeRoute = routes.find(([slug]) => slug === section) ?? routes[0];
-  const activeGroup = routeGroups.find(group => group.items.some(([slug]) => slug === section));
+  const activeGroup = routeGroups.find((group) => group.items.some(([slug]) => slug === section));
   const progress = Math.round(((completedCases.length + Object.keys(quizAnswers).length) / (cases.length + knowledgeChecks.length)) * 100);
+
   const render = () => {
-    switch(section) {
-      case "curriculum": return <CurriculumWorkspace lang={lang} mode={mode} progress={curriculum} onChange={setCurriculum}/>;
-      case "domains": return <Domains lang={lang}/>;
-      case "trifecta": return <Trifecta lang={lang}/>;
-      case "comparison": return <Comparison lang={lang}/>;
-      case "cases": return <CaseLab lang={lang} onComplete={id=>setCompletedCases(x=>x.includes(id)?x:[...x,id])}/>;
-      case "objective-builder": return <ObjectiveBuilder lang={lang} value={objective} onChange={setObjective}/>;
-      case "station-builder": return <StationBuilder lang={lang} value={station} onChange={setStation}/>;
-      case "calibration": return <Calibration lang={lang}/>;
-      case "profile": return <PerformanceProfile lang={lang}/>;
-      case "aar": return <AAR lang={lang}/>;
-      case "checks": return <Checks lang={lang} answers={quizAnswers} setAnswer={(i,a)=>setQuizAnswers(x=>({...x,[i]:a}))}/>;
-      case "references": return <References lang={lang}/>;
-      case "about": return <About lang={lang}/>;
-      default: return <Overview lang={lang} go={go}/>;
+    switch (section) {
+      case "curriculum":
+        return <CurriculumWorkspace lang={lang} mode={mode} progress={curriculum} onChange={setCurriculum} />;
+      case "curriculum-builder":
+        return <CurriculumBuilderSuite lang={lang} mode={mode} store={curriculumSuite} onChangeStore={setCurriculumSuite} />;
+      case "domains":
+        return <Domains lang={lang} />;
+      case "trifecta":
+        return <Trifecta lang={lang} />;
+      case "comparison":
+        return <Comparison lang={lang} />;
+      case "cases":
+        return <CaseLab lang={lang} onComplete={(id) => setCompletedCases((x) => (x.includes(id) ? x : [...x, id]))} />;
+      case "objective-builder":
+        return <ObjectiveBuilder lang={lang} value={objective} onChange={setObjective} />;
+      case "station-builder":
+        // Compatibility route: maps seamlessly to Station tab inside CurriculumBuilderSuite
+        return <CurriculumBuilderSuite lang={lang} mode={mode} store={curriculumSuite} onChangeStore={setCurriculumSuite} initialTab="station" />;
+      case "calibration":
+        return <Calibration lang={lang} />;
+      case "profile":
+        return <PerformanceProfile lang={lang} />;
+      case "aar":
+        return <AAR lang={lang} />;
+      case "checks":
+        return <Checks lang={lang} answers={quizAnswers} setAnswer={(i, a) => setQuizAnswers((x) => ({ ...x, [i]: a }))} />;
+      case "references":
+        return <References lang={lang} />;
+      case "about":
+        return <About lang={lang} />;
+      default:
+        return <Overview lang={lang} go={go} />;
     }
   };
   return <div className="app-shell" data-mode={mode}>
@@ -808,11 +930,11 @@ export default function TrainingApp({ initialSection = "overview" }: { initialSe
         <div className="progress-mini" title={`${labels[lang].progress} ${progress}%`} aria-label={`${labels[lang].progress} ${progress}%`}><span style={{transform:`scaleX(${progress / 100})`}}/></div>
         <div className="segmented compact"><button aria-pressed={mode==="learner"} onClick={()=>setMode("learner")}>{labels[lang].learner}</button><button aria-pressed={mode==="instructor"} onClick={()=>setMode("instructor")}>{labels[lang].instructor}</button></div>
         <button className="language" onClick={()=>setLang(x=>x==="ar"?"en":"ar")} aria-label={lang==="ar"?"Switch to English":"التبديل إلى العربية"}>{lang==="ar"?"EN":"ع"}</button>
-        <button className="menu-button" onClick={()=>setMenu(x=>!x)} aria-expanded={menu} aria-controls="main-nav">{labels[lang].menu}</button>
+        <button ref={menuButtonRef} className="menu-button" onClick={()=>setMenu(x=>!x)} aria-expanded={menu} aria-controls="main-nav">{labels[lang].menu}</button>
       </nav>
     </header>
     {menu && <button className="nav-scrim" aria-label={local(b("إغلاق القائمة", "Close menu"),lang)} onClick={()=>setMenu(false)}/>}
-    <aside id="main-nav" className={`sidebar ${menu?"open":""}`} aria-label={local(b("التنقل الرئيسي", "Primary navigation"),lang)}>
+    <aside ref={sidebarRef} id="main-nav" className={`sidebar ${menu?"open":""}`} aria-label={local(b("التنقل الرئيسي", "Primary navigation"),lang)}>
       <div className="segmented mobile-mode" aria-label={local(b("اختيار الوضع", "Mode selection"),lang)}>
         <button aria-pressed={mode==="learner"} onClick={()=>{setMode("learner");setMenu(false);}}>{labels[lang].learner}</button>
         <button aria-pressed={mode==="instructor"} onClick={()=>{setMode("instructor");setMenu(false);}}>{labels[lang].instructor}</button>

@@ -29,7 +29,7 @@ test("server-renders the Arabic-first application shell", async () => {
 test("all public module routes return the application", async () => {
   const routes = [
     "overview", "curriculum", "domains", "trifecta", "comparison", "cases",
-    "objective-builder", "station-builder", "calibration", "profile",
+    "curriculum-builder", "objective-builder", "station-builder", "calibration", "profile",
     "aar", "checks", "references", "about",
   ];
   for (const route of routes) {
@@ -40,12 +40,13 @@ test("all public module routes return the application", async () => {
 });
 
 test("critical safety and diagnostic-restraint rules are encoded", async () => {
-  const [component, content] = await Promise.all([
+  const [component, stationBuilder, content] = await Promise.all([
     readFile(new URL("../components/TrainingApp.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/StationBuilder.tsx", import.meta.url), "utf8"),
     readFile(new URL("../lib/content.ts", import.meta.url), "utf8"),
   ]);
-  assert.match(component, /Critical Safety Gate/);
-  assert.match(component, /NON-COMPENSABLE/);
+  assert.match(stationBuilder, /Critical Safety Gate/);
+  assert.match(stationBuilder, /NON-COMPENSABLE/);
   assert.match(component, /Need More Data/);
   assert.match(content, /لا تشخّص من ملاحظة واحدة|لا نستنتج SA/);
   assert.match(content, /تتطلب بيانات طولية|Requires longitudinal data/);
@@ -66,8 +67,9 @@ test("curriculum hierarchy, evidence roll-up, and Gate safety are encoded", asyn
   assert.match(workspace, /"retest"/);
   assert.match(workspace, /if \(hasCritical\) return "no-go"/);
   assert.match(workspace, /decision: "no-go"/);
-  assert.match(component, /schemaVersion:\s*2/);
-  assert.match(component, /x\.curriculum\?\.schemaVersion === 1/);
+  assert.match(component, /schemaVersion:\s*3/);
+  assert.match(curriculum, /migrateCurriculumSuiteStore/);
+  assert.match(curriculum, /performance-lab-state-backup-v2/);
 });
 
 test("source-driven cognitive phases and diagnostic intervention patterns are present", async () => {
