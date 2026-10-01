@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "Trifecta Performance Lab"
+type: software
+authors:
+  - family-names: "Selim"
+    given-names: "Maissara"
+version: "2.2.0"
+date-released: 2026-10-01
+abstract: "An Arabic-first bilingual trainer-development and performance-assessment application for learning domains, physical-technical-cognitive performance analysis, curriculum and station design, evidence-based progression gates, after-action review, and local-first training workflows."
+repository-code: "https://github.com/maissaramoheb/trifecta-performance-lab"
+keywords:
+  - "trainer development"
+  - "performance assessment"
+  - "learning domains"
+  - "curriculum design"
+  - "training evaluation"
+  - "after-action review"
+  - "performance diagnostics"
+  - "Arabic"
+  - "bilingual"
