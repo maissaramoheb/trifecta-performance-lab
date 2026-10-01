@@ -2,6 +2,13 @@
 
 Arabic-first bilingual trainer-development application for Learning Domains, the Trifecta, evidence-based assessment, station design, and AAR.
 
+## Current Version
+
+**v2.2.0 — Dark Tactical Performance Operations System**
+
+This release consolidates the current Trifecta performance model, curriculum-builder architecture, evidence-based progression gates, bilingual Arabic/English workflow, safety invariants, responsive UI/UX, and local-first persistence model.
+
+
 ## Application Purpose
 
 - Explains Cognitive, Psychomotor, and Affective Learning Domains with five/six-level interactive progressions.
